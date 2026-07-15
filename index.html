@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var isLocalPreview = ["localhost", "127.0.0.1"].indexOf(window.location.hostname) !== -1;
+        if (!isLocalPreview) return;
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .getRegistrations()
+            .then(function (registrations) {
+              registrations.forEach(function (registration) {
+                registration.unregister();
+              });
+            })
+            .catch(function () {});
+        }
+
+        if (window.caches) {
+          window.caches
+            .keys()
+            .then(function (keys) {
+              keys.forEach(function (key) {
+                window.caches.delete(key);
+              });
+            })
+            .catch(function () {});
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Mero Pasal</title>
+    <link rel="icon" type="image/png" href="/logo.png?v=mero-pasal" />
+    <meta name="description" content="Cafe & Inventory Management System for your business" />
+    <meta name="author" content="Mero Pasal" />
+
+    <!-- PWA / Mobile -->
+    <meta name="theme-color" content="#c0392b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Mero Pasal" />
+    <link rel="apple-touch-icon" href="/logo.png?v=mero-pasal" />
+
+    <meta property="og:title" content="Mero Pasal" />
+    <meta property="og:description" content="Cafe & Inventory Management System for your business" />
+    <meta property="og:type" content="website" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
