@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import type { Company, CompanyPlan, CompanyStatus, BusinessType } from "./types";
 import { BUSINESS_TYPE_LABELS } from "./types";
-import { superAdmin, plans as plansApi, type ApiStaff } from "@/lib/api";
+import { ApiRequestError, superAdmin, plans as plansApi, type ApiStaff } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -593,6 +593,13 @@ export default function CompaniesPage() {
       setPlanOptions(plansRes.map(p => ({ id: p.id, name: p.name, module_access: p.module_access })));
       setApiAvailable(true);
     } catch (err) {
+      if (err instanceof ApiRequestError && !err.isBackendUnavailable) {
+        setApiAvailable(false);
+        setCompanies([]);
+        setPlanOptions([]);
+        toast.error(err.status === 403 ? "Super admin access required for companies." : err.message);
+        return;
+      }
       setApiAvailable(false);
       setCompanies(demoCompanies);
       setPlanOptions(demoPlanOptions);

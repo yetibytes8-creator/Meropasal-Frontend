@@ -14,6 +14,22 @@ const ACCESS_KEY  = "mp_access";
 const REFRESH_KEY = "mp_refresh";
 const BRANCH_KEY = "mp_branch_id";
 
+export class ApiRequestError extends Error {
+  status?: number;
+  code?: string;
+
+  constructor(message: string, status?: number, code?: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+  }
+
+  get isBackendUnavailable() {
+    return this.code === "backend_unavailable" || this.code === "html_response" || this.code === "invalid_json";
+  }
+}
+
 // Token helpers.
 // Keep token storage centralized so login, logout, and refresh behavior is easy
 // to change later.
@@ -130,7 +146,7 @@ export async function request<T = unknown>(
     try {
       json = JSON.parse(trimmedText);
     } catch {
-      throw new Error("Server returned invalid JSON. Please check the API response.");
+      throw new ApiRequestError("Server returned invalid JSON. Please check the API response.", res.status, "invalid_json");
     }
   }
 
@@ -139,7 +155,7 @@ export async function request<T = unknown>(
     const fallback = isHtml
       ? "Backend returned an HTML page instead of JSON. Please check the API server or VITE_API_URL."
       : `Server returned a non-JSON response (${res.status}).`;
-    if (!res.ok || isHtml) throw new Error(fallback);
+    if (!res.ok || isHtml) throw new ApiRequestError(fallback, res.status, isHtml ? "html_response" : "non_json_response");
   }
 
   if (!res.ok) {
@@ -149,7 +165,7 @@ export async function request<T = unknown>(
       (res.status === 401 ? "Session expired. Please sign in again." : undefined) ||
       extractApiError(data) ||
       `Request failed (${res.status})`;
-    throw new Error(msg);
+    throw new ApiRequestError(msg, res.status);
   }
 
   if (
