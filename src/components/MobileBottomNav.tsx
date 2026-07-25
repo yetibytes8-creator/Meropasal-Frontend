@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils";
 import { useStaffAuth } from "@/contexts/StaffAuthContext";
 import { useAuth, type FeatureKey } from "@/contexts/AuthContext";
 import { canAccessRoute, type StaffRole } from "@/lib/rbac";
+import { getBusinessProfileFromSystemConfig } from "@/lib/businessProfiles";
 import {
   LayoutDashboard, UtensilsCrossed, ClipboardList, Grid3X3, ChefHat, Receipt,
   Heart, UserCog, Bell, Settings, Package, ShoppingCart, Truck, Users, BarChart3,
-  MoreHorizontal, QrCode, Warehouse, ConciergeBell, Bike, Landmark, GitBranch, AlertCircle, Printer,
+  MoreHorizontal, QrCode, Warehouse, ConciergeBell, Bike, Landmark, GitBranch, AlertCircle, Printer, Wallet,
 } from "lucide-react";
 
 interface NavItem {
@@ -37,6 +38,7 @@ const restaurantMore: NavItem[] = [
   { title: "Customers", url: "/restaurant/customers", icon: Heart },
   { title: "Staff", url: "/restaurant/staff", icon: UserCog },
   { title: "Branches", url: "/restaurant/branches", icon: GitBranch },
+  { title: "Finance", url: "/restaurant/finance", icon: Wallet },
   { title: "Savings", url: "/restaurant/savings", icon: Landmark },
   { title: "Issues", url: "/restaurant/issues", icon: AlertCircle },
   { title: "Printer", url: "/restaurant/printer", icon: Printer },
@@ -58,6 +60,7 @@ const inventoryMore: NavItem[] = [
   { title: "Customers", url: "/inventory/customers", icon: Heart },
   { title: "Staff", url: "/inventory/staff", icon: UserCog },
   { title: "Reports", url: "/inventory/reports", icon: BarChart3 },
+  { title: "Finance", url: "/inventory/finance", icon: Wallet },
   { title: "Alerts", url: "/inventory/alerts", icon: Bell },
   { title: "Settings", url: "/inventory/settings", icon: Settings },
 ];
@@ -69,6 +72,7 @@ const restaurantFeatureByUrl: Partial<Record<string, FeatureKey>> = {
   "/restaurant/customers": "customers",
   "/restaurant/staff": "staff",
   "/restaurant/branches": "branches",
+  "/restaurant/finance": "finance",
 };
 
 const inventoryFeatureByUrl: Partial<Record<string, FeatureKey>> = {
@@ -77,6 +81,7 @@ const inventoryFeatureByUrl: Partial<Record<string, FeatureKey>> = {
   "/inventory/customers": "customers",
   "/inventory/staff": "staff",
   "/inventory/reports": "reports",
+  "/inventory/finance": "finance",
 };
 
 interface MobileBottomNavProps {
@@ -87,7 +92,16 @@ export default function MobileBottomNav({ module }: MobileBottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const { staffUser } = useStaffAuth();
-  const { canAccessFeature } = useAuth();
+  const { canAccessFeature, systemConfig, subscription } = useAuth();
+  const businessProfile = getBusinessProfileFromSystemConfig(systemConfig, subscription?.plan?.module_access);
+  const displayTitle = (title: string) => {
+    if (module !== "inventory") return title;
+    if (title === "Products") return businessProfile.productLabel;
+    if (title === "Stock Control") return businessProfile.stockLabel;
+    if (title === "Purchases") return businessProfile.purchaseLabel;
+    if (title === "Sales") return businessProfile.salesLabel;
+    return title;
+  };
 
   const filterByRole = (items: NavItem[]) =>
     staffUser ? items.filter((i) => canAccessRoute(staffUser.role as StaffRole, i.url)) : items;
@@ -122,7 +136,7 @@ export default function MobileBottomNav({ module }: MobileBottomNavProps) {
               activeClassName="text-primary"
             >
               <item.icon className="w-5 h-5 shrink-0" />
-              <span className="text-[11px] font-medium leading-none">{item.title}</span>
+              <span className="text-[11px] font-medium leading-none">{displayTitle(item.title)}</span>
             </NavLink>
           ))}
 
@@ -165,7 +179,7 @@ export default function MobileBottomNav({ module }: MobileBottomNavProps) {
                   )}
                 >
                   <item.icon className="w-6 h-6 shrink-0" />
-                  <span className="text-[11px] font-medium text-center leading-tight">{item.title}</span>
+                  <span className="text-[11px] font-medium text-center leading-tight">{displayTitle(item.title)}</span>
                 </NavLink>
               );
             })}

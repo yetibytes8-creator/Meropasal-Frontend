@@ -17,9 +17,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { applyMenuImageFallback, menuFoodImage } from "@/lib/menuImages";
-import { Plus, Search, Pencil, Trash2, Upload, ImageIcon, FolderPlus, Save, X, Tags } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Upload, ImageIcon, FolderPlus, Save, X, Tags, Megaphone } from "lucide-react";
 import type { MenuItem } from "@/types";
 import { toast } from "sonner";
+import { readQrMenuAds, writeQrMenuAds, type QrMenuAd } from "@/lib/qrMenuAds";
 
 const fileToDataUrl = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -85,8 +86,11 @@ const MenuManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [comboDialogOpen, setComboDialogOpen] = useState(false);
+  const [adDialogOpen, setAdDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<MenuItem | null>(null);
   const [editCombo, setEditCombo] = useState<ApiComboOffer | null>(null);
+  const [qrAds, setQrAds] = useState<QrMenuAd[]>(() => readQrMenuAds());
+  const [adForm, setAdForm] = useState<QrMenuAd>({ id: "", title: "", subtitle: "", image: "", link: "", active: true, sortOrder: 1 });
   const [itemMode, setItemMode] = useState<ItemMode>("normal");
   const [form, setForm] = useState({ name: "", category: "", subCategory: "", price: "", originalPrice: "", offerLabel: "", description: "", image: "" });
   const [catForm, setCatForm] = useState<{ name: string; image: string; editing: string | null }>({ name: "", image: "", editing: null });
@@ -95,6 +99,7 @@ const MenuManagement = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const catFileRef = useRef<HTMLInputElement>(null);
   const comboFileRef = useRef<HTMLInputElement>(null);
+  const adFileRef = useRef<HTMLInputElement>(null);
 
   const subCategories = uniqueSorted(items.map((i) => i.subCategory || ""));
   const subMenusByCategory = useMemo(() => {
@@ -225,13 +230,14 @@ const MenuManagement = () => {
     } catch (err) { toast.error((err as Error).message); }
   };
 
-  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>, target: "item" | "cat" | "combo") => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>, target: "item" | "cat" | "combo" | "ad") => {
     const f = e.target.files?.[0];
     if (!f) return;
     const dataUrl = await fileToDataUrl(f);
     if (target === "item") setForm((p) => ({ ...p, image: dataUrl }));
     else if (target === "cat") setCatForm((p) => ({ ...p, image: dataUrl }));
-    else setComboForm((p) => ({ ...p, image: dataUrl }));
+    else if (target === "combo") setComboForm((p) => ({ ...p, image: dataUrl }));
+    else setAdForm((p) => ({ ...p, image: dataUrl }));
   };
 
   const handleSave = async () => {
@@ -327,6 +333,55 @@ const MenuManagement = () => {
     try { await comboOffersApi.delete(comboId); } catch { /* ignore */ }
     setCombos((prev) => prev.filter((combo) => combo.id !== comboId));
     toast.success("Combo offer deleted");
+  };
+
+  const persistQrAds = (ads: QrMenuAd[]) => {
+    setQrAds(ads);
+    writeQrMenuAds(ads);
+  };
+
+  const openAddAd = () => {
+    setAdForm({
+      id: "",
+      title: "",
+      subtitle: "",
+      image: "",
+      link: "",
+      active: true,
+      sortOrder: qrAds.length + 1,
+    });
+    setAdDialogOpen(true);
+  };
+
+  const openEditAd = (ad: QrMenuAd) => {
+    setAdForm(ad);
+    setAdDialogOpen(true);
+  };
+
+  const saveAd = () => {
+    if (!adForm.title.trim()) {
+      toast.error("Advertisement title is required");
+      return;
+    }
+    const nextAd: QrMenuAd = {
+      ...adForm,
+      id: adForm.id || String(Date.now()),
+      title: adForm.title.trim(),
+      subtitle: adForm.subtitle.trim(),
+      link: adForm.link.trim(),
+      sortOrder: Number(adForm.sortOrder) || qrAds.length + 1,
+    };
+    const nextAds = adForm.id
+      ? qrAds.map((ad) => ad.id === adForm.id ? nextAd : ad)
+      : [...qrAds, nextAd];
+    persistQrAds(nextAds);
+    setAdDialogOpen(false);
+    toast.success("QR menu advertisement saved");
+  };
+
+  const deleteAd = (id: string) => {
+    persistQrAds(qrAds.filter((ad) => ad.id !== id));
+    toast.success("Advertisement removed");
   };
 
   const toggleCombo = async (combo: ApiComboOffer) => {
@@ -457,6 +512,14 @@ const MenuManagement = () => {
             <Tags className="w-4 h-4 sm:mr-2" />
             <span>Combo Offer</span>
           </Button>
+          <Button
+            variant="outline"
+            className="col-span-2 h-11 rounded-xl border-emerald-300 bg-emerald-50 px-5 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-100 sm:col-span-1 sm:min-w-40"
+            onClick={openAddAd}
+          >
+            <Megaphone className="w-4 h-4 sm:mr-2" />
+            <span>QR Ad</span>
+          </Button>
         </div>
       </div>
 
@@ -525,6 +588,62 @@ const MenuManagement = () => {
           </CardContent>
         </Card>
       )}
+
+      <Card className="border-emerald-100 bg-emerald-50/40">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
+          <div>
+            <CardTitle className="text-sm">QR Menu Advertisements</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">QR scan garepachi menu ko top area ma offer, event, sponsor, or promotion dekhauna milcha.</p>
+          </div>
+          <Button type="button" size="sm" className="rounded-xl bg-emerald-700 hover:bg-emerald-800" onClick={openAddAd}>
+            <Megaphone className="mr-2 h-4 w-4" /> Add Ad
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {qrAds.length === 0 ? (
+            <div className="rounded-xl border border-dashed bg-white p-6 text-center text-sm text-muted-foreground">
+              No QR advertisement yet. Add one to show it in customer QR menu.
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {qrAds
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((ad) => (
+                  <div key={ad.id} className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${ad.active ? "border-emerald-200" : "opacity-60"}`}>
+                    <div className="flex gap-3 p-3">
+                      <div className="flex h-20 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-emerald-50">
+                        {ad.image ? (
+                          <img src={ad.image} alt={ad.title} className="h-full w-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, ad.title, "Offer")} />
+                        ) : (
+                          <Megaphone className="h-7 w-7 text-emerald-700" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold">{ad.title}</p>
+                            <p className="line-clamp-2 text-xs text-muted-foreground">{ad.subtitle || "No subtitle"}</p>
+                          </div>
+                          <Badge variant={ad.active ? "default" : "secondary"} className={ad.active ? "bg-emerald-700" : ""}>
+                            {ad.active ? "Active" : "Hidden"}
+                          </Badge>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">Priority {ad.sortOrder}</span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => openEditAd(ad)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive" onClick={() => deleteAd(ad.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Item dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -648,6 +767,60 @@ const MenuManagement = () => {
             )}
 
             <Button onClick={handleSave} className="w-full gap-2"><Save className="w-4 h-4 shrink-0" />Save Item</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={adDialogOpen} onOpenChange={setAdDialogOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-xl sm:w-full">
+          <DialogHeader><DialogTitle>{adForm.id ? "Edit" : "Add"} QR Menu Advertisement</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-900">
+              Customer le QR scan garda search/category ko tala advertisement banner dekhincha. Active off gare hide huncha.
+            </div>
+            <div className="space-y-2">
+              <Label>Banner Image</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex h-24 w-32 items-center justify-center overflow-hidden rounded-xl border bg-muted">
+                  {adForm.image ? (
+                    <img src={adForm.image} alt="" className="h-full w-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, adForm.title, "Offer")} />
+                  ) : (
+                    <Megaphone className="h-7 w-7 text-muted-foreground" />
+                  )}
+                </div>
+                <input ref={adFileRef} type="file" accept="image/*" hidden onChange={(e) => handleImage(e, "ad")} />
+                <Button type="button" variant="outline" onClick={() => adFileRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Upload</Button>
+                {adForm.image && <Button type="button" variant="ghost" className="h-10 rounded-xl gap-2 px-4" onClick={() => setAdForm({ ...adForm, image: "" })}><X className="h-3.5 w-3.5" />Remove</Button>}
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Title</Label>
+                <Input value={adForm.title} onChange={(e) => setAdForm({ ...adForm, title: e.target.value })} placeholder="e.g. Weekend Special Combo" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Short Detail</Label>
+                <Input value={adForm.subtitle} onChange={(e) => setAdForm({ ...adForm, subtitle: e.target.value })} placeholder="e.g. Buy 2 momo get cold drink discount" />
+              </div>
+              <div className="space-y-2">
+                <Label>Link (optional)</Label>
+                <Input value={adForm.link} onChange={(e) => setAdForm({ ...adForm, link: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Input type="number" min="1" value={adForm.sortOrder} onChange={(e) => setAdForm({ ...adForm, sortOrder: Number(e.target.value) || 1 })} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border p-3">
+              <div>
+                <p className="text-sm font-medium">Show in QR menu</p>
+                <p className="text-xs text-muted-foreground">Active हुँदा customer QR menu मा देखिन्छ</p>
+              </div>
+              <Switch checked={adForm.active} onCheckedChange={(active) => setAdForm({ ...adForm, active })} />
+            </div>
+            <Button onClick={saveAd} className="w-full gap-2 bg-emerald-700 hover:bg-emerald-800">
+              <Save className="h-4 w-4" /> Save Advertisement
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

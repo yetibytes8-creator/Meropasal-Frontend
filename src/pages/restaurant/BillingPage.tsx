@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -12,88 +13,17 @@ import StatCard from "@/components/StatCard";
 import { useOrders } from "@/contexts/OrdersContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { orders as ordersApi } from "@/lib/api";
-import { generateTaxInvoiceHTML, generateThermalInvoiceHTML } from "@/lib/invoiceTemplate";
 import { balanceMoneyInput, formatMoneyInput, parseMoneyInput, sanitizeMoneyInput } from "@/lib/moneyInput";
 import { postRefundToAccounts, postRestaurantBillToAccounts } from "@/lib/accountingAutoPost";
+import { printRestaurantBill, printRestaurantRefundNote, restaurantBillNumber, restaurantInvoiceUrl, restaurantTableLabel } from "@/lib/restaurantBill";
 import type { Order, Table } from "@/types";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import { useSearchParams } from "react-router-dom";
 
-import type { BusinessSettings } from "@/types";
-
-const invoiceUrl = (order: Order) =>
-  `${window.location.origin}/restaurant/billing?invoice=${order.id}`;
-
 const tableLabel = (order: Order, tables: Table[]): string | null => {
-  if (!order.tableId) return null;
-  const table = tables.find((t) => t.id === order.tableId);
-  return table ? `Table ${table.number}` : null;
-};
-
-const generateInvoiceHTML = (order: Order, qrDataUrl: string, s: BusinessSettings, tableText: string | null) => {
-  const split = order.splitPayment;
-  const url = invoiceUrl(order);
-  const isPaymentQr = s.paymentQr?.showOnBill && s.paymentQr?.image && (order.paymentMethod === "mobile" || order.paymentMethod === "split");
-  return generateTaxInvoiceHTML({
-    title: "TAX INVOICE",
-    invoiceNo: order.id.slice(1),
-    invoiceDate: new Date(order.createdAt).toLocaleString(),
-    customerName: order.customerName || "Walk-in Customer",
-    orderType: order.type,
-    tableText,
-    paymentMode: order.paymentMethod
-      ? `${order.paymentMethod}${split ? ` (Cash Rs. ${split.cash.toFixed(2)} + Online Rs. ${split.online.toFixed(2)})` : ""}`
-      : undefined,
-    lines: order.items.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      rate: item.price,
-      amount: item.quantity * item.price,
-    })),
-    subtotal: order.total,
-    taxPercent: 0,
-    taxAmount: 0,
-    total: order.total,
-    qrDataUrl: isPaymentQr ? s.paymentQr.image! : qrDataUrl,
-    qrCaption: isPaymentQr
-      ? `Payment QR: ${s.paymentQr.provider}${s.paymentQr.accountName ? ` - ${s.paymentQr.accountName}` : ""}${s.paymentQr.accountNumber ? ` (${s.paymentQr.accountNumber})` : ""}`
-      : url,
-    note: s.receiptFooter,
-}, s);
-};
-
-const generateThermalReceiptHTML = (order: Order, qrDataUrl: string, s: BusinessSettings, tableText: string | null) => {
-  const split = order.splitPayment;
-  const url = invoiceUrl(order);
-  const isPaymentQr = s.paymentQr?.showOnBill && s.paymentQr?.image && (order.paymentMethod === "mobile" || order.paymentMethod === "split");
-  return generateThermalInvoiceHTML({
-    title: "TAX INVOICE",
-    invoiceNo: order.id.slice(1),
-    invoiceDate: new Date(order.createdAt).toLocaleString(),
-    customerName: order.customerName || "Walk-in Customer",
-    orderType: order.type,
-    tableText,
-    paymentMode: order.paymentMethod
-      ? `${order.paymentMethod}${split ? ` (Cash Rs. ${split.cash.toFixed(2)} + Online Rs. ${split.online.toFixed(2)})` : ""}`
-      : undefined,
-    lines: order.items.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      rate: item.price,
-      amount: item.quantity * item.price,
-    })),
-    subtotal: order.total,
-    taxPercent: 0,
-    taxAmount: 0,
-    total: order.total,
-    qrDataUrl: isPaymentQr ? s.paymentQr.image! : qrDataUrl,
-    qrCaption: isPaymentQr
-      ? `Payment QR: ${s.paymentQr.provider}${s.paymentQr.accountNumber ? ` ${s.paymentQr.accountNumber}` : ""}`
-      : url,
-    note: s.receiptFooter,
-  }, s);
+  return restaurantTableLabel(order, tables);
 };
 
 const methodIcon = (m?: string) => m === "cash" ? <Banknote className="w-3 h-3" /> : m === "card" ? <CreditCard className="w-3 h-3" /> : m === "split" ? <SplitSquareHorizontal className="w-3 h-3" /> : <Smartphone className="w-3 h-3" />;
@@ -103,17 +33,13 @@ const BillingPage = () => {
   const { settings } = useSettings();
 
   const handlePrint = async (order: Order) => {
-    const qr = await QRCode.toDataURL(invoiceUrl(order), { margin: 1, width: 220 });
-    const w = window.open("", "_blank", "width=450,height=600");
-    if (!w) return;
-    w.document.write(generateThermalReceiptHTML(order, qr, settings, tableLabel(order, allTables)));
-    w.document.close();
-    w.setTimeout(() => { w.print(); }, 400);
+    const printed = await printRestaurantBill(order, settings, allTables);
+    if (!printed) toast.error("Popup blocked. Please allow popups to print bill.");
   };
 
   const handleDownload = async (order: Order) => {
     const invoice = settings.printSettings.invoice;
-    const qr = await QRCode.toDataURL(invoiceUrl(order), { margin: 1, width: 220 });
+    const qr = await QRCode.toDataURL(restaurantInvoiceUrl(order), { margin: 1, width: 220 });
     const doc = new jsPDF({ unit: "mm", format: [80, 220] });
     const split = order.splitPayment;
     const tableText = tableLabel(order, allTables);
@@ -136,7 +62,7 @@ const BillingPage = () => {
     doc.setFont("helvetica", "bold"); doc.setFontSize(10);
     doc.text(invoice.title || "INVOICE", 40, y, { align: "center" }); y += 3;
     doc.setFont("helvetica", "normal"); doc.setFontSize(8);
-    if (invoice.showInvoiceNo) { doc.text(`#${order.id.slice(1)}`, 40, y, { align: "center" }); y += 4; }
+    if (invoice.showInvoiceNo) { doc.text(`#${restaurantBillNumber(order)}`, 40, y, { align: "center" }); y += 4; }
     doc.text("--------------------------------", 40, y, { align: "center" }); y += 4;
     if (invoice.showDate) { doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 4, y); y += 4; }
     if (order.customerName) { doc.text(`Customer: ${order.customerName}`, 4, y); y += 4; }
@@ -165,7 +91,7 @@ const BillingPage = () => {
     doc.setFontSize(8);
     if (invoice.footerTitle) { doc.text(invoice.footerTitle, 40, y, { align: "center" }); y += 4; }
     doc.text(invoice.footerMessage || settings.receiptFooter || "Thank you for your visit!", 40, y, { align: "center" });
-    doc.save(`invoice-${order.id.slice(1)}.pdf`);
+    doc.save(`invoice-${restaurantBillNumber(order)}.pdf`);
   };
 
   const [search, setSearch] = useState("");
@@ -176,6 +102,17 @@ const BillingPage = () => {
   const [splitCash, setSplitCash] = useState("");
   const [splitOnline, setSplitOnline] = useState("");
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
+  const [refundOrder, setRefundOrder] = useState<Order | null>(null);
+  const [refundForm, setRefundForm] = useState({
+    amount: "",
+    method: "cash" as "cash" | "card" | "mobile" | "split",
+    reason: "Customer returned order",
+    referenceNo: "",
+    customerName: "",
+    receivedBy: "",
+    approvedBy: "",
+    notes: "",
+  });
   const [params, setParams] = useSearchParams();
 
   useEffect(() => {
@@ -211,7 +148,7 @@ const BillingPage = () => {
     setSplitOnline(formatMoneyInput(o.total / 2));
   };
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
     if (!payOrder) return;
     let splitPayment: Order["splitPayment"];
     if (payMethod === "split") {
@@ -225,28 +162,79 @@ const BillingPage = () => {
     }
     const paidOrder: Order = { ...payOrder, status: "completed", paymentMethod: payMethod, splitPayment };
     setAllOrders(prev => prev.map(o => o.id === payOrder.id ? paidOrder : o));
+    const numericOrderId = Number(payOrder.id);
+    if (Number.isFinite(numericOrderId)) {
+      ordersApi.update(numericOrderId, {
+        status: "completed",
+        payment_method: payMethod,
+        split_cash: splitPayment?.cash ?? null,
+        split_online: splitPayment?.online ?? null,
+      }).catch(() => toast.warning("Payment saved locally, backend sync pending"));
+    }
     postRestaurantBillToAccounts(paidOrder).catch(() => toast.warning("Payment saved, finance auto-entry pending"));
-    toast.success("Payment recorded");
+    await handlePrint(paidOrder);
+    toast.success("Payment recorded and bill printed");
     setPayOrder(null);
   };
 
-  const handleRefund = async (order: Order) => {
-    if (!window.confirm(`Refund bill #${order.id.slice(1)} for Rs. ${order.total.toFixed(2)}?`)) return;
+  const openRefund = (order: Order) => {
+    setRefundOrder(order);
+    setRefundForm({
+      amount: formatMoneyInput(order.total),
+      method: (order.paymentMethod && order.paymentMethod !== "split" ? order.paymentMethod : "cash") as "cash" | "card" | "mobile" | "split",
+      reason: "Customer returned order",
+      referenceNo: "",
+      customerName: order.customerName || "",
+      receivedBy: "",
+      approvedBy: "",
+      notes: "",
+    });
+  };
+
+  const confirmRefund = async (printNote = true) => {
+    if (!refundOrder) return;
+    const refundAmount = parseMoneyInput(refundForm.amount);
+    if (refundAmount <= 0) {
+      toast.error("Refund amount must be greater than zero");
+      return;
+    }
+    if (refundAmount > refundOrder.total) {
+      toast.error(`Refund cannot exceed Rs. ${refundOrder.total.toFixed(2)}`);
+      return;
+    }
+    const refundNo = `RF-${restaurantBillNumber(refundOrder)}-${Date.now().toString().slice(-5)}`;
+    const refundDate = new Date().toLocaleString();
     try {
-      const refunded = await ordersApi.refund(Number(order.id));
+      const refunded = await ordersApi.refund(Number(restaurantBillNumber(refundOrder)));
       setAllOrders((prev) =>
         prev.map((item) =>
-          item.id === order.id ? { ...item, status: refunded.status, paymentMethod: undefined, splitPayment: undefined } : item
+          item.id === refundOrder.id ? { ...item, status: refunded.status, paymentMethod: undefined, splitPayment: undefined } : item
         )
       );
       postRefundToAccounts({
-        reference: `REST-${order.id}`,
-        amount: order.total,
-        method: order.paymentMethod,
-        party: order.customerName,
-        description: `Restaurant refund: ${order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}`,
+        reference: refundNo,
+        amount: refundAmount,
+        method: refundForm.method,
+        party: refundForm.customerName || refundOrder.customerName,
+        description: `Restaurant refund #${restaurantBillNumber(refundOrder)}: ${refundForm.reason}. ${refundOrder.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}${refundForm.notes ? ` Notes: ${refundForm.notes}` : ""}`,
       }).catch(() => toast.warning("Refund saved, finance auto-entry pending"));
-      toast.success("Refund recorded in finance ledger");
+      if (printNote) {
+        const printed = await printRestaurantRefundNote(refundOrder, {
+          refundNo,
+          refundDate,
+          refundMethod: refundForm.method,
+          refundAmount,
+          reason: refundForm.reason,
+          notes: refundForm.notes,
+          customerName: refundForm.customerName,
+          receivedBy: refundForm.receivedBy,
+          approvedBy: refundForm.approvedBy,
+          referenceNo: refundForm.referenceNo,
+        }, settings, allTables);
+        if (!printed) toast.error("Refund saved, but popup blocked. Please allow popups to print refund note.");
+      }
+      toast.success("Refund recorded and credit note prepared");
+      setRefundOrder(null);
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -288,12 +276,12 @@ const BillingPage = () => {
               <div className="space-y-3">
                 {list.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No invoices found</p>}
                 {list.map((order) => (
-                  <div key={order.id} className="rounded-lg border bg-card p-3 transition hover:border-primary/20 hover:bg-muted/20 sm:p-4">
+                  <div key={order.id} className="rounded-xl border bg-card p-3 shadow-sm transition hover:border-primary/25 hover:shadow-md sm:p-4">
                     {/* Top row — ID, badges */}
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_360px] lg:items-center">
+                    <div className="grid gap-3 xl:grid-cols-[minmax(220px,1fr)_minmax(240px,360px)_auto] xl:items-center">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-sm">#{order.id.slice(1)}</span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-md bg-muted px-2 py-1 text-sm font-bold text-foreground">#{restaurantBillNumber(order)}</span>
                           <Badge variant="outline" className="h-6 rounded-md text-xs">{order.type}</Badge>
                           {tableLabel(order, allTables) && (
                             <Badge variant="outline" className="h-6 rounded-md border-info/20 bg-info/10 text-xs text-info">
@@ -302,7 +290,7 @@ const BillingPage = () => {
                           )}
                           <Badge variant={order.status === "completed" ? "default" : order.status === "refunded" ? "destructive" : "secondary"} className="h-6 rounded-md text-xs">{order.status}</Badge>
                         </div>
-                        <div className="mt-1.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                           <span>{order.items.length} items</span>
                           <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
                           {order.customerName && <span className="truncate">{order.customerName}</span>}
@@ -316,31 +304,31 @@ const BillingPage = () => {
                           <p className="text-xs text-info mt-1">Cash Rs. {order.splitPayment.cash.toFixed(2)} • Online Rs. {order.splitPayment.online.toFixed(2)}</p>
                         )}
                       </div>
-                      <div className="min-w-0 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground lg:bg-transparent lg:px-0 lg:py-0">
-                        <p className="truncate font-medium text-foreground">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</p>
+                      <div className="min-w-0 rounded-lg bg-muted/45 px-3 py-2 text-xs text-muted-foreground xl:bg-transparent xl:px-0 xl:py-0">
+                        <p className="line-clamp-2 font-semibold leading-snug text-foreground">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</p>
                         <p className="mt-1">Ready for {order.status === "completed" ? "receipt" : "payment"}</p>
                       </div>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
-                        <span className="text-lg font-bold sm:mr-2 lg:min-w-28 lg:text-right">Rs. {order.total.toFixed(2)}</span>
-                        <div className="grid grid-cols-3 gap-2 sm:flex">
-                          {order.status !== "completed" && order.status !== "refunded" && (
-                            <Button className="h-10 rounded-lg px-4 text-sm font-semibold shadow-none" onClick={() => openPay(order)}>
+                      <div className="flex flex-col gap-2 xl:items-end">
+                        <span className="rounded-lg bg-primary/5 px-3 py-2 text-right text-lg font-bold text-foreground xl:min-w-32">Rs. {order.total.toFixed(2)}</span>
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:flex xl:justify-end">
+                          {!order.paymentMethod && order.status !== "cancelled" && order.status !== "refunded" && (
+                            <Button className="col-span-2 h-10 rounded-lg px-4 text-sm font-semibold shadow-none sm:col-span-1" onClick={() => openPay(order)}>
                               <Receipt className="mr-1.5 h-3.5 w-3.5 shrink-0" />Preview
                             </Button>
                           )}
                           {order.status === "completed" && (
-                            <Button variant="outline" className="h-10 rounded-lg px-3 text-destructive shadow-none hover:text-destructive" onClick={() => handleRefund(order)}>
-                              <RefreshCcw className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                              <span className="hidden sm:inline">Refund</span>
+                            <Button variant="outline" className="h-10 rounded-lg px-3 text-destructive shadow-none hover:text-destructive" onClick={() => openRefund(order)}>
+                              <RefreshCcw className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              <span>Refund</span>
                             </Button>
                           )}
                           <Button variant="outline" className="h-10 rounded-lg px-3 shadow-none" onClick={() => handlePrint(order)}>
-                            <Printer className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                            <span className="hidden sm:inline">Print</span>
+                            <Printer className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                            <span>Print</span>
                           </Button>
                           <Button variant="outline" className="h-10 rounded-lg px-3 shadow-none" onClick={() => handleDownload(order)}>
-                            <Download className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                            <span className="hidden sm:inline">PDF</span>
+                            <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                            <span>PDF</span>
                           </Button>
                         </div>
                       </div>
@@ -370,7 +358,7 @@ const BillingPage = () => {
                     <p className="text-xs text-muted-foreground">PAN/VAT: {settings.taxNumber || "Not set"}</p>
                   </div>
                   <div className="text-left sm:text-right">
-                    <p className="font-semibold">#{payOrder.id.slice(1)}</p>
+                    <p className="font-semibold">#{restaurantBillNumber(payOrder)}</p>
                     <p className="text-xs text-muted-foreground">{new Date(payOrder.createdAt).toLocaleString()}</p>
                     <Badge variant="outline" className="mt-2 capitalize">{payOrder.type}</Badge>
                   </div>
@@ -487,9 +475,135 @@ const BillingPage = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!refundOrder} onOpenChange={(open) => !open && setRefundOrder(null)}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Refund / Credit Note {refundOrder ? `#${restaurantBillNumber(refundOrder)}` : ""}</DialogTitle>
+          </DialogHeader>
+          {refundOrder && (
+            <div className="space-y-4">
+              <div className="rounded-xl border bg-muted/30 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Original Bill</p>
+                    <h3 className="mt-1 text-lg font-bold">#{restaurantBillNumber(refundOrder)}</h3>
+                    <p className="text-sm text-muted-foreground">{new Date(refundOrder.createdAt).toLocaleString()}</p>
+                    <p className="mt-1 text-sm capitalize">{refundOrder.type}{tableLabel(refundOrder, allTables) ? ` - ${tableLabel(refundOrder, allTables)}` : ""}</p>
+                  </div>
+                  <div className="rounded-lg bg-card px-4 py-3 text-right shadow-sm">
+                    <p className="text-xs text-muted-foreground">Bill Amount</p>
+                    <p className="text-xl font-bold">Rs. {refundOrder.total.toFixed(2)}</p>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {refundOrder.items.map((item, index) => (
+                    <div key={`${item.menuItemId}-${index}`} className="flex items-center justify-between rounded-lg bg-card px-3 py-2 text-sm">
+                      <span className="font-medium">{item.quantity}x {item.name}</span>
+                      <span>Rs. {(item.quantity * item.price).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Refund Amount (Rs.)</Label>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={refundForm.amount}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onChange={(e) => setRefundForm((form) => ({ ...form, amount: sanitizeMoneyInput(e.target.value) }))}
+                    onBlur={(e) => setRefundForm((form) => ({ ...form, amount: formatMoneyInput(parseMoneyInput(e.target.value)) }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Refund Method</Label>
+                  <Select value={refundForm.method} onValueChange={(value) => setRefundForm((form) => ({ ...form, method: value as typeof refundForm.method }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="mobile">Mobile / Online</SelectItem>
+                      <SelectItem value="split">Split / Mixed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Reason</Label>
+                  <Select value={refundForm.reason} onValueChange={(value) => setRefundForm((form) => ({ ...form, reason: value }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Customer returned order">Customer returned order</SelectItem>
+                      <SelectItem value="Wrong item billed">Wrong item billed</SelectItem>
+                      <SelectItem value="Over payment received">Over payment received</SelectItem>
+                      <SelectItem value="Order cancelled after payment">Order cancelled after payment</SelectItem>
+                      <SelectItem value="Manager approved goodwill refund">Manager approved goodwill refund</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Reference / Transaction No.</Label>
+                  <Input
+                    placeholder="Cash voucher, eSewa ref, card trace..."
+                    value={refundForm.referenceNo}
+                    onChange={(e) => setRefundForm((form) => ({ ...form, referenceNo: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Customer Name</Label>
+                  <Input
+                    placeholder="Walk-in customer"
+                    value={refundForm.customerName}
+                    onChange={(e) => setRefundForm((form) => ({ ...form, customerName: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Received By</Label>
+                  <Input
+                    placeholder="Cashier / staff name"
+                    value={refundForm.receivedBy}
+                    onChange={(e) => setRefundForm((form) => ({ ...form, receivedBy: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Approved By</Label>
+                  <Input
+                    placeholder="Manager / owner name"
+                    value={refundForm.approvedBy}
+                    onChange={(e) => setRefundForm((form) => ({ ...form, approvedBy: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Notes</Label>
+                  <Textarea
+                    placeholder="What happened, item condition, approval note..."
+                    value={refundForm.notes}
+                    onChange={(e) => setRefundForm((form) => ({ ...form, notes: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-destructive/15 bg-destructive/5 p-3 text-sm text-muted-foreground">
+                Refund finance entry: Sales Return / Refund debit, Cash/Bank/Customer credit. Credit note will print with original bill reference.
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button variant="outline" className="h-11 rounded-xl" onClick={() => confirmRefund(false)}>
+                  Record Only
+                </Button>
+                <Button className="h-11 rounded-xl" onClick={() => confirmRefund(true)}>
+                  <Printer className="mr-2 h-4 w-4" />Record & Print Refund Note
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!detailOrder} onOpenChange={(o) => { if (!o) { setDetailOrder(null); params.delete("invoice"); setParams(params, { replace: true }); } }}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full overflow-y-auto max-h-[85vh]">
-          <DialogHeader><DialogTitle>Invoice #{detailOrder?.id.slice(1)}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Invoice #{detailOrder ? restaurantBillNumber(detailOrder) : ""}</DialogTitle></DialogHeader>
           {detailOrder && (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(detailOrder.createdAt).toLocaleString()}</span></div>

@@ -1,4 +1,5 @@
 import type { PrintSettings } from "@/types";
+import type { BusinessProfileKey } from "@/lib/businessProfiles";
 
 // ---------------------------------------------------------------------------
 // Typed API client for the Django backend.
@@ -174,6 +175,7 @@ export interface ApiUser {
       boolean
     >>;
     defaultModule?: "restaurant" | "inventory" | "finance";
+    businessProfile?: BusinessProfileKey;
     [key: string]: unknown;
   };
 }
@@ -582,6 +584,64 @@ export const suppliers = {
 
 // ── Inventory: Products ───────────────────────────────────────────────────────
 
+export interface ApiProductCategory {
+  id: number;
+  business_type: BusinessProfileKey | "";
+  name: string;
+  parent_id?: number | null;
+  parent_name?: string | null;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export const productCategories = {
+  list: (params: { business_type?: BusinessProfileKey; active?: boolean; search?: string } = {}) => {
+    const search = new URLSearchParams();
+    if (params.business_type) search.set("business_type", params.business_type);
+    if (params.active !== undefined) search.set("active", String(params.active));
+    if (params.search) search.set("search", params.search);
+    const query = search.toString();
+    return request<ApiProductCategory[]>(`/inventory/product-categories/${query ? `?${query}` : ""}`);
+  },
+  create: (data: Omit<ApiProductCategory, "id" | "parent_name" | "created_at">) =>
+    request<ApiProductCategory>("/inventory/product-categories/", { method: "POST", body: data }),
+  update: (id: number, data: Partial<Omit<ApiProductCategory, "id" | "parent_name" | "created_at">>) =>
+    request<ApiProductCategory>(`/inventory/product-categories/${id}/`, { method: "PATCH", body: data }),
+  delete: (id: number) =>
+    request<void>(`/inventory/product-categories/${id}/`, { method: "DELETE" }),
+};
+
+export interface ApiProductUnit {
+  id: number;
+  business_type: BusinessProfileKey | "";
+  name: string;
+  symbol: string;
+  decimal_allowed: boolean;
+  is_default: boolean;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export const productUnits = {
+  list: (params: { business_type?: BusinessProfileKey; active?: boolean; search?: string } = {}) => {
+    const search = new URLSearchParams();
+    if (params.business_type) search.set("business_type", params.business_type);
+    if (params.active !== undefined) search.set("active", String(params.active));
+    if (params.search) search.set("search", params.search);
+    const query = search.toString();
+    return request<ApiProductUnit[]>(`/inventory/product-units/${query ? `?${query}` : ""}`);
+  },
+  create: (data: Omit<ApiProductUnit, "id" | "created_at">) =>
+    request<ApiProductUnit>("/inventory/product-units/", { method: "POST", body: data }),
+  update: (id: number, data: Partial<Omit<ApiProductUnit, "id" | "created_at">>) =>
+    request<ApiProductUnit>(`/inventory/product-units/${id}/`, { method: "PATCH", body: data }),
+  delete: (id: number) =>
+    request<void>(`/inventory/product-units/${id}/`, { method: "DELETE" }),
+};
+
 export interface ApiProduct {
   id: number;
   branch_id?: number | null;
@@ -642,6 +702,8 @@ export interface ApiPurchase {
   total: number;
   date: string;
   status: "pending" | "received" | "cancelled";
+  invoice_number?: string | null;
+  bill_image?: string | null;
   items: ApiPurchaseItem[];
   created_at: string;
 }
@@ -944,6 +1006,7 @@ export interface ApiChartAccount {
   name: string;
   account_type: "asset" | "liability" | "equity" | "income" | "expense";
   group: string;
+  sub_group: string;
   opening_debit: number;
   opening_credit: number;
   is_active: boolean;
@@ -1033,6 +1096,8 @@ export interface SuperAdminClient {
   address: string;
   city: string;
   country: string;
+  subdomain_slug?: string | null;
+  custom_domain?: string | null;
   plan_module: "cafe" | "inventory" | "combo" | null;
   plan_id: number | null;
   plan_name: string | null;
@@ -1059,6 +1124,8 @@ export interface SuperAdminClientCreate {
   address?: string;
   city?: string;
   country?: string;
+  subdomain_slug?: string;
+  custom_domain?: string;
   plan_id: number;
   status?: string;
   max_users?: number;
@@ -1166,6 +1233,8 @@ export interface ApiBusinessSettings {
   phone: string;
   email: string;
   pan_vat: string;
+  subdomain_slug?: string | null;
+  custom_domain?: string | null;
   tax_number?: string;
   tax_rate: number;
   currency: string;
@@ -1181,6 +1250,28 @@ export const businessSettings = {
   get: () => request<ApiBusinessSettings>("/settings/"),
   update: (data: Partial<Omit<ApiBusinessSettings, "id">>) =>
     request<ApiBusinessSettings>("/settings/", { method: "PATCH", body: data }),
+};
+
+export interface ApiTenantResolve {
+  tenant: {
+    user_id: number;
+    business_name: string;
+    business_type: string;
+    subdomain_slug: string | null;
+    custom_domain: string | null;
+    domain: string | null;
+    logo: string | null;
+    plan_module: "cafe" | "inventory" | "combo" | null;
+    status: string;
+    system_config: Record<string, unknown>;
+  };
+}
+
+export const tenant = {
+  resolve: (host?: string) => {
+    const resolvedHost = host ?? (typeof window !== "undefined" ? window.location.host : "");
+    return request<ApiTenantResolve>(`/tenant/resolve/?host=${encodeURIComponent(resolvedHost)}`);
+  },
 };
 
 export interface ApiPublicMenu {

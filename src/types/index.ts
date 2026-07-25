@@ -51,6 +51,7 @@ export interface Table {
 export interface Ingredient {
   id: string;
   name: string;
+  category?: string;
   stock: number;
   unit: string;
   minStock: number;
@@ -97,6 +98,7 @@ export interface Supplier {
 
 export interface Purchase {
   id: string;
+  poNumber?: string;
   supplierId: string;
   supplierName: string;
   items: { productId: string; productName: string; quantity: number; cost: number }[];
@@ -227,6 +229,18 @@ export interface ReportPrintSettings {
   checkedByLabel: string;
   printedByLabel: string;
   authorizedByLabel: string;
+  createdByName?: string;
+  checkedByName?: string;
+  printedByName?: string;
+  authorizedByName?: string;
+  createdBySignature?: string;
+  checkedBySignature?: string;
+  printedBySignature?: string;
+  authorizedBySignature?: string;
+  createdByNote?: string;
+  checkedByNote?: string;
+  printedByNote?: string;
+  authorizedByNote?: string;
 }
 
 export interface PrintSettings {

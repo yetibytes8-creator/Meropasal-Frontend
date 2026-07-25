@@ -4,6 +4,7 @@ import type {
 } from "@/lib/api";
 import type { Order, Table, MenuItem, Ingredient, Product, Supplier, Purchase, Sale, Expense, Customer, Alert, Staff } from "@/types";
 import { menuFoodImage } from "@/lib/menuImages";
+import { productImage } from "@/lib/productImages";
 
 export function fromApiOrder(o: ApiOrder): Order {
   return {
@@ -62,6 +63,7 @@ export function fromApiIngredient(i: ApiIngredient): Ingredient {
   return {
     id: String(i.id),
     name: i.name,
+    category: "Ingredient",
     stock: Number(i.stock),
     unit: i.unit,
     minStock: Number(i.min_stock),
@@ -94,7 +96,7 @@ export function fromApiProduct(p: ApiProduct): Product {
     stock: Number(p.stock),
     minStock: Number(p.min_stock),
     stockStatus: p.stock_status,
-    image: p.image ?? undefined,
+    image: productImage(p.name, p.category, p.image),
     supplierId: p.supplier_id ? String(p.supplier_id) : undefined,
   };
 }
@@ -113,6 +115,7 @@ export function fromApiSupplier(s: ApiSupplier): Supplier {
 export function fromApiPurchase(p: ApiPurchase): Purchase {
   return {
     id: String(p.id),
+    poNumber: p.invoice_number || undefined,
     supplierId: p.supplier_id ? String(p.supplier_id) : "",
     supplierName: p.supplier_name,
     items: p.items.map((i) => ({

@@ -91,7 +91,7 @@ export default function SuperAdminSettings() {
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
           <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-indigo-400" />Platform Information
+            <Globe className="w-4 h-4 text-green-400" />Platform Information
           </CardTitle>
           <CardDescription className="text-slate-500">Basic details shown to companies and on login</CardDescription>
         </CardHeader>
@@ -102,7 +102,7 @@ export default function SuperAdminSettings() {
               <Input
                 value={platform.name}
                 onChange={(e) => setPlatform({ ...platform, name: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500"
+                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-green-500"
               />
             </div>
             <div className="space-y-1.5">
@@ -111,7 +111,7 @@ export default function SuperAdminSettings() {
                 type="email"
                 value={platform.support_email}
                 onChange={(e) => setPlatform({ ...platform, support_email: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500"
+                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-green-500"
               />
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function SuperAdminSettings() {
               value={platform.tagline}
               onChange={(e) => setPlatform({ ...platform, tagline: e.target.value })}
               rows={2}
-              className="bg-slate-800 border-slate-700 text-white resize-none focus-visible:ring-indigo-500"
+              className="bg-slate-800 border-slate-700 text-white resize-none focus-visible:ring-green-500"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -132,7 +132,7 @@ export default function SuperAdminSettings() {
                 min={1}
                 value={platform.trial_days}
                 onChange={(e) => setPlatform({ ...platform, trial_days: Number(e.target.value) })}
-                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500"
+                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-green-500"
               />
             </div>
             <div className="space-y-1.5">
@@ -142,7 +142,7 @@ export default function SuperAdminSettings() {
                 min={1}
                 value={platform.max_trial_companies}
                 onChange={(e) => setPlatform({ ...platform, max_trial_companies: Number(e.target.value) })}
-                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500"
+                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-green-500"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function SuperAdminSettings() {
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
           <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-indigo-400" />Admin Notifications
+            <Bell className="w-4 h-4 text-green-400" />Admin Notifications
           </CardTitle>
           <CardDescription className="text-slate-500">Choose which events trigger super admin alerts</CardDescription>
         </CardHeader>
@@ -183,11 +183,11 @@ export default function SuperAdminSettings() {
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <div>
             <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-indigo-400" />Super Admin Accounts
+              <Shield className="w-4 h-4 text-green-400" />Super Admin Accounts
             </CardTitle>
             <CardDescription className="text-slate-500">Who can access this platform-level panel</CardDescription>
           </div>
-          <Button size="sm" onClick={() => setAddOpen(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white gap-1.5 shrink-0">
+          <Button size="sm" onClick={() => setAddOpen(true)} className="bg-green-600 hover:bg-green-500 text-white gap-1.5 shrink-0">
             <Plus className="w-3.5 h-3.5" /><span className="hidden sm:inline">Add Account</span>
           </Button>
         </CardHeader>
@@ -214,7 +214,7 @@ export default function SuperAdminSettings() {
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 w-full sm:w-auto">
+      <Button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-500 text-white gap-2 w-full sm:w-auto">
         <Save className="w-4 h-4" />{saving ? "Saving…" : "Save Settings"}
       </Button>
 
@@ -235,7 +235,7 @@ export default function SuperAdminSettings() {
               <Label className="text-slate-300 text-xs">Password (optional - temporary password if left blank)</Label>
               <Input type="password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} className="bg-slate-800 border-slate-700 text-white" />
             </div>
-            <Button onClick={handleAddAccount} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
+            <Button onClick={handleAddAccount} className="w-full bg-green-600 hover:bg-green-500 text-white gap-2">
               <Plus className="w-4 h-4" />Create Account
             </Button>
           </div>
@@ -246,7 +246,7 @@ export default function SuperAdminSettings() {
       <Dialog open={!!generatedPassword} onOpenChange={(o) => !o && setGeneratedPassword(null)}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md sm:w-full bg-slate-900 border-slate-700 text-white">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2"><KeyRound className="w-4 h-4 text-indigo-400" />Account Created</DialogTitle>
+            <DialogTitle className="text-white flex items-center gap-2"><KeyRound className="w-4 h-4 text-green-400" />Account Created</DialogTitle>
           </DialogHeader>
           {generatedPassword && (
             <div className="space-y-3">
@@ -255,7 +255,7 @@ export default function SuperAdminSettings() {
                 <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-slate-500" /><span className="text-slate-300">{generatedPassword.email}</span></div>
                 <div className="flex items-center gap-2"><KeyRound className="w-4 h-4 text-slate-500" /><span className="font-mono text-slate-300">{generatedPassword.password}</span></div>
               </div>
-              <Button onClick={() => setGeneratedPassword(null)} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white">Done</Button>
+              <Button onClick={() => setGeneratedPassword(null)} className="w-full bg-green-600 hover:bg-green-500 text-white">Done</Button>
             </div>
           )}
         </DialogContent>
@@ -278,3 +278,4 @@ export default function SuperAdminSettings() {
     </div>
   );
 }
+

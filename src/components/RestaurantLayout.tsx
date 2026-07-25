@@ -21,7 +21,6 @@ import { useStaffAuth } from "@/contexts/StaffAuthContext";
 import StaffProfileBadge from "@/components/StaffProfileBadge";
 import { canAccessRoute, type StaffRole } from "@/lib/rbac";
 import AppTopBar from "@/components/AppTopBar";
-import FinanceSidebarMenu from "@/components/FinanceSidebarMenu";
 
 const restaurantNav = [
   { title: "Dashboard", url: "/restaurant", icon: LayoutDashboard },
@@ -97,7 +96,7 @@ function RestaurantSidebarContent() {
   return (
     // hidden on mobile — bottom nav handles navigation there
     <Sidebar collapsible="icon" className="hidden md:flex border-r-0 print:hidden">
-      <SidebarContent className="bg-sidebar bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.24),transparent_42%),linear-gradient(180deg,hsl(var(--sidebar-background)),hsl(4_38%_11%))] border-r border-sidebar-border/70">
+      <SidebarContent className="bg-sidebar bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.28),transparent_42%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.12),transparent_38%),linear-gradient(180deg,hsl(var(--sidebar-background)),hsl(151_42%_9%))] border-r border-sidebar-border/70">
         <div className="p-4 flex items-center gap-3">
           {settings.logo
             ? <img src={settings.logo} alt={settings.businessName} className="w-8 h-8 rounded object-contain shrink-0" />
@@ -159,14 +158,6 @@ function RestaurantSidebarContent() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {!collapsed && canAccessFeature("finance") && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Finance</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <FinanceSidebarMenu base="/restaurant" />
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
     </Sidebar>
   );
@@ -185,9 +176,9 @@ export default function RestaurantLayout({ children }: { children: ReactNode }) 
   return (
     <>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full overflow-x-hidden print:block print:min-h-0">
+        <div className="h-dvh min-h-dvh flex w-full overflow-hidden print:block print:h-auto print:min-h-0 print:overflow-visible">
           <RestaurantSidebarContent />
-          <div className="flex-1 flex flex-col min-w-0 max-w-full print:block">
+          <div className="flex-1 flex min-h-0 flex-col min-w-0 max-w-full print:block">
             <AppTopBar
               module="restaurant"
               onSignOut={handleSignOut}
@@ -221,7 +212,7 @@ export default function RestaurantLayout({ children }: { children: ReactNode }) 
             </header>
             )}
             {/* pb-20 on mobile reserves space above the fixed bottom nav */}
-            <main className="print-root flex-1 min-w-0 max-w-full p-3 sm:p-4 md:p-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 overflow-auto overflow-x-hidden print:block print:overflow-visible print:p-0 print:pb-0">{children}</main>
+            <main className="app-workspace print-root flex-1 min-h-0 min-w-0 max-w-full p-3 sm:p-4 md:p-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain print:block print:overflow-visible print:p-0 print:pb-0">{children}</main>
           </div>
         </div>
       </SidebarProvider>

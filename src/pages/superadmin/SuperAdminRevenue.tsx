@@ -131,17 +131,17 @@ export default function SuperAdminRevenue() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Badge className="mb-3 border-white/10 bg-white/10 text-white hover:bg-white/10">Mero Pasal Company Finance</Badge>
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">Revenue & Dues</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <Badge className="mb-3 border-green-200 bg-green-50 text-green-700 hover:bg-green-50">Mero Pasal Company Finance</Badge>
+          <h1 className="text-2xl font-bold text-green-950 sm:text-3xl">Revenue & Dues</h1>
+          <p className="mt-1 text-sm text-slate-600">
             Subscription income, receivable follow-up, operating budget, and platform finance summary.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.print()} className="border-white/10 bg-white/5 text-white hover:bg-white/10">
+          <Button variant="outline" onClick={() => window.print()} className="border-green-200 bg-white text-green-800 hover:bg-green-50">
             <Download className="mr-2 h-4 w-4" /> Print
           </Button>
-          <Button variant="ghost" size="icon" onClick={load} className="text-slate-400 hover:bg-white/5 hover:text-white">
+          <Button variant="ghost" size="icon" onClick={load} className="text-slate-600 hover:bg-green-50 hover:text-green-800">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -149,20 +149,20 @@ export default function SuperAdminRevenue() {
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {[
-          { label: "Monthly Revenue", value: money(finance.totalMRR), icon: TrendingUp, color: "text-emerald-300" },
-          { label: "Receivable / Due", value: money(finance.due), icon: WalletCards, color: "text-amber-300" },
-          { label: "Operating Budget", value: money(finance.operatingCost), icon: TrendingDown, color: "text-sky-300" },
-          { label: "Net Position", value: money(finance.netSurplus), icon: Banknote, color: finance.netSurplus >= 0 ? "text-emerald-300" : "text-red-300" },
-          { label: "Avg Client MRR", value: money(finance.averageRevenue), icon: Building2, color: "text-violet-300" },
+          { label: "Monthly Revenue", value: money(finance.totalMRR), icon: TrendingUp, color: "text-green-700" },
+          { label: "Receivable / Due", value: money(finance.due), icon: WalletCards, color: "text-red-700" },
+          { label: "Operating Budget", value: money(finance.operatingCost), icon: TrendingDown, color: "text-red-700" },
+          { label: "Net Position", value: money(finance.netSurplus), icon: Banknote, color: finance.netSurplus >= 0 ? "text-green-700" : "text-red-700" },
+          { label: "Avg Client MRR", value: money(finance.averageRevenue), icon: Building2, color: "text-green-700" },
         ].map((item) => (
-          <Card key={item.label} className="border-white/10 bg-slate-950/80 text-white">
+          <Card key={item.label} className="border-green-100 bg-white text-slate-900 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-500">{item.label}</p>
                   <p className={`mt-2 text-xl font-bold ${item.color}`}>{item.value}</p>
                 </div>
-                <div className="rounded-xl bg-white/5 p-2">
+                <div className="rounded-xl bg-green-50 p-2">
                   <item.icon className={`h-5 w-5 ${item.color}`} />
                 </div>
               </div>
@@ -172,41 +172,41 @@ export default function SuperAdminRevenue() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.45fr_0.9fr]">
-        <Card className="border-white/10 bg-slate-950/80 text-white">
+        <Card className="border-green-100 bg-white text-slate-900 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Revenue vs Operating Budget</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickFormatter={(v) => (Number(v) >= 1000 ? `${Math.round(Number(v) / 1000)}k` : String(v))} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#475569" }} />
+                <YAxis tick={{ fontSize: 11, fill: "#475569" }} tickFormatter={(v) => (Number(v) >= 1000 ? `${Math.round(Number(v) / 1000)}k` : String(v))} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #1e293b", borderRadius: 8 }}
+                  contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #bbf7d0", borderRadius: 8 }}
                   formatter={(value: number, name: string) => [money(value), name === "cost" ? "Operating budget" : name === "net" ? "Net" : "Revenue"]}
                 />
-                <Bar dataKey="revenue" fill="#dc2626" radius={[5, 5, 0, 0]} />
-                <Bar dataKey="cost" fill="#38bdf8" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="revenue" fill="#16a34a" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="cost" fill="#dc2626" radius={[5, 5, 0, 0]} />
                 <Bar dataKey="net" fill="#22c55e" radius={[5, 5, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-950/80 text-white">
+        <Card className="border-green-100 bg-white text-slate-900 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Plan-wise Revenue</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {planRows.map((row) => (
-              <div key={row.plan} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <div key={row.plan} className="rounded-xl border border-green-100 bg-green-50/40 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold">{row.label}</p>
                     <p className="text-xs text-slate-500">{row.active} active of {row.clients} clients</p>
                   </div>
-                  <p className="font-bold text-emerald-300">{money(row.revenue)}</p>
+                  <p className="font-bold text-green-700">{money(row.revenue)}</p>
                 </div>
               </div>
             ))}
@@ -214,20 +214,20 @@ export default function SuperAdminRevenue() {
         </Card>
       </div>
 
-      <Card className="border-white/10 bg-slate-950/80 text-white">
+      <Card className="border-green-100 bg-white text-slate-900 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Active Client Subscriptions</CardTitle>
-          <Badge variant="outline" className="border-white/10 text-slate-300">{finance.active.length} active</Badge>
+          <Badge variant="outline" className="border-green-200 text-green-700">{finance.active.length} active</Badge>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-slate-400">Client</TableHead>
-                <TableHead className="text-slate-400">Plan</TableHead>
-                <TableHead className="text-right text-slate-400">Monthly Fee</TableHead>
-                <TableHead className="text-slate-400">Expiry</TableHead>
-                <TableHead className="text-slate-400">Collection Status</TableHead>
+              <TableRow className="border-green-100 hover:bg-transparent">
+                <TableHead className="text-slate-600">Client</TableHead>
+                <TableHead className="text-slate-600">Plan</TableHead>
+                <TableHead className="text-right text-slate-600">Monthly Fee</TableHead>
+                <TableHead className="text-slate-600">Expiry</TableHead>
+                <TableHead className="text-slate-600">Collection Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -239,21 +239,21 @@ export default function SuperAdminRevenue() {
                 finance.active.map((client) => {
                   const days = daysUntil(client.expires_at);
                   return (
-                    <TableRow key={client.id} className="border-white/10 hover:bg-white/[0.03]">
+                    <TableRow key={client.id} className="border-green-100 hover:bg-green-50/50">
                       <TableCell>
-                        <div className="font-medium text-white">{client.business_name}</div>
+                        <div className="font-medium text-slate-900">{client.business_name}</div>
                         <div className="text-xs text-slate-500">{client.email}</div>
                       </TableCell>
                       <TableCell className="capitalize text-sm text-slate-300">{client.plan_name ?? client.plan_module}</TableCell>
                       <TableCell className="text-right font-semibold text-emerald-300">{money(client.monthly_revenue ?? 0)}</TableCell>
-                      <TableCell className="text-sm text-slate-400">{client.expires_at?.split("T")[0] ?? "-"}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{client.expires_at?.split("T")[0] ?? "-"}</TableCell>
                       <TableCell>
                         {days <= 30 ? (
-                          <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-300">
+                          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
                             <CalendarClock className="mr-1 h-3 w-3" /> Follow up
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+                          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
                             Paid / Active
                           </Badge>
                         )}
@@ -268,39 +268,39 @@ export default function SuperAdminRevenue() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-amber-500/20 bg-amber-500/5 text-white">
+        <Card className="border-red-100 bg-red-50/40 text-slate-900">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base text-amber-300">
+            <CardTitle className="flex items-center gap-2 text-base text-red-700">
               <AlertTriangle className="h-4 w-4" /> Renewal Follow-up
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {finance.expiringIn30.length === 0 ? (
-              <p className="text-sm text-slate-400">No renewals are due in the next 30 days.</p>
+              <p className="text-sm text-slate-600">No renewals are due in the next 30 days.</p>
             ) : (
               finance.expiringIn30.map((client) => (
-                <div key={client.id} className="flex items-center justify-between rounded-lg bg-slate-950/70 p-3">
+                <div key={client.id} className="flex items-center justify-between rounded-lg border border-red-100 bg-white p-3">
                   <div>
-                    <p className="text-sm font-medium text-white">{client.business_name}</p>
+                    <p className="text-sm font-medium text-slate-900">{client.business_name}</p>
                     <p className="text-xs text-slate-500">{client.phone || client.email}</p>
                   </div>
-                  <p className="text-sm font-bold text-amber-300">{daysUntil(client.expires_at)} days</p>
+                  <p className="text-sm font-bold text-red-700">{daysUntil(client.expires_at)} days</p>
                 </div>
               ))
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-950/80 text-white">
+        <Card className="border-green-100 bg-white text-slate-900 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4 text-sky-300" /> Finance Notes
+              <FileText className="h-4 w-4 text-green-700" /> Finance Notes
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-400">
+          <CardContent className="space-y-3 text-sm text-slate-600">
             <p>Use this page for platform owner finance: subscription income, renewals, dues, and operating cost view.</p>
             <p>For production accounting, connect a dedicated platform ledger for salary, hosting, tax, office cost, partner payment, and bank reconciliation.</p>
-            <p className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-slate-300">
+            <p className="rounded-lg border border-green-100 bg-green-50/50 p-3 text-slate-700">
               Current values are calculated from client subscriptions. Expense ledger can be added as the next backend module.
             </p>
           </CardContent>
@@ -309,3 +309,4 @@ export default function SuperAdminRevenue() {
     </div>
   );
 }
+

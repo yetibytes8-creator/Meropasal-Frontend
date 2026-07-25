@@ -60,10 +60,10 @@ const planLabel: Record<string, string> = {
 };
 
 const statusStyle: Record<string, string> = {
-  active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-  trial: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-  suspended: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  cancelled: "border-slate-600/40 bg-slate-600/20 text-slate-300",
+  active: "border-green-200 bg-green-50 text-green-700",
+  trial: "border-green-200 bg-green-50 text-green-700",
+  suspended: "border-red-200 bg-red-50 text-red-700",
+  cancelled: "border-slate-200 bg-slate-100 text-slate-600",
 };
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
@@ -242,43 +242,43 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-xl shadow-black/20">
+      <section className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm">
         <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.34),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] p-5 sm:p-6">
+          <div className="bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.16),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(22,163,74,0.12),transparent_34%),linear-gradient(135deg,#fff1f2,#ffffff_55%,#f0fdf4)] p-5 sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className="border-white/10 bg-white/10 text-white hover:bg-white/10">Platform Owner</Badge>
-              <Badge variant="outline" className={apiAvailable ? "border-emerald-500/30 text-emerald-300" : "border-amber-500/30 text-amber-300"}>
+              <Badge className="border-green-200 bg-green-600 text-white hover:bg-green-600">Platform Owner</Badge>
+              <Badge variant="outline" className={apiAvailable ? "border-green-200 bg-white text-green-700" : "border-red-200 bg-white text-red-700"}>
                 {apiAvailable ? "Backend connected" : "Backend unavailable"}
               </Badge>
             </div>
-            <h1 className="mt-4 max-w-2xl text-2xl font-bold tracking-tight text-white sm:text-4xl">
+            <h1 className="mt-4 max-w-2xl font-display text-2xl font-extrabold tracking-tight text-green-950 sm:text-4xl">
               Super Admin Command Center
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
               Manage client companies, subscription revenue, access permissions, renewals, and your own software-company finance from one place.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button onClick={() => navigate("/super-admin/companies")} className="bg-red-600 text-white hover:bg-red-500">
+              <Button onClick={() => navigate("/super-admin/companies")} className="bg-green-600 text-white hover:bg-green-700">
                 <Building2 className="mr-2 h-4 w-4" /> Add / Manage Company
               </Button>
-              <Button variant="outline" onClick={() => navigate("/super-admin/revenue")} className="border-white/15 bg-white/10 text-white hover:bg-white/15">
+              <Button variant="outline" onClick={() => navigate("/super-admin/revenue")} className="border-green-200 bg-white text-green-700 hover:bg-green-50">
                 <Banknote className="mr-2 h-4 w-4" /> View Platform Finance
               </Button>
-              <Button variant="ghost" onClick={load} className="text-slate-200 hover:bg-white/10 hover:text-white">
+              <Button variant="ghost" onClick={load} className="text-slate-700 hover:bg-green-50 hover:text-green-700">
                 <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} /> Refresh
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-px bg-white/10">
+          <div className="grid grid-cols-2 gap-px bg-green-100">
             {[
               { label: "MRR", value: money(finance.activeRevenue), hint: "Active subscription" },
               { label: "Receivable", value: money(finance.receivable), hint: "Due / renewal queue" },
               { label: "Net Position", value: money(finance.netPosition), hint: "Revenue less budget" },
               { label: "ARR", value: money(finance.annualRunRate), hint: "Run rate" },
             ].map((item) => (
-              <div key={item.label} className="bg-slate-950/95 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{item.label}</p>
-                <p className="mt-2 text-xl font-bold text-white">{item.value}</p>
+              <div key={item.label} className="bg-white p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{item.label}</p>
+                <p className="mt-2 text-xl font-extrabold text-green-950">{item.value}</p>
                 <p className="mt-1 text-xs text-slate-500">{item.hint}</p>
               </div>
             ))}
@@ -287,7 +287,7 @@ export default function SuperAdminDashboard() {
       </section>
 
       {loading && !stats ? (
-        <div className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-slate-950/80 py-16 text-slate-300">
+        <div className="flex items-center justify-center gap-3 rounded-xl border border-green-100 bg-white py-16 text-slate-600 shadow-sm">
           <Loader2 className="h-5 w-5 animate-spin" />
           Loading dashboard...
         </div>
@@ -295,20 +295,20 @@ export default function SuperAdminDashboard() {
         <>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: "Total Clients", value: snapshot.total.toLocaleString(), detail: `${snapshot.active} active, ${snapshot.trial} trial`, icon: Building2, color: "text-sky-300" },
-              { label: "Platform Users", value: snapshot.totalUsers.toLocaleString(), detail: "Owners and staff accounts", icon: Users, color: "text-violet-300" },
-              { label: "Trial Pipeline", value: money(finance.trialPipeline), detail: "Possible monthly conversion", icon: TrendingUp, color: "text-emerald-300" },
-              { label: "Expiring Soon", value: snapshot.expiringSoon.toLocaleString(), detail: "Renewals within 30 days", icon: Clock, color: "text-amber-300" },
+              { label: "Total Clients", value: snapshot.total.toLocaleString(), detail: `${snapshot.active} active, ${snapshot.trial} trial`, icon: Building2, color: "text-green-700", bg: "bg-green-50" },
+              { label: "Platform Users", value: snapshot.totalUsers.toLocaleString(), detail: "Owners and staff accounts", icon: Users, color: "text-green-700", bg: "bg-green-50" },
+              { label: "Trial Pipeline", value: money(finance.trialPipeline), detail: "Possible monthly conversion", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
+              { label: "Expiring Soon", value: snapshot.expiringSoon.toLocaleString(), detail: "Renewals within 30 days", icon: Clock, color: "text-red-600", bg: "bg-red-50" },
             ].map((item) => (
-              <Card key={item.label} className="border-white/10 bg-slate-950/80 text-white shadow-sm">
+              <Card key={item.label} className="border-green-100 bg-white text-slate-900 shadow-sm">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{item.label}</p>
-                      <p className="mt-2 text-2xl font-bold">{item.value}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{item.label}</p>
+                      <p className="mt-2 text-2xl font-extrabold text-green-950">{item.value}</p>
                       <p className="mt-1 text-xs text-slate-500">{item.detail}</p>
                     </div>
-                    <div className="rounded-xl bg-white/5 p-3">
+                    <div className={cn("rounded-xl p-3", item.bg)}>
                       <item.icon className={cn("h-5 w-5", item.color)} />
                     </div>
                   </div>
@@ -318,32 +318,32 @@ export default function SuperAdminDashboard() {
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[1.5fr_0.9fr]">
-            <Card className="border-white/10 bg-slate-950/80 text-white">
+            <Card className="border-green-100 bg-white text-slate-900 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base">Software Company Finance</CardTitle>
-                <Badge variant="outline" className="border-white/10 text-slate-300">Monthly view</Badge>
+                <CardTitle className="text-base text-green-950">Software Company Finance</CardTitle>
+                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">Monthly view</Badge>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={revenueTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#94a3b8" }} />
-                    <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#fee2e2" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#64748b" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#64748b" }} tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} />
                     <Tooltip
-                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: 10 }}
+                      cursor={{ fill: "rgba(220,38,38,0.06)" }}
+                      contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #fecaca", borderRadius: 10, color: "#0f172a" }}
                       formatter={(value: number, name: string) => [money(value), name === "revenue" ? "Revenue" : "Operating budget"]}
                     />
                     <Bar dataKey="revenue" fill="#dc2626" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="expense" fill="#38bdf8" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="expense" fill="#16a34a" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            <Card className="border-white/10 bg-slate-950/80 text-white">
+            <Card className="border-emerald-100 bg-white text-slate-900 shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Module Sales Mix</CardTitle>
+                <CardTitle className="text-base text-emerald-950">Module Sales Mix</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={155}>
@@ -353,13 +353,13 @@ export default function SuperAdminDashboard() {
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: 10 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #d1fae5", borderRadius: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="space-y-2">
                   {moduleMix.map((item) => (
-                    <div key={item.name} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
-                      <span className="flex items-center gap-2 text-slate-300">
+                    <div key={item.name} className="flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50/40 px-3 py-2 text-sm">
+                      <span className="flex items-center gap-2 text-slate-700">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                         {item.name}
                       </span>
@@ -372,20 +372,20 @@ export default function SuperAdminDashboard() {
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[1fr_1.35fr]">
-            <Card className="border-white/10 bg-slate-950/80 text-white">
+            <Card className="border-emerald-100 bg-white text-slate-900 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base">Collection Follow-up</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-amber-300" />
+                <CardTitle className="text-base text-emerald-950">Collection Follow-up</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-amber-100">Due and renewal amount</span>
-                    <span className="font-bold text-amber-100">{money(finance.receivable)}</span>
+                    <span className="text-sm text-red-800">Due and renewal amount</span>
+                    <span className="font-bold text-red-900">{money(finance.receivable)}</span>
                   </div>
                 </div>
                 {expiringClients.length === 0 ? (
-                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                     <CheckCircle2 className="mb-2 h-5 w-5" />
                     No urgent renewals right now.
                   </div>
@@ -396,14 +396,14 @@ export default function SuperAdminDashboard() {
                       <button
                         key={client.id}
                         onClick={() => navigate("/super-admin/companies")}
-                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:bg-white/[0.06]"
+                        className="w-full rounded-xl border border-emerald-100 bg-white p-3 text-left transition hover:bg-emerald-50"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold">{client.name}</p>
                             <p className="truncate text-xs text-slate-500">{client.email}</p>
                           </div>
-                          <Badge variant="outline" className={days <= 7 ? "border-red-500/30 text-red-300" : "border-amber-500/30 text-amber-300"}>
+                          <Badge variant="outline" className={days <= 7 ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}>
                             {days === 0 ? "Today" : `${days}d`}
                           </Badge>
                         </div>
@@ -414,32 +414,32 @@ export default function SuperAdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-white/10 bg-slate-950/80 text-white">
+            <Card className="border-emerald-100 bg-white text-slate-900 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base">Client Finance Summary</CardTitle>
-                <Button variant="ghost" size="sm" className="text-slate-300 hover:bg-white/5 hover:text-white" onClick={() => navigate("/super-admin/companies")}>
+                <CardTitle className="text-base text-emerald-950">Client Finance Summary</CardTitle>
+                <Button variant="ghost" size="sm" className="text-slate-600 hover:bg-emerald-50 hover:text-emerald-800" onClick={() => navigate("/super-admin/companies")}>
                   View all <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardHeader>
               <CardContent className="overflow-x-auto p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-slate-400">Company</TableHead>
-                      <TableHead className="text-slate-400">Module</TableHead>
-                      <TableHead className="text-right text-slate-400">MRR</TableHead>
-                      <TableHead className="text-slate-400">Status</TableHead>
+                    <TableRow className="border-emerald-100 hover:bg-transparent">
+                      <TableHead className="text-slate-500">Company</TableHead>
+                      <TableHead className="text-slate-500">Module</TableHead>
+                      <TableHead className="text-right text-slate-500">MRR</TableHead>
+                      <TableHead className="text-slate-500">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {clientRows.map((client) => (
-                      <TableRow key={client.id} className="border-white/10 hover:bg-white/[0.03]">
+                      <TableRow key={client.id} className="border-emerald-100 hover:bg-emerald-50/50">
                         <TableCell>
                           <div className="font-medium">{client.name}</div>
                           <div className="text-xs text-slate-500">{client.city || "Nepal"}</div>
                         </TableCell>
-                        <TableCell className="text-sm text-slate-300">{planLabel[client.plan]}</TableCell>
-                        <TableCell className="text-right font-semibold text-emerald-300">{money(client.monthlyRevenue)}</TableCell>
+                        <TableCell className="text-sm text-slate-600">{planLabel[client.plan]}</TableCell>
+                        <TableCell className="text-right font-semibold text-emerald-700">{money(client.monthlyRevenue)}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={cn("border text-xs capitalize", statusStyle[client.status])}>
                             {client.status}
@@ -465,11 +465,11 @@ export default function SuperAdminDashboard() {
               <button
                 key={item.title}
                 onClick={() => navigate(item.to)}
-                className="rounded-xl border border-white/10 bg-slate-950/80 p-4 text-left text-white transition hover:border-white/20 hover:bg-slate-900"
+                className="rounded-xl border border-emerald-100 bg-white p-4 text-left text-slate-900 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/50"
               >
                 <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-white/5 p-2">
-                    <item.icon className="h-5 w-5 text-red-300" />
+                  <div className="rounded-xl bg-green-50 p-2">
+                    <item.icon className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
                     <p className="font-semibold">{item.title}</p>
@@ -480,18 +480,18 @@ export default function SuperAdminDashboard() {
             ))}
           </div>
 
-          <Card className="border-white/10 bg-slate-950/80 text-white">
+          <Card className="border-emerald-100 bg-white text-slate-900 shadow-sm">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-emerald-500/10 p-2">
-                  <ShieldCheck className="h-5 w-5 text-emerald-300" />
+                <div className="rounded-xl bg-emerald-50 p-2">
+                  <ShieldCheck className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Owner panel now covers clients, access control, and platform finance.</p>
+                  <p className="text-sm font-semibold text-emerald-950">Owner panel now covers clients, access control, and platform finance.</p>
                   <p className="text-xs text-slate-500">Next backend scale step: dedicated platform expense and invoice ledger.</p>
                 </div>
               </div>
-              <Button variant="outline" className="border-white/10 bg-white/5 text-white hover:bg-white/10" onClick={() => navigate("/super-admin/revenue")}>
+              <Button variant="outline" className="border-emerald-200 bg-white text-emerald-800 hover:bg-emerald-50" onClick={() => navigate("/super-admin/revenue")}>
                 <FileText className="mr-2 h-4 w-4" /> Finance Detail
               </Button>
             </CardContent>
@@ -501,3 +501,5 @@ export default function SuperAdminDashboard() {
     </div>
   );
 }
+
+

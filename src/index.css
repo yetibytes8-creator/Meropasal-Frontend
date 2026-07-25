@@ -15,11 +15,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 4 82% 46%;
+    --primary: 151 75% 31%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 142 20% 92%;
-    --secondary-foreground: 142 40% 22%;
+    --secondary: 4 82% 95%;
+    --secondary-foreground: 4 75% 32%;
 
     --muted: 0 0% 94%;
     --muted-foreground: 0 0% 44%;
@@ -41,27 +41,27 @@
 
     --border: 0 0% 88%;
     --input: 0 0% 88%;
-    --ring: 4 82% 46%;
+    --ring: 151 75% 31%;
 
     --radius: 0.625rem;
 
-    --sidebar-background: 4 36% 14%;
+    --sidebar-background: 151 34% 13%;
     --sidebar-foreground: 18 38% 91%;
-    --sidebar-primary: 4 82% 55%;
+    --sidebar-primary: 151 75% 36%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 4 54% 24%;
+    --sidebar-accent: 151 40% 22%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 8 28% 24%;
-    --sidebar-ring: 4 82% 55%;
+    --sidebar-border: 151 28% 22%;
+    --sidebar-ring: 151 75% 36%;
 
-    --restaurant: 4 82% 46%;
+    --restaurant: 151 75% 31%;
     --restaurant-foreground: 0 0% 100%;
-    --inventory: 142 52% 36%;
+    --inventory: 151 75% 31%;
     --inventory-foreground: 0 0% 100%;
-    --finance: 245 58% 51%;
+    --finance: 151 75% 31%;
     --finance-foreground: 0 0% 100%;
 
-    --cafe-warm: 4 82% 46%;
+    --cafe-warm: 151 75% 31%;
     --cafe-cream: 0 0% 94%;
     --cafe-espresso: 0 0% 12%;
     --cafe-latte: 0 0% 78%;
@@ -82,11 +82,11 @@
     --popover: 0 0% 14%;
     --popover-foreground: 0 0% 92%;
 
-    --primary: 4 82% 56%;
+    --primary: 151 65% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 18%;
-    --secondary-foreground: 0 0% 82%;
+    --secondary: 4 30% 20%;
+    --secondary-foreground: 4 82% 72%;
 
     --muted: 0 0% 16%;
     --muted-foreground: 0 0% 55%;
@@ -108,25 +108,25 @@
 
     --border: 0 0% 22%;
     --input: 0 0% 22%;
-    --ring: 4 82% 56%;
+    --ring: 151 65% 42%;
 
-    --sidebar-background: 4 36% 12%;
+    --sidebar-background: 151 35% 11%;
     --sidebar-foreground: 18 34% 84%;
-    --sidebar-primary: 4 82% 56%;
+    --sidebar-primary: 151 65% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 4 54% 22%;
+    --sidebar-accent: 151 42% 18%;
     --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 8 26% 21%;
-    --sidebar-ring: 4 82% 56%;
+    --sidebar-border: 151 30% 20%;
+    --sidebar-ring: 151 65% 42%;
 
-    --restaurant: 4 82% 56%;
+    --restaurant: 151 65% 42%;
     --restaurant-foreground: 0 0% 100%;
-    --inventory: 142 52% 44%;
+    --inventory: 151 65% 42%;
     --inventory-foreground: 0 0% 100%;
-    --finance: 245 65% 62%;
+    --finance: 151 65% 42%;
     --finance-foreground: 0 0% 100%;
 
-    --cafe-warm: 4 82% 56%;
+    --cafe-warm: 151 65% 42%;
     --cafe-cream: 0 0% 20%;
     --cafe-espresso: 0 0% 10%;
     --cafe-latte: 0 0% 35%;
@@ -177,6 +177,61 @@
 }
 
 @layer utilities {
+  @keyframes qr-menu-enter {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes qr-menu-sweep {
+    from {
+      transform: translateX(-20%);
+    }
+    to {
+      transform: translateX(260%);
+    }
+  }
+
+  .qr-menu-enter {
+    animation: qr-menu-enter 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .qr-menu-sweep {
+    animation: qr-menu-sweep 7s ease-in-out infinite;
+  }
+
+  .qr-category-tile,
+  .qr-item-card {
+    will-change: transform;
+  }
+
+  .qr-item-card {
+    animation: qr-menu-enter 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .qr-menu-page img {
+    -webkit-user-drag: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qr-menu-enter,
+    .qr-item-card,
+    .qr-menu-sweep {
+      animation: none !important;
+    }
+
+    .qr-category-tile,
+    .qr-item-card,
+    .qr-menu-page img {
+      transition: none !important;
+    }
+  }
+
   .glass {
     @apply bg-card/80 backdrop-blur-sm border border-border/50;
   }
@@ -201,6 +256,44 @@
   .toolbar-surface {
     @apply rounded-lg border border-border/70 bg-card/80 p-3 shadow-sm;
   }
+  .app-workspace {
+    background-image:
+      radial-gradient(circle at 12% 0%, hsl(var(--primary) / 0.055), transparent 25rem),
+      radial-gradient(circle at 92% 6%, hsl(var(--destructive) / 0.035), transparent 22rem);
+  }
+  .app-workspace > * {
+    @apply animate-fade-in;
+  }
+  .app-workspace h1 {
+    @apply text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl;
+  }
+  .app-workspace h2 {
+    @apply text-xl font-extrabold tracking-tight text-foreground sm:text-2xl;
+  }
+  .app-workspace h3 {
+    @apply text-base font-extrabold tracking-tight text-foreground sm:text-lg;
+  }
+  .app-workspace p {
+    @apply leading-6;
+  }
+  .app-workspace [class*="rounded-xl"][class*="border"],
+  .app-workspace [class*="rounded-2xl"][class*="border"] {
+    @apply border-border/70;
+  }
+  .app-workspace input,
+  .app-workspace textarea,
+  .app-workspace [role="combobox"] {
+    @apply min-w-0;
+  }
+  .app-workspace img {
+    @apply max-w-full;
+  }
+  .app-workspace .page-header {
+    @apply text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl;
+  }
+  .app-workspace .page-description {
+    @apply mt-1 text-sm leading-6 text-muted-foreground;
+  }
   .responsive-table-wrap {
     @apply w-full max-w-full overflow-x-auto;
   }
@@ -212,6 +305,178 @@
   }
   .font-display {
     font-family: var(--font-display);
+  }
+  .super-admin-shell {
+    color: rgb(15 23 42);
+  }
+  .super-admin-shell .bg-slate-950,
+  .super-admin-shell .bg-slate-900,
+  .super-admin-shell .bg-slate-800 {
+    background-color: rgb(255 255 255);
+  }
+  .super-admin-shell .bg-slate-700,
+  .super-admin-shell .bg-slate-700\/50,
+  .super-admin-shell .bg-slate-600\/30,
+  .super-admin-shell .bg-slate-500\/10 {
+    background-color: rgb(236 253 245);
+  }
+  .super-admin-shell .border-slate-900,
+  .super-admin-shell .border-slate-800,
+  .super-admin-shell .border-slate-700,
+  .super-admin-shell .border-slate-600,
+  .super-admin-shell .border-slate-600\/40 {
+    border-color: rgb(209 250 229);
+  }
+  .super-admin-shell .text-white,
+  .super-admin-shell .text-slate-100,
+  .super-admin-shell .text-slate-200,
+  .super-admin-shell .text-slate-300 {
+    color: rgb(15 23 42);
+  }
+  .super-admin-shell .text-slate-400,
+  .super-admin-shell .text-slate-500,
+  .super-admin-shell .text-slate-600 {
+    color: rgb(71 85 105);
+  }
+  .super-admin-shell .placeholder\:text-slate-500::placeholder {
+    color: rgb(100 116 139);
+  }
+  .super-admin-shell .focus-visible\:ring-indigo-500:focus-visible,
+  .super-admin-shell .focus-visible\:ring-blue-500:focus-visible,
+  .super-admin-shell .focus-visible\:ring-sky-500:focus-visible,
+  .super-admin-shell .focus-visible\:ring-purple-500:focus-visible {
+    --tw-ring-color: rgb(22 163 74);
+  }
+  .super-admin-shell .bg-indigo-600,
+  .super-admin-shell .bg-blue-600,
+  .super-admin-shell .bg-sky-600,
+  .super-admin-shell .bg-purple-600,
+  .super-admin-shell .hover\:bg-indigo-500:hover,
+  .super-admin-shell .hover\:bg-blue-500:hover,
+  .super-admin-shell .hover\:bg-sky-500:hover,
+  .super-admin-shell .hover\:bg-purple-500:hover {
+    background-color: rgb(22 163 74);
+    color: white;
+  }
+  .super-admin-shell .hover\:bg-slate-800:hover,
+  .super-admin-shell .hover\:bg-slate-700:hover,
+  .super-admin-shell .hover\:bg-slate-800\/40:hover {
+    background-color: rgb(236 253 245);
+  }
+  .super-admin-shell .hover\:text-white:hover {
+    color: rgb(6 78 59);
+  }
+  .super-admin-shell input,
+  .super-admin-shell textarea,
+  .super-admin-shell [role="combobox"] {
+    color: rgb(15 23 42);
+  }
+  .super-admin-shell [data-radix-popper-content-wrapper] [role="option"],
+  .super-admin-shell [data-radix-select-content],
+  .super-admin-shell [cmdk-list] {
+    color: rgb(15 23 42);
+  }
+  /* Super admin brand system: green is the primary control color, red is the secondary/accent color. */
+  .super-admin-shell .bg-emerald-700,
+  .super-admin-shell .bg-emerald-600,
+  .super-admin-shell .bg-emerald-500,
+  .super-admin-shell .data-\[state\=active\]\:bg-emerald-700[data-state="active"] {
+    background-color: rgb(22 163 74);
+    color: rgb(255 255 255);
+  }
+  .super-admin-shell .hover\:bg-emerald-800:hover,
+  .super-admin-shell .hover\:bg-emerald-700:hover,
+  .super-admin-shell .hover\:bg-emerald-600:hover,
+  .super-admin-shell .hover\:bg-emerald-500:hover {
+    background-color: rgb(21 128 61);
+    color: rgb(255 255 255);
+  }
+  .super-admin-shell .text-emerald-950,
+  .super-admin-shell .text-emerald-900,
+  .super-admin-shell .text-emerald-800,
+  .super-admin-shell .text-emerald-700 {
+    color: rgb(20 83 45);
+  }
+  .super-admin-shell .border-emerald-200,
+  .super-admin-shell .border-emerald-100,
+  .super-admin-shell .border-emerald-900\/10 {
+    border-color: rgb(187 247 208);
+  }
+  .super-admin-shell .bg-emerald-100,
+  .super-admin-shell .bg-emerald-50,
+  .super-admin-shell .bg-emerald-50\/40,
+  .super-admin-shell .bg-emerald-50\/50,
+  .super-admin-shell .bg-emerald-50\/60,
+  .super-admin-shell .hover\:bg-emerald-50:hover {
+    background-color: rgb(240 253 244);
+  }
+  .super-admin-shell .text-indigo-400,
+  .super-admin-shell .text-blue-400,
+  .super-admin-shell .text-blue-500,
+  .super-admin-shell .text-blue-600,
+  .super-admin-shell .text-blue-700,
+  .super-admin-shell .text-sky-300,
+  .super-admin-shell .text-sky-400,
+  .super-admin-shell .text-sky-600,
+  .super-admin-shell .text-sky-700,
+  .super-admin-shell .text-violet-300,
+  .super-admin-shell .text-violet-400,
+  .super-admin-shell .text-purple-400 {
+    color: rgb(21 128 61);
+  }
+  .super-admin-shell .bg-indigo-500\/10,
+  .super-admin-shell .bg-indigo-600\/20,
+  .super-admin-shell .bg-blue-50,
+  .super-admin-shell .bg-blue-500\/10,
+  .super-admin-shell .bg-blue-500\/15,
+  .super-admin-shell .bg-sky-50,
+  .super-admin-shell .bg-violet-50,
+  .super-admin-shell .bg-purple-50 {
+    background-color: rgb(240 253 244);
+  }
+  .super-admin-shell .border-indigo-500\/20,
+  .super-admin-shell .border-blue-200,
+  .super-admin-shell .border-blue-500\/30,
+  .super-admin-shell .border-sky-100,
+  .super-admin-shell .border-sky-200,
+  .super-admin-shell .border-violet-200,
+  .super-admin-shell .border-purple-200 {
+    border-color: rgb(187 247 208);
+  }
+  .super-admin-shell .text-amber-200,
+  .super-admin-shell .text-amber-300,
+  .super-admin-shell .text-amber-400,
+  .super-admin-shell .text-amber-600,
+  .super-admin-shell .text-amber-700,
+  .super-admin-shell .text-amber-800,
+  .super-admin-shell .text-amber-900 {
+    color: rgb(185 28 28);
+  }
+  .super-admin-shell .bg-amber-50,
+  .super-admin-shell .bg-amber-500\/5,
+  .super-admin-shell .bg-amber-500\/10,
+  .super-admin-shell .bg-amber-500\/15,
+  .super-admin-shell .hover\:bg-amber-50:hover,
+  .super-admin-shell .hover\:bg-amber-500\/10:hover,
+  .super-admin-shell .hover\:bg-amber-500\/20:hover {
+    background-color: rgb(254 242 242);
+  }
+  .super-admin-shell .border-amber-200,
+  .super-admin-shell .border-amber-500\/20,
+  .super-admin-shell .border-amber-500\/30,
+  .super-admin-shell .border-amber-800\/50 {
+    border-color: rgb(254 202 202);
+  }
+  .super-admin-shell .text-green-600,
+  .super-admin-shell .text-green-700,
+  .super-admin-shell .text-green-800 {
+    color: rgb(21 128 61);
+  }
+  .super-admin-shell .bg-green-50 {
+    background-color: rgb(240 253 244);
+  }
+  .super-admin-shell .border-green-200 {
+    border-color: rgb(187 247 208);
   }
   .cafe-gradient {
     background: linear-gradient(135deg, hsl(var(--cafe-espresso)), hsl(var(--cafe-warm)), hsl(var(--cafe-mocha)));
@@ -716,6 +981,80 @@
   .print-root .finance-accounting-register-table [data-column-key="status"],
   .print-root .finance-accounting-register-table [data-column-key="type"] {
     width: 10% !important;
+  }
+
+  .print-root .coa-print-report {
+    display: block !important;
+    margin-top: 6px !important;
+  }
+
+  .print-root .coa-print-section-title {
+    margin: 8px 0 4px !important;
+    color: #111827 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+  }
+
+  .print-root .coa-print-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    margin-bottom: 6px !important;
+  }
+
+  .print-root .coa-print-table th,
+  .print-root .coa-print-table td {
+    border: 1px solid #111827 !important;
+    padding: 3px 5px !important;
+    font-size: 8.3px !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .print-root .coa-print-table th {
+    background: #e5e7eb !important;
+    color: #111827 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+  }
+
+  .print-root .coa-print-table th:first-child,
+  .print-root .coa-print-table td:first-child {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    text-align: left !important;
+  }
+
+  .print-root .coa-group-table th:nth-child(1),
+  .print-root .coa-group-table td:nth-child(1) { width: 13% !important; }
+  .print-root .coa-group-table th:nth-child(2),
+  .print-root .coa-group-table td:nth-child(2) { width: 22% !important; }
+  .print-root .coa-group-table th:nth-child(3),
+  .print-root .coa-group-table td:nth-child(3) { width: 65% !important; }
+
+  .print-root .coa-ledger-table th:nth-child(1),
+  .print-root .coa-ledger-table td:nth-child(1) { width: 9% !important; }
+  .print-root .coa-ledger-table th:nth-child(2),
+  .print-root .coa-ledger-table td:nth-child(2) { width: 22% !important; }
+  .print-root .coa-ledger-table th:nth-child(3),
+  .print-root .coa-ledger-table td:nth-child(3) { width: 11% !important; }
+  .print-root .coa-ledger-table th:nth-child(4),
+  .print-root .coa-ledger-table td:nth-child(4),
+  .print-root .coa-ledger-table th:nth-child(5),
+  .print-root .coa-ledger-table td:nth-child(5) { width: 15% !important; }
+  .print-root .coa-ledger-table th:nth-child(6),
+  .print-root .coa-ledger-table td:nth-child(6) { width: 8% !important; }
+  .print-root .coa-ledger-table th:nth-child(7),
+  .print-root .coa-ledger-table td:nth-child(7),
+  .print-root .coa-ledger-table th:nth-child(8),
+  .print-root .coa-ledger-table td:nth-child(8) {
+    width: 10% !important;
+    text-align: right !important;
+    white-space: nowrap !important;
   }
 
   .print-root .daybook-ledger-card {

@@ -8,7 +8,17 @@ import StatCard from "@/components/StatCard";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { TrendingUp, ReceiptText, ShoppingCart, Users } from "lucide-react";
 
-const COLORS = ["hsl(217, 91%, 50%)", "hsl(160, 70%, 42%)", "hsl(15, 85%, 55%)", "hsl(38, 92%, 50%)", "hsl(199, 89%, 48%)"];
+const COLORS = [
+  "hsl(160, 70%, 42%)",
+  "hsl(217, 91%, 50%)",
+  "hsl(38, 92%, 50%)",
+  "hsl(15, 85%, 55%)",
+  "hsl(199, 89%, 48%)",
+  "hsl(262, 83%, 58%)",
+  "hsl(330, 81%, 60%)",
+  "hsl(45, 93%, 47%)",
+  "hsl(188, 86%, 43%)",
+];
 const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -98,6 +108,17 @@ function filterByPeriod<T extends { date: string }>(items: T[], period: string):
   return items.filter(i => new Date(i.date) >= cutoff);
 }
 
+function formatMoney(value: number) {
+  return `Rs. ${Math.round(value).toLocaleString()}`;
+}
+
+function compactPieData(data: Array<{ name: string; value: number }>, limit = 8) {
+  const sorted = data.filter((item) => item.value > 0).sort((a, b) => b.value - a.value);
+  const visible = sorted.slice(0, limit);
+  const rest = sorted.slice(limit).reduce((sum, item) => sum + item.value, 0);
+  return rest > 0 ? [...visible, { name: "Others", value: rest }] : visible;
+}
+
 const ReportsPage = () => {
   const [period, setPeriod] = useState("month");
   const [products, setProducts] = useState<Product[]>([]);
@@ -130,7 +151,7 @@ const ReportsPage = () => {
     acc[p.category] = (acc[p.category] || 0) + p.stock * p.price;
     return acc;
   }, {});
-  const categoryChartData = Object.entries(categoryData).map(([name, value]) => ({ name, value: Math.round(value) }));
+  const categoryChartData = compactPieData(Object.entries(categoryData).map(([name, value]) => ({ name, value: Math.round(value) })));
 
   // Stock levels
   const stockData = products.map((p) => ({ name: p.name.length > 12 ? p.name.slice(0, 12) + "…" : p.name, stock: p.stock, minStock: p.minStock }));
@@ -140,7 +161,7 @@ const ReportsPage = () => {
 
   // Payment methods
   const paymentData = completedSales.reduce<Record<string, number>>((acc, s) => { acc[s.paymentMethod] = (acc[s.paymentMethod] || 0) + 1; return acc; }, {});
-  const paymentChartData = Object.entries(paymentData).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
+  const paymentChartData = compactPieData(Object.entries(paymentData).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value })), 5);
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
@@ -186,15 +207,44 @@ const ReportsPage = () => {
 
         <Card>
           <CardHeader><CardTitle className="text-base">Inventory Value by Category</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={categoryChartData} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: Rs. ${value}`}>
-                  {categoryChartData.map((_, idx) => (<Cell key={idx} fill={COLORS[idx % COLORS.length]} />))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className="grid gap-4 xl:grid-cols-[1fr_240px]">
+            <div className="min-h-[240px]">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                  <Pie
+                    data={categoryChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={56}
+                    outerRadius={96}
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="hsl(var(--background))"
+                    strokeWidth={2}
+                  >
+                    {categoryChartData.map((_, idx) => (<Cell key={idx} fill={COLORS[idx % COLORS.length]} />))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatMoney(Number(value))} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+              <div className="flex items-center justify-between gap-2 text-xs font-semibold text-muted-foreground">
+                <span>Category</span>
+                <span>Value</span>
+              </div>
+              {categoryChartData.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">No stock value yet.</p>
+              ) : categoryChartData.map((item, idx) => (
+                <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-background px-2.5 py-2 text-sm">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                    <span className="truncate font-medium">{item.name}</span>
+                  </span>
+                  <span className="shrink-0 font-semibold">{formatMoney(item.value)}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -231,15 +281,38 @@ const ReportsPage = () => {
 
         <Card>
           <CardHeader><CardTitle className="text-base">Payment Methods</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={paymentChartData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+          <CardContent className="grid gap-4 xl:grid-cols-[1fr_220px]">
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                <Pie
+                  data={paymentChartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={56}
+                  outerRadius={96}
+                  paddingAngle={2}
+                  dataKey="value"
+                  stroke="hsl(var(--background))"
+                  strokeWidth={2}
+                >
                   {paymentChartData.map((_, idx) => (<Cell key={idx} fill={COLORS[idx % COLORS.length]} />))}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+              {paymentChartData.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">No payments yet.</p>
+              ) : paymentChartData.map((item, idx) => (
+                <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-background px-2.5 py-2 text-sm">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                    <span className="truncate font-medium">{item.name}</span>
+                  </span>
+                  <span className="shrink-0 font-semibold">{item.value}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -248,4 +321,3 @@ const ReportsPage = () => {
 };
 
 export default ReportsPage;
-

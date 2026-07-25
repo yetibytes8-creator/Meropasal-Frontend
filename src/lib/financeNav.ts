@@ -14,6 +14,7 @@ function pathFor(base: FinanceBase, page: string) {
   if (page === "overview") return `${base}/finance`;
   if (page === "reports") return `${base}/finance-reports`;
   if (page === "expenses") return `${base}/expenses`;
+  if (page === "settings") return `${base}/settings#report-settings`;
   return `${base}/${page}`;
 }
 
@@ -50,6 +51,7 @@ export function getFinanceNav(base: FinanceBase): FinanceNavItem[] {
     { title: "5 Year Projection", url: pathFor(base, "five-year-projection") },
     { title: "Approval Workflow", url: pathFor(base, "approval-workflow") },
     { title: "Document Attachments", url: pathFor(base, "document-attachments") },
+    { title: "Report & Signature Settings", url: pathFor(base, "settings") },
     { title: "Audit Trail", url: pathFor(base, "audit-trail") },
     { title: "Fiscal Year Closing", url: pathFor(base, "fiscal-year-closing") },
     { title: "Reports", url: pathFor(base, "reports") },

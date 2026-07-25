@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { financeSummary, type FinanceSummary } from "@/lib/api";
-import StatCard from "@/components/StatCard";
 import FinanceStatementHeader from "@/components/FinanceStatementHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertTriangle,
@@ -151,10 +151,66 @@ const FinanceDashboard = () => {
     "Documents, cheque copy and supplier bills are attached before posting sensitive entries.",
     "Trial balance debit and credit totals are equal before P&L and Balance Sheet print.",
   ];
+  const quickActions = [
+    { label: "New Journal", to: financeLink("journal-voucher"), icon: ClipboardCheck },
+    { label: "Receive / Pay", to: financeLink("accounts"), icon: WalletCards },
+    { label: "Bank Match", to: financeLink("bank-reconciliation"), icon: Landmark },
+    { label: "Print Reports", to: base === "/finance" ? "/finance/reports" : `${base}/finance-reports`, icon: FileText },
+  ];
+  const kpis = [
+    { label: "Income", value: `Rs. ${data.income.toLocaleString()}`, note: "This month", icon: TrendingUp, tone: "border-green-100 bg-green-50 text-green-700" },
+    { label: "Expenses", value: `Rs. ${data.expenses.toLocaleString()}`, note: "Recorded cost", icon: TrendingDown, tone: "border-red-100 bg-red-50 text-red-700" },
+    { label: profitPositive ? "Net Profit" : "Net Loss", value: `Rs. ${Math.abs(data.net_profit).toLocaleString()}`, note: data.income > 0 ? `${Math.round((data.net_profit / data.income) * 100)}% margin` : "No income yet", icon: Banknote, tone: profitPositive ? "border-green-100 bg-green-50 text-green-700" : "border-red-100 bg-red-50 text-red-700" },
+    { label: "Invoices", value: `${data.invoices_open + data.invoices_overdue}`, note: `${data.invoices_overdue} overdue`, icon: FileText, tone: data.invoices_overdue > 0 ? "border-red-100 bg-red-50 text-red-700" : "border-green-100 bg-green-50 text-green-700" },
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
-      <div>
+      <section className="relative overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm print:hidden">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-600 via-green-500 to-red-500" />
+        <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[1.15fr_0.85fr] lg:p-6">
+          <div className="min-w-0">
+            <Badge className="mb-3 border-green-200 bg-green-50 text-green-700 hover:bg-green-50">
+              Accountant control room
+            </Badge>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              Finance Dashboard
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Income, expense, bank, tax, ledger and audit flow for {data.branch_name}. Daily entries bata report samma one place ma track garnus.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Button key={action.label} asChild variant="outline" className="h-10 rounded-xl border-green-200 bg-white text-green-800 hover:bg-green-50">
+                    <Link to={action.to}>
+                      <Icon className="mr-2 h-4 w-4" />
+                      {action.label}
+                    </Link>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {kpis.map((kpi) => {
+              const Icon = kpi.icon;
+              return (
+                <div key={kpi.label} className="rounded-2xl border bg-slate-50/70 p-4">
+                  <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl border ${kpi.tone}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{kpi.label}</p>
+                  <p className="mt-1 text-xl font-bold text-slate-950">{kpi.value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{kpi.note}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+      <div className="hidden print:block">
         <h1 className="page-header">Finance Dashboard</h1>
         <p className="page-description">
           {new Date().toLocaleString("default", { month: "long", year: "numeric" })} overview · {data.branch_name}
@@ -168,39 +224,12 @@ const FinanceDashboard = () => {
         reportNo={`FIN-${thisMonth.replace("-", "")}`}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 print:hidden">
-        <StatCard
-          title="Total Income"
-          value={`Rs. ${data.income.toLocaleString()}`}
-          icon={<TrendingUp className="w-5 h-5" />}
-          iconClassName="bg-success/10 text-success"
-        />
-        <StatCard
-          title="Total Expenses"
-          value={`Rs. ${data.expenses.toLocaleString()}`}
-          icon={<TrendingDown className="w-5 h-5" />}
-          iconClassName="bg-destructive/10 text-destructive"
-        />
-        <StatCard
-          title="Net Profit"
-          value={`Rs. ${data.net_profit.toLocaleString()}`}
-          icon={<Banknote className="w-5 h-5" />}
-          iconClassName={profitPositive ? "bg-finance/10 text-finance" : "bg-destructive/10 text-destructive"}
-          trend={data.net_profit !== 0 ? { value: Math.abs(Math.round((data.net_profit / (data.income || 1)) * 100)), positive: profitPositive } : undefined}
-        />
-        <StatCard
-          title="Open Invoices"
-          value={data.invoices_open + data.invoices_overdue}
-          icon={<FileText className="w-5 h-5" />}
-          iconClassName={data.invoices_overdue > 0 ? "bg-destructive/10 text-destructive" : "bg-finance/10 text-finance"}
-        />
-      </div>
-
-      <Card className="print:hidden">
+      <Card className="overflow-hidden border-green-100 shadow-sm print:hidden">
+        <div className="h-1 bg-gradient-to-r from-green-600 to-red-500" />
         <CardHeader>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="finance-accountant-workspace-copy">
-              <CardTitle className="text-base">Accountant Workspace</CardTitle>
+              <CardTitle className="text-lg">Accountant Workspace</CardTitle>
               <p className="finance-clean-copy mt-1 text-sm text-muted-foreground">
                 Daily entry, account posting and report flow for the accountant.
               </p>
@@ -208,7 +237,7 @@ const FinanceDashboard = () => {
                 दैनिक entry गर्दा कुन transaction कुन account मा राख्ने भन्ने quick guide.
               </p>
             </div>
-            <Badge variant="outline" className="w-fit bg-finance/10 text-finance border-finance/20">
+            <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
               Double-entry ready
             </Badge>
           </div>

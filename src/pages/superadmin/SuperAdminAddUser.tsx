@@ -125,7 +125,7 @@ export default function SuperAdminAddUser() {
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-indigo-400" />Business Information
+              <Building2 className="w-4 h-4 text-green-400" />Business Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -134,14 +134,14 @@ export default function SuperAdminAddUser() {
                 <Label className="text-slate-300 text-xs">Business Name *</Label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input value={form.business_name} onChange={(e) => set("business_name", e.target.value)} placeholder="e.g. Himalaya Cafe" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" required />
+                  <Input value={form.business_name} onChange={(e) => set("business_name", e.target.value)} placeholder="e.g. Himalaya Cafe" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500" required />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-slate-300 text-xs">Contact Person</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input value={form.contact_person} onChange={(e) => set("contact_person", e.target.value)} placeholder="Owner name" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  <Input value={form.contact_person} onChange={(e) => set("contact_person", e.target.value)} placeholder="Owner name" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500" />
                 </div>
               </div>
             </div>
@@ -150,14 +150,14 @@ export default function SuperAdminAddUser() {
                 <Label className="text-slate-300 text-xs">Email (Login ID) *</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="owner@business.com" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" required />
+                  <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="owner@business.com" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500" required />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-slate-300 text-xs">Phone</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+977-98XXXXXXXX" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+977-98XXXXXXXX" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500" />
                 </div>
               </div>
             </div>
@@ -166,13 +166,13 @@ export default function SuperAdminAddUser() {
                 <Label className="text-slate-300 text-xs">City</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Kathmandu" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  <Input value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Kathmandu" className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500" />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-slate-300 text-xs">Business Type</Label>
                 <Select value={form.business_type} onValueChange={(v) => set("business_type", v)}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white focus:ring-indigo-500">
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white focus:ring-green-500">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-700">
@@ -189,12 +189,12 @@ export default function SuperAdminAddUser() {
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-indigo-400" />Subscription Plan *
+              <KeyRound className="w-4 h-4 text-green-400" />Subscription Plan *
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Select value={form.plan_id} onValueChange={(v) => set("plan_id", v)}>
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white focus:ring-indigo-500">
+              <SelectTrigger className="bg-slate-800 border-slate-700 text-white focus:ring-green-500">
                 <SelectValue placeholder="Select a plan" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
@@ -213,7 +213,7 @@ export default function SuperAdminAddUser() {
           <Button type="button" variant="outline" onClick={() => navigate("/super-admin/users")} className="border-slate-700 text-slate-300 hover:bg-slate-800">
             Cancel
           </Button>
-          <Button type="submit" disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
+          <Button type="submit" disabled={saving} className="flex-1 bg-green-600 hover:bg-green-500 text-white gap-2">
             {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Create Client &amp; Prepare Credentials
           </Button>
@@ -232,3 +232,4 @@ export default function SuperAdminAddUser() {
     </div>
   );
 }
+

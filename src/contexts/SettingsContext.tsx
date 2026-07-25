@@ -59,6 +59,18 @@ const DEFAULT_PRINT_SETTINGS: PrintSettings = {
     checkedByLabel: "Checked By",
     printedByLabel: "Printed By",
     authorizedByLabel: "Authorized By",
+    createdByName: "",
+    checkedByName: "",
+    printedByName: "",
+    authorizedByName: "",
+    createdBySignature: "",
+    checkedBySignature: "",
+    printedBySignature: "",
+    authorizedBySignature: "",
+    createdByNote: "",
+    checkedByNote: "",
+    printedByNote: "",
+    authorizedByNote: "",
   },
 };
 

@@ -37,6 +37,7 @@ const SettingsPage = () => {
   const location = useLocation();
   const logoRef = useRef<HTMLInputElement>(null);
   const qrRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState(location.hash === "#report-settings" ? "billing" : "business");
   const [branches, setBranches] = useState<ApiBranch[]>([]);
   const [branchForm, setBranchForm] = useState({
     name: "",
@@ -53,6 +54,14 @@ const SettingsPage = () => {
   useEffect(() => {
     branchesApi.list().then(setBranches).catch(() => setBranches([]));
   }, []);
+
+  useEffect(() => {
+    if (location.hash !== "#report-settings") return;
+    setActiveTab("billing");
+    window.setTimeout(() => {
+      document.getElementById("report-settings")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }, [location.hash]);
 
   const updateInvoiceSettings = (patch: Partial<typeof invoiceSettings>) => {
     setSettings((s) => ({
@@ -117,6 +126,53 @@ const SettingsPage = () => {
     reader.readAsDataURL(file);
     e.target.value = "";
   };
+
+  const uploadReportSignature = (key: "createdBySignature" | "checkedBySignature" | "printedBySignature" | "authorizedBySignature", file?: File) => {
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      toast.error("Signature image must be under 1 MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => updateReportSettings({ [key]: reader.result as string } as Partial<typeof reportSettings>);
+    reader.readAsDataURL(file);
+  };
+
+  const reportSignatureRoles = [
+    {
+      title: "Created / Prepared",
+      labelKey: "createdByLabel",
+      nameKey: "createdByName",
+      signatureKey: "createdBySignature",
+      noteKey: "createdByNote",
+      defaultLabel: "Created By",
+    },
+    {
+      title: "Checked / Verified",
+      labelKey: "checkedByLabel",
+      nameKey: "checkedByName",
+      signatureKey: "checkedBySignature",
+      noteKey: "checkedByNote",
+      defaultLabel: "Checked By",
+    },
+    {
+      title: "Printed",
+      labelKey: "printedByLabel",
+      nameKey: "printedByName",
+      signatureKey: "printedBySignature",
+      noteKey: "printedByNote",
+      defaultLabel: "Printed By",
+    },
+    {
+      title: "Approved / Authorized",
+      labelKey: "authorizedByLabel",
+      nameKey: "authorizedByName",
+      signatureKey: "authorizedBySignature",
+      noteKey: "authorizedByNote",
+      defaultLabel: "Authorized By",
+    },
+  ] as const;
 
   const updatePaymentQr = (patch: Partial<typeof settings.paymentQr>) => {
     setSettings((s) => ({ ...s, paymentQr: { ...s.paymentQr, ...patch } }));
@@ -184,7 +240,7 @@ const SettingsPage = () => {
         <p className="page-description">Configure your business and system preferences</p>
       </div>
 
-      <Tabs defaultValue="business" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="overflow-x-auto">
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="business" className="gap-2 flex-1 sm:flex-none">
@@ -193,7 +249,7 @@ const SettingsPage = () => {
             </TabsTrigger>
             <TabsTrigger value="billing" className="gap-2 flex-1 sm:flex-none">
               <Receipt className="w-4 h-4" />
-              <span className="hidden sm:inline">Billing</span>
+              <span className="hidden sm:inline">Billing & Reports</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2 flex-1 sm:flex-none">
               <Bell className="w-4 h-4" />
@@ -420,7 +476,7 @@ const SettingsPage = () => {
         <TabsContent value="billing">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-6">
-              <Card>
+              <Card id="report-settings" className="scroll-mt-24">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Receipt className="h-4 w-4" />
@@ -530,9 +586,9 @@ const SettingsPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Printer className="h-4 w-4" />
-                    Report Header & Footer
+                    Finance Report Header, Footer & Signature Upload
                   </CardTitle>
-                  <CardDescription>Company-wise letterhead and signature footer for finance/accounting reports</CardDescription>
+                  <CardDescription>Upload accountant, checker, printer and authorized signatures for finance/accounting print reports</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="flex flex-col gap-4 rounded-xl border bg-muted/20 p-4 sm:flex-row sm:items-center">
@@ -579,6 +635,74 @@ const SettingsPage = () => {
                         />
                       </div>
                     ))}
+                  </div>
+                  <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+                    <div>
+                      <p className="font-semibold">Signature Upload For Finance Reports</p>
+                      <p className="text-sm text-muted-foreground">
+                        Created, verified, printed and approved signatures shown automatically on finance/accounting print reports.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      {reportSignatureRoles.map((role) => {
+                        const signature = String(reportSettings[role.signatureKey] || "");
+                        return (
+                          <div key={role.signatureKey} className="rounded-xl border bg-white p-3">
+                            <div className="mb-3 flex items-center justify-between gap-2">
+                              <div>
+                                <p className="font-semibold">{role.title}</p>
+                                <p className="text-xs text-muted-foreground">{String(reportSettings[role.labelKey] || role.defaultLabel)}</p>
+                              </div>
+                              {signature && <Badge variant="secondary">Uploaded</Badge>}
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-[112px_1fr]">
+                              <div className="flex h-24 items-center justify-center rounded-lg border bg-muted/30">
+                                {signature ? (
+                                  <img src={signature} alt={`${role.title} signature`} className="h-full w-full object-contain p-2" />
+                                ) : (
+                                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <Input
+                                  placeholder="Person name"
+                                  value={String(reportSettings[role.nameKey] || "")}
+                                  onChange={(e) => updateReportSettings({ [role.nameKey]: e.target.value } as Partial<typeof reportSettings>)}
+                                />
+                                <Input
+                                  placeholder="Designation / note, e.g. Accountant"
+                                  value={String(reportSettings[role.noteKey] || "")}
+                                  onChange={(e) => updateReportSettings({ [role.noteKey]: e.target.value } as Partial<typeof reportSettings>)}
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                  <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border bg-background px-3 text-sm font-medium shadow-sm hover:bg-accent">
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Upload Sign
+                                    <input
+                                      type="file"
+                                      accept="image/png,image/jpeg,image/webp"
+                                      className="hidden"
+                                      onChange={(e) => uploadReportSignature(role.signatureKey, e.target.files?.[0])}
+                                    />
+                                  </label>
+                                  {signature && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      className="h-9 gap-2 text-destructive hover:text-destructive"
+                                      onClick={() => updateReportSettings({ [role.signatureKey]: "" } as Partial<typeof reportSettings>)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                      Remove
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {[

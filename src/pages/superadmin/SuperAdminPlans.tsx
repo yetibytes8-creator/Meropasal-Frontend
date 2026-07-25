@@ -15,12 +15,12 @@ import {
 
 const planIcon: Record<string, React.ElementType> = { cafe: Coffee, inventory: Package, combo: LayoutGrid };
 const planColor: Record<string, string> = {
-  cafe:      "from-orange-500/20 to-orange-600/5 border-orange-500/20",
+  cafe:      "from-green-500/20 to-green-600/5 border-green-500/20",
   inventory: "from-emerald-500/20 to-emerald-600/5 border-emerald-500/20",
-  combo:     "from-indigo-500/20 to-indigo-600/5 border-indigo-500/20",
+  combo:     "from-green-500/20 to-green-600/5 border-green-500/20",
 };
-const planAccent: Record<string, string> = { cafe: "text-orange-400", inventory: "text-emerald-400", combo: "text-indigo-400" };
-const planBarColor: Record<string, string> = { cafe: "bg-orange-500", inventory: "bg-emerald-500", combo: "bg-indigo-500" };
+const planAccent: Record<string, string> = { cafe: "text-green-400", inventory: "text-emerald-400", combo: "text-green-400" };
+const planBarColor: Record<string, string> = { cafe: "bg-green-500", inventory: "bg-emerald-500", combo: "bg-green-500" };
 
 export default function SuperAdminPlans() {
   const [allPlans, setAllPlans] = useState<ApiPlan[]>([]);
@@ -97,8 +97,8 @@ export default function SuperAdminPlans() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: "Total MRR", value: `Rs. ${Math.round(totalMRR).toLocaleString()}`, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
-          { label: "Active Subscribers", value: activeCount, icon: Building2, color: "text-indigo-400", bg: "bg-indigo-500/10" },
-          { label: "Total Plans", value: paidPlans.length, icon: LayoutGrid, color: "text-blue-400", bg: "bg-blue-500/10" },
+          { label: "Active Subscribers", value: activeCount, icon: Building2, color: "text-green-400", bg: "bg-green-500/10" },
+          { label: "Total Plans", value: paidPlans.length, icon: LayoutGrid, color: "text-green-400", bg: "bg-green-500/10" },
         ].map((s) => (
           <Card key={s.label} className="bg-slate-900 border-slate-800">
             <CardContent className="p-3 sm:p-4 flex items-center gap-3">
@@ -122,7 +122,7 @@ export default function SuperAdminPlans() {
             <Card key={plan.id} className={`bg-gradient-to-b border ${color} bg-slate-900 relative`}>
               {isCombo && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-indigo-600 text-white text-xs px-3 gap-1 shadow-lg">
+                  <Badge className="bg-green-600 text-white text-xs px-3 gap-1 shadow-lg">
                     <Star className="w-3 h-3" />Most Popular
                   </Badge>
                 </div>
@@ -169,7 +169,7 @@ export default function SuperAdminPlans() {
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
           <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
-            <Banknote className="w-4 h-4 text-indigo-400" />Revenue by Module
+            <Banknote className="w-4 h-4 text-green-400" />Revenue by Module
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -212,7 +212,7 @@ export default function SuperAdminPlans() {
                 type="number" inputMode="numeric" min="1"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500"
+                className="bg-slate-800 border-slate-700 text-white focus-visible:ring-green-500"
               />
             </div>
             <div className="space-y-1.5">
@@ -221,7 +221,7 @@ export default function SuperAdminPlans() {
                 value={form.features}
                 onChange={(e) => setForm({ ...form, features: e.target.value })}
                 rows={8}
-                className="w-full rounded-md bg-slate-800 border border-slate-700 text-white text-sm p-3 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full rounded-md bg-slate-800 border border-slate-700 text-white text-sm p-3 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                 placeholder="One feature per line…"
               />
               <p className="text-xs text-slate-600">{form.features.split("\n").filter((f) => f.trim()).length} features</p>
@@ -230,7 +230,7 @@ export default function SuperAdminPlans() {
               <Button variant="outline" onClick={() => setEditPlan(null)} className="border-slate-700 text-slate-300 hover:bg-slate-800 gap-2">
                 <X className="w-4 h-4" />Cancel
               </Button>
-              <Button onClick={handleSave} disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
+              <Button onClick={handleSave} disabled={saving} className="flex-1 bg-green-600 hover:bg-green-500 text-white gap-2">
                 {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 Save Plan
               </Button>
@@ -241,3 +241,4 @@ export default function SuperAdminPlans() {
     </div>
   );
 }
+

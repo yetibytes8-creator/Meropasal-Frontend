@@ -182,7 +182,7 @@ export default function QRCodesPage() {
     if (!qr) return;
     const w = window.open("", "_blank", "width=520,height=760");
     if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Table ${table.number} QR</title>
+    w.document.write(`<!DOCTYPE html><html><head><link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" /><title>Table ${table.number} QR</title>
       <style>
         body{font-family:Arial,sans-serif;margin:0;background:#f6f2ee;color:#111}
         .poster{width:420px;margin:20px auto;text-align:center;padding:44px 24px;background:#f6f2ee}

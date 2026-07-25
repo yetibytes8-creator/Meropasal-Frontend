@@ -245,7 +245,7 @@ export default function DeliveryPage() {
     const rows = active.map((record, index) => `<tr><td>${index + 1}</td><td>${record.id}<br>${record.customer}<br>${record.phone}</td><td>${record.address}<br>${record.area || ""}</td><td>${record.rider || "-"}</td><td>${money(settings.currencySymbol, record.total + record.deliveryCharge)}</td><td>${paymentMeta[record.paymentStatus].label}</td></tr>`).join("");
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
-    win.document.write(`<!doctype html><html><head><title>Delivery Run Sheet</title><style>
+    win.document.write(`<!doctype html><html><head><link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" /><title>Delivery Run Sheet</title><style>
       body { font-family: Arial, sans-serif; color: #111827; }
       h1 { margin-bottom: 0; } p { margin-top: 4px; color: #6b7280; }
       table { width: 100%; border-collapse: collapse; font-size: 12px; }

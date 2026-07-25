@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const typeColor: Record<string, string> = {
   create_client:             "text-emerald-400 bg-emerald-500/10",
   delete_client:             "text-red-400 bg-red-500/10",
-  change_subscription_status:"text-blue-400 bg-blue-500/10",
+  change_subscription_status:"text-green-400 bg-green-500/10",
   change_payment_status:    "text-green-400 bg-green-500/10",
 };
 
@@ -68,7 +68,7 @@ export default function SuperAdminActivity() {
             placeholder="Search by action or company…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500"
+            className="pl-9 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500"
           />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
@@ -133,3 +133,4 @@ export default function SuperAdminActivity() {
     </div>
   );
 }
+

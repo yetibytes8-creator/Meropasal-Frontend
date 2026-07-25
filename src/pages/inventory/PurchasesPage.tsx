@@ -46,7 +46,11 @@ const statusIcon: Record<string, React.ReactNode> = {
 
 const emptyNewSupplier = { name: "", phone: "", email: "", address: "" };
 
-const formatPoNumber = (id: string) => `PO-${String(id).replace(/\D/g, "").padStart(5, "0")}`;
+const formatPoNumber = (purchaseOrId: Purchase | string) => {
+  if (typeof purchaseOrId !== "string" && purchaseOrId.poNumber) return purchaseOrId.poNumber;
+  const id = typeof purchaseOrId === "string" ? purchaseOrId : purchaseOrId.id;
+  return `PO-${String(id).replace(/\D/g, "").padStart(5, "0")}`;
+};
 const cleanMax = (value: string, max = 200) => value.trim().slice(0, max);
 
 const generatePurchaseOrderHTML = (
@@ -72,10 +76,11 @@ const generatePurchaseOrderHTML = (
   }).join("");
 
   return `<!doctype html>
-  <html>
+    <html>
     <head>
       <meta charset="utf-8" />
-      <title>${esc(formatPoNumber(po.id))}</title>
+      <link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" />
+      <title>${esc(formatPoNumber(po))}</title>
       <style>
         @page { size: A4; margin: 12mm; }
         * { box-sizing: border-box; }
@@ -125,7 +130,7 @@ const generatePurchaseOrderHTML = (
           </div>
           <div class="doc-title">
             <h1>PURCHASE ORDER</h1>
-            <p class="muted">${esc(formatPoNumber(po.id))}</p>
+            <p class="muted">${esc(formatPoNumber(po))}</p>
             <span class="status">${esc(po.status)}</span>
           </div>
         </section>
@@ -139,7 +144,7 @@ const generatePurchaseOrderHTML = (
           </div>
           <div class="box">
             <p class="label">Order Detail</p>
-            <p class="value"><strong>PO No:</strong> ${esc(formatPoNumber(po.id))}</p>
+            <p class="value"><strong>PO No:</strong> ${esc(formatPoNumber(po))}</p>
             <p class="value"><strong>PO Date:</strong> ${esc(po.date)}</p>
             <p class="value"><strong>Status:</strong> ${esc(po.status)}</p>
           </div>
@@ -210,6 +215,7 @@ const PurchasesPage = () => {
   // Product picker state
   const [productSearch, setProductSearch] = useState("");
   const [showAllProducts, setShowAllProducts] = useState(false);
+  const [productCategory, setProductCategory] = useState("all");
 
   // Custom one-off item entry
   const [customName, setCustomName] = useState("");
@@ -219,6 +225,11 @@ const PurchasesPage = () => {
   // ── Detail dialog ──────────────────────────────────────────────────────────
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailPO, setDetailPO] = useState<Purchase | null>(null);
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [receivePoQuery, setReceivePoQuery] = useState("");
+  const [receivePOId, setReceivePOId] = useState("");
+  const [receiveBillNo, setReceiveBillNo] = useState("");
+  const [receiveNote, setReceiveNote] = useState("");
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const totalSpent = allPurchases.filter((p) => p.status === "received").reduce((s, p) => s + p.total, 0);
@@ -232,23 +243,60 @@ const PurchasesPage = () => {
       (p) =>
         p.supplierName.toLowerCase().includes(q) ||
         p.id.toLowerCase().includes(q) ||
+        formatPoNumber(p).toLowerCase().includes(q) ||
         p.items.some((i) => i.productName.toLowerCase().includes(q))
     );
   }, [allPurchases, search]);
 
+  const receiveCandidates = useMemo(() => {
+    const pending = allPurchases.filter((po) => po.status === "pending");
+    const q = receivePoQuery.trim().toLowerCase();
+    if (!q) return pending.slice(0, 8);
+    return pending.filter((po) => (
+      po.id.toLowerCase().includes(q) ||
+      formatPoNumber(po).toLowerCase().includes(q) ||
+      po.supplierName.toLowerCase().includes(q) ||
+      po.items.some((item) => item.productName.toLowerCase().includes(q))
+    )).slice(0, 12);
+  }, [allPurchases, receivePoQuery]);
+
+  const selectedReceivePO = allPurchases.find((po) => po.id === receivePOId) ?? receiveCandidates[0] ?? null;
+
   const selectedSupplier = allSuppliers.find((s) => s.id === selectedSupplierId);
 
   // Products shown in the picker — all products or only supplier-linked ones
-  const pickerProducts = useMemo(() => {
-    const base = showAllProducts
+  const scopedPickerProducts = useMemo(() => {
+    return showAllProducts
       ? products
       : selectedSupplier
         ? products.filter((p) => p.supplierId === selectedSupplier.id)
         : [];
-    if (!productSearch.trim()) return base;
+  }, [products, showAllProducts, selectedSupplier]);
+
+  const productCatalogs = useMemo(() => {
+    const counts = scopedPickerProducts.reduce<Record<string, number>>((acc, product) => {
+      const category = product.category || "Uncategorized";
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, count]) => ({ name, count }));
+  }, [scopedPickerProducts]);
+
+  const pickerProducts = useMemo(() => {
+    const byCatalog = productCategory === "all"
+      ? scopedPickerProducts
+      : scopedPickerProducts.filter((p) => (p.category || "Uncategorized") === productCategory);
+    if (!productSearch.trim()) return byCatalog;
     const q = productSearch.toLowerCase();
-    return base.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
-  }, [products, showAllProducts, productSearch, selectedSupplier]);
+    return byCatalog.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q) ||
+      (p.category || "").toLowerCase().includes(q) ||
+      (p.brand || "").toLowerCase().includes(q)
+    );
+  }, [scopedPickerProducts, productSearch, productCategory]);
 
   const newPOTotal = purchaseItems.reduce((sum, i) => sum + i.quantity * i.unitCost, 0);
 
@@ -318,6 +366,7 @@ const PurchasesPage = () => {
       setShowNewSupplier(false);
       setNewSupplier(emptyNewSupplier);
       setShowAllProducts(true);
+      setProductCategory("all");
       toast.success(`Supplier "${created.name}" added`);
     } catch (err) { toast.error((err as Error).message); }
   };
@@ -350,7 +399,7 @@ const PurchasesPage = () => {
       setAllPurchases([fromApiPurchase(created), ...allPurchases]);
       setPoCounter((c) => c + 1);
       resetCreateForm();
-      toast.success(`Purchase Order #${created.id} created!`);
+      toast.success(`Purchase Order ${fromApiPurchase(created).poNumber || formatPoNumber(String(created.id))} created!`);
     } catch (err) { toast.error((err as Error).message); }
   };
 
@@ -361,6 +410,7 @@ const PurchasesPage = () => {
     setShowNewSupplier(false);
     setNewSupplier(emptyNewSupplier);
     setProductSearch("");
+    setProductCategory("all");
     setShowAllProducts(false);
     setCustomName("");
     setCustomQty("1");
@@ -379,6 +429,24 @@ const PurchasesPage = () => {
       toast.success(customCount > 0 ? `PO received! Stock updated for catalog items. ${customCount} custom item(s) noted.` : "PO received! Stock updated.");
     } catch (err) { toast.error((err as Error).message); }
     setDetailOpen(false);
+  };
+
+  const openReceiveByPo = () => {
+    setReceivePoQuery("");
+    setReceivePOId("");
+    setReceiveBillNo("");
+    setReceiveNote("");
+    setReceiveOpen(true);
+  };
+
+  const handleReceiveByPo = async () => {
+    if (!selectedReceivePO) { toast.error("Enter or select a pending PO number"); return; }
+    if (selectedReceivePO.status !== "pending") { toast.error("Only pending PO can be received"); return; }
+    await handleReceive(selectedReceivePO);
+    setReceiveOpen(false);
+    const billText = receiveBillNo.trim() ? ` Supplier bill ${receiveBillNo.trim()} linked.` : "";
+    const noteText = receiveNote.trim() ? " Receive remark noted." : "";
+    toast.success(`${formatPoNumber(selectedReceivePO)} received.${billText}${noteText}`);
   };
 
   const handleCancel = async (poId: string) => {
@@ -404,15 +472,21 @@ const PurchasesPage = () => {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="page-header">Purchases</h1>
           <p className="page-description">Create purchase orders and receive stock from suppliers</p>
         </div>
-        <Button onClick={openCreate} className="h-11 shrink-0 rounded-xl px-4 font-semibold shadow-sm sm:px-5">
-          <Plus className="w-4 h-4" />
-          <span>New Purchase</span>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={openReceiveByPo} className="h-11 shrink-0 rounded-xl px-4 font-semibold sm:px-5">
+            <PackageCheck className="w-4 h-4" />
+            <span>Receive by PO No.</span>
+          </Button>
+          <Button onClick={openCreate} className="h-11 shrink-0 rounded-xl px-4 font-semibold shadow-sm sm:px-5">
+            <Plus className="w-4 h-4" />
+            <span>New Purchase Order</span>
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -440,7 +514,7 @@ const PurchasesPage = () => {
             ) : filteredPOs.map((po) => (
               <div key={po.id} className="p-4 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono font-bold text-primary text-sm">#{po.id.slice(2)}</span>
+                  <span className="font-mono font-bold text-primary text-sm">{formatPoNumber(po)}</span>
                   <Badge variant="outline" className={cn("text-xs flex items-center gap-1", statusBadgeClass[po.status])}>
                     {statusIcon[po.status]}{po.status}
                   </Badge>
@@ -497,7 +571,7 @@ const PurchasesPage = () => {
               ) : (
                 filteredPOs.map((po) => (
                   <TableRow key={po.id}>
-                    <TableCell className="font-mono text-sm">#{po.id.slice(2)}</TableCell>
+                    <TableCell className="font-mono text-sm">{formatPoNumber(po)}</TableCell>
                     <TableCell className="font-medium text-sm">{po.supplierName}</TableCell>
                     <TableCell className="text-sm max-w-[160px] sm:max-w-xs truncate">
                       {po.items.map((i) => `${i.quantity}× ${i.productName}`).join(", ")}
@@ -536,6 +610,111 @@ const PurchasesPage = () => {
         </CardContent>
       </Card>
 
+      {/* ── Receive by PO No. Dialog ───────────────────────────────────────── */}
+      <Dialog open={receiveOpen} onOpenChange={setReceiveOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PackageCheck className="w-5 h-5" /> Receive Purchase by PO Number
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
+              <div className="space-y-1.5">
+                <Label>PO Number / Supplier / Item</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    placeholder="e.g. PO-00012, supplier, product..."
+                    value={receivePoQuery}
+                    onChange={(event) => {
+                      setReceivePoQuery(event.target.value);
+                      setReceivePOId("");
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Supplier Bill No.</Label>
+                <Input value={receiveBillNo} onChange={(event) => setReceiveBillNo(event.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-[0.85fr_1.15fr]">
+              <div className="rounded-xl border">
+                <div className="border-b px-3 py-2 text-sm font-semibold">Pending PO</div>
+                <div className="max-h-64 overflow-y-auto">
+                  {receiveCandidates.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">No pending PO found</div>
+                  ) : receiveCandidates.map((po) => (
+                    <button
+                      key={po.id}
+                      type="button"
+                      onClick={() => setReceivePOId(po.id)}
+                      className={cn(
+                        "flex w-full items-start justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted",
+                        selectedReceivePO?.id === po.id && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-semibold">{formatPoNumber(po)}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{po.supplierName}</span>
+                      </span>
+                      <span className="shrink-0 text-xs font-bold">Rs. {po.total.toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border p-4">
+                {selectedReceivePO ? (
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-mono text-sm font-bold text-primary">{formatPoNumber(selectedReceivePO)}</p>
+                        <p className="text-sm font-semibold">{selectedReceivePO.supplierName}</p>
+                        <p className="text-xs text-muted-foreground">PO Date: {selectedReceivePO.date}</p>
+                      </div>
+                      <Badge variant="outline" className={cn("capitalize", statusBadgeClass[selectedReceivePO.status])}>{selectedReceivePO.status}</Badge>
+                    </div>
+                    <div className="rounded-lg bg-muted/40">
+                      {selectedReceivePO.items.map((item) => (
+                        <div key={`${item.productId}-${item.productName}`} className="flex items-center justify-between gap-3 border-b p-3 last:border-b-0">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{item.productName}</p>
+                            <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
+                          </div>
+                          <p className="shrink-0 text-sm font-semibold">Rs. {item.cost.toFixed(2)}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                      <span className="text-sm text-muted-foreground">Receive Total</span>
+                      <span className="text-lg font-bold">Rs. {selectedReceivePO.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid min-h-48 place-items-center text-center text-sm text-muted-foreground">
+                    Select a pending purchase order to receive stock.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Receive Remarks</Label>
+              <Input value={receiveNote} onChange={(event) => setReceiveNote(event.target.value)} placeholder="Delivery note, cheque, payment note..." />
+            </div>
+
+            <Button className="h-11 w-full rounded-xl" onClick={handleReceiveByPo} disabled={!selectedReceivePO}>
+              <PackageCheck className="mr-2 h-4 w-4" />
+              Receive Stock from Selected PO
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Create PO Dialog ─────────────────────────────────────────────── */}
       <Dialog open={createOpen} onOpenChange={(o) => { if (!o) resetCreateForm(); else setCreateOpen(true); }}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full max-h-[90vh] overflow-y-auto">
@@ -567,6 +746,7 @@ const PurchasesPage = () => {
                     onClick={() => {
                       setShowNewSupplier(true);
                       setShowAllProducts(true);
+                      setProductCategory("all");
                       setSelectedSupplierId("");
                     }}
                     className="h-8 text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/5"
@@ -586,6 +766,7 @@ const PurchasesPage = () => {
                       setSelectedSupplierId(v);
                       setShowAllProducts(false);
                       setProductSearch("");
+                      setProductCategory("all");
                     }}
                   >
                     <SelectTrigger className="h-10">
@@ -738,7 +919,7 @@ const PurchasesPage = () => {
                   {/* Toggle pill */}
                   <button
                     type="button"
-                    onClick={() => { setShowAllProducts((v) => !v); setProductSearch(""); }}
+                    onClick={() => { setShowAllProducts((v) => !v); setProductSearch(""); setProductCategory("all"); }}
                     className={cn(
                       "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full border transition-colors",
                       showAllProducts
@@ -755,11 +936,47 @@ const PurchasesPage = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Search products by name or SKU..."
+                    placeholder="Search products by name, SKU, catalog, brand..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                     className="pl-9 h-9 text-sm"
                   />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Catalog</p>
+                    <p className="text-[11px] text-muted-foreground">{pickerProducts.length} item shown</p>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    <button
+                      type="button"
+                      onClick={() => setProductCategory("all")}
+                      className={cn(
+                        "shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                        productCategory === "all"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary"
+                      )}
+                    >
+                      All Catalog ({scopedPickerProducts.length})
+                    </button>
+                    {productCatalogs.map((catalog) => (
+                      <button
+                        key={catalog.name}
+                        type="button"
+                        onClick={() => setProductCategory(catalog.name)}
+                        className={cn(
+                          "shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                          productCategory === catalog.name
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary"
+                        )}
+                      >
+                        {catalog.name} ({catalog.count})
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Product grid */}
@@ -789,6 +1006,9 @@ const PurchasesPage = () => {
                             <Badge variant="secondary" className="text-[9px] shrink-0 px-1">other</Badge>
                           )}
                         </div>
+                        <span className="mt-1 max-w-full truncate rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          {product.category || "Uncategorized"}
+                        </span>
                         <span className="text-xs text-muted-foreground mt-0.5">Rs. {product.costPrice.toFixed(2)}</span>
                         {inOrder && <span className="text-[10px] text-primary font-medium mt-0.5">✓ added</span>}
                       </button>
@@ -797,7 +1017,7 @@ const PurchasesPage = () => {
                   {pickerProducts.length === 0 && (
                     <div className="col-span-full text-center text-sm text-muted-foreground py-6">
                       {productSearch
-                        ? "No products match your search."
+                        ? "No products match this catalog/search."
                         : "No products linked to this supplier — toggle \"Show all\" or add a custom item below."}
                     </div>
                   )}

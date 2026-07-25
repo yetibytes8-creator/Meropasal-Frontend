@@ -74,6 +74,7 @@ export const generateTaxInvoiceHTML = (invoice: PrintableInvoice, settings: Busi
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" />
   <title>${esc(title)} ${esc(invoice.invoiceNo)}</title>
   <style>
     @page { size: A4; margin: 10mm; }
@@ -266,6 +267,7 @@ export const generateThermalInvoiceHTML = (invoice: PrintableInvoice, settings: 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" />
   <title>${esc(title)} ${esc(invoice.invoiceNo)}</title>
   <style>
     @page { size: 80mm auto; margin: 0; }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { auth as apiAuth, getAccessToken, type ApiUser, type ApiSubscription } from "@/lib/api";
+import type { BusinessProfileKey } from "@/lib/businessProfiles";
 
 // ---------------------------------------------------------------------------
 // Types exposed to the rest of the app
@@ -47,6 +48,7 @@ export type FeatureKey =
 export interface CompanySystemConfig {
   features?: Partial<Record<FeatureKey, boolean>>;
   defaultModule?: "restaurant" | "inventory" | "finance";
+  businessProfile?: BusinessProfileKey;
   [key: string]: unknown;
 }
 
@@ -166,6 +168,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore session from stored access token on mount
   useEffect(() => {
+    const previewSuperAdmin =
+      import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "superadmin";
+
+    if (previewSuperAdmin) {
+      const nextUser = { id: "preview-superadmin", email: "superadmin@preview.local" };
+      const nextProfile: Profile = {
+        id: "preview-superadmin",
+        user_id: "preview-superadmin",
+        full_name: "Preview Super Admin",
+        avatar_url: null,
+        role: "superadmin",
+      };
+      setUser(nextUser);
+      setProfile(nextProfile);
+      setSubscription(null);
+      setSystemConfig({});
+      setLoading(false);
+      return;
+    }
+
     const restoreSnapshot = () => {
       const snapshot = readAuthSnapshot();
       if (!snapshot) return false;
@@ -317,7 +339,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const canAccessModule = (module: "restaurant" | "inventory"): boolean => {
-    if (systemConfig.features?.[module] === false) return false;
+    const configuredAccess = systemConfig.features?.[module];
+    if (configuredAccess === false) return false;
+    if (configuredAccess === true) return true;
     if (!subscription?.plan) return true;
     if (subscription.status === "expired" || subscription.status === "cancelled") return false;
     if (isTrialExpired()) return false;

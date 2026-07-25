@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { CalendarDays, Download, Printer, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -166,13 +167,78 @@ function financePrintStyles() {
     .finance-accounting-register-table [data-column-key="reason"] { width: 22% !important; }
     .finance-accounting-register-table [data-column-key="status"],
     .finance-accounting-register-table [data-column-key="type"] { width: 10% !important; }
+    .coa-print-report { display: block !important; margin-top: 6px !important; }
+    .coa-print-section-title {
+      margin: 8px 0 4px !important;
+      color: #111827 !important;
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+    }
+    .coa-print-table {
+      width: 100% !important;
+      table-layout: fixed !important;
+      border-collapse: collapse !important;
+      margin-bottom: 6px !important;
+    }
+    .coa-print-table th,
+    .coa-print-table td {
+      border: 1px solid #111827 !important;
+      padding: 3px 5px !important;
+      font-size: 8.3px !important;
+      line-height: 1.2 !important;
+      text-align: left !important;
+      white-space: normal !important;
+      overflow-wrap: anywhere !important;
+    }
+    .coa-print-table th {
+      background: #e5e7eb !important;
+      color: #111827 !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+    }
+    .coa-print-table th:first-child,
+    .coa-print-table td:first-child {
+      width: auto !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      text-align: left !important;
+    }
+    .coa-group-table th:nth-child(1),
+    .coa-group-table td:nth-child(1) { width: 13% !important; }
+    .coa-group-table th:nth-child(2),
+    .coa-group-table td:nth-child(2) { width: 22% !important; }
+    .coa-group-table th:nth-child(3),
+    .coa-group-table td:nth-child(3) { width: 65% !important; }
+    .coa-ledger-table th:nth-child(1),
+    .coa-ledger-table td:nth-child(1) { width: 9% !important; }
+    .coa-ledger-table th:nth-child(2),
+    .coa-ledger-table td:nth-child(2) { width: 22% !important; }
+    .coa-ledger-table th:nth-child(3),
+    .coa-ledger-table td:nth-child(3) { width: 11% !important; }
+    .coa-ledger-table th:nth-child(4),
+    .coa-ledger-table td:nth-child(4),
+    .coa-ledger-table th:nth-child(5),
+    .coa-ledger-table td:nth-child(5) { width: 15% !important; }
+    .coa-ledger-table th:nth-child(6),
+    .coa-ledger-table td:nth-child(6) { width: 8% !important; }
+    .coa-ledger-table th:nth-child(7),
+    .coa-ledger-table td:nth-child(7),
+    .coa-ledger-table th:nth-child(8),
+    .coa-ledger-table td:nth-child(8) {
+      width: 10% !important;
+      text-align: right !important;
+      white-space: nowrap !important;
+    }
     tfoot td, tr[class*="font-semibold"] td { background: #f8fafc !important; font-weight: 800 !important; }
     .print-root svg:not(.finance-print-keep-icon) { display: none !important; }
     .finance-report-footer { border: 1.5px solid #111827 !important; padding: 8px 8px 6px !important; page-break-inside: avoid !important; break-inside: avoid !important; margin-top: 10px !important; }
     .finance-signature-grid { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
-    .finance-signature-name { min-height: 20px !important; margin-top: 6px !important; border-bottom: 1px solid #94a3b8 !important; padding-bottom: 1px !important; font-size: 8px !important; color: #111827 !important; }
+    .finance-signature-image-wrap { height: 24px !important; margin-top: 4px !important; display: flex !important; align-items: flex-end !important; }
+    .finance-signature-image { max-width: 100% !important; max-height: 24px !important; object-fit: contain !important; object-position: left bottom !important; }
+    .finance-signature-name { min-height: 16px !important; margin-top: 2px !important; border-bottom: 1px solid #94a3b8 !important; padding-bottom: 1px !important; font-size: 8px !important; color: #111827 !important; }
     .finance-signature-label { margin: 0 !important; font-size: 9px !important; font-weight: 800 !important; color: #111827 !important; }
-    .finance-signature-caption, .finance-report-footer-note { font-size: 8px !important; color: #475569 !important; }
+    .finance-signature-caption, .finance-signature-note, .finance-report-footer-note { font-size: 8px !important; color: #475569 !important; }
     [data-print-keep], tr { break-inside: avoid; page-break-inside: avoid; }
   `;
 }
@@ -198,6 +264,18 @@ function fiscalYearLabel(date = new Date()) {
   return `${startYear}/${String(startYear + 1).slice(-2)}`;
 }
 
+function dateInputValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function displayDate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? new Date().toLocaleDateString() : date.toLocaleDateString();
+}
+
 export default function FinanceStatementHeader({
   title,
   subtitle,
@@ -209,8 +287,10 @@ export default function FinanceStatementHeader({
 }: FinanceStatementHeaderProps) {
   const { user, profile } = useAuth();
   const { settings } = useSettings();
+  const [reportDateInput, setReportDateInput] = useState(() => dateInputValue());
   const preparedAt = new Date().toLocaleString();
-  const preparedDate = new Date().toLocaleDateString();
+  const preparedDate = displayDate(reportDateInput);
+  const reportDate = new Date(`${reportDateInput}T00:00:00`);
   const operatorName = profile?.full_name || user?.email || "System User";
   const reportSettings = settings.printSettings.report;
   const originalTitleRef = useRef<string | null>(null);
@@ -262,6 +342,7 @@ export default function FinanceStatementHeader({
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" />
     <title>${escapeHtml(printTitle)}</title>
     <style>${financePrintStyles()}</style>
   </head>
@@ -287,6 +368,33 @@ export default function FinanceStatementHeader({
       restoreAppTitle();
     };
   }, [applyClientPrintTitle, restoreAppTitle]);
+
+  const signatureRoles = [
+    {
+      label: reportSettings.createdByLabel || "Created By",
+      name: reportSettings.createdByName || operatorName,
+      signature: reportSettings.createdBySignature,
+      note: reportSettings.createdByNote,
+    },
+    {
+      label: reportSettings.checkedByLabel || "Checked By",
+      name: reportSettings.checkedByName,
+      signature: reportSettings.checkedBySignature,
+      note: reportSettings.checkedByNote,
+    },
+    {
+      label: reportSettings.printedByLabel || "Printed By",
+      name: reportSettings.printedByName || operatorName,
+      signature: reportSettings.printedBySignature,
+      note: reportSettings.printedByNote,
+    },
+    {
+      label: reportSettings.authorizedByLabel || "Authorized By",
+      name: reportSettings.authorizedByName,
+      signature: reportSettings.authorizedBySignature,
+      note: reportSettings.authorizedByNote,
+    },
+  ];
 
   return (
     <Card className="finance-statement-card border-primary/15 bg-card print:border print:shadow-none">
@@ -332,7 +440,7 @@ export default function FinanceStatementHeader({
               </tr>
               <tr>
                 <th>Fiscal Year</th>
-                <td>{fiscalYearLabel()}</td>
+                <td>{fiscalYearLabel(reportDate)}</td>
                 <th>Prepared At</th>
                 <td>{preparedAt}</td>
               </tr>
@@ -344,7 +452,7 @@ export default function FinanceStatementHeader({
           </table>
         </div>
 
-        <div className="finance-report-letterhead mb-5 rounded-xl border bg-muted/20 p-4 print:mb-0 print:rounded-none print:border-0 print:border-b print:bg-white">
+        <div className="finance-report-letterhead mb-5 hidden rounded-xl border bg-muted/20 p-4">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
             {settings.logo && (
               <img
@@ -371,13 +479,13 @@ export default function FinanceStatementHeader({
         </div>
         <div className="finance-report-body flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between print:p-4">
           <div className="min-w-0 space-y-3">
-            <div className="min-w-0">
+            <div className="min-w-0 print:hidden">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Finance Statement</p>
               <h2 className="text-xl font-bold leading-tight sm:text-2xl">{title}</h2>
               {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
             </div>
 
-            <div className="finance-report-meta grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
+            <div className="finance-report-meta hidden gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4 print:grid">
               <div className="rounded-lg border bg-muted/25 p-2">
                 <p className="text-muted-foreground">Business</p>
                 <p className="font-semibold truncate">{clientBusinessName}</p>
@@ -388,7 +496,7 @@ export default function FinanceStatementHeader({
               </div>
               <div className="rounded-lg border bg-muted/25 p-2">
                 <p className="text-muted-foreground">Fiscal Year (AD)</p>
-                <p className="font-semibold">{fiscalYearLabel()}</p>
+                <p className="font-semibold">{fiscalYearLabel(reportDate)}</p>
               </div>
               <div className="rounded-lg border bg-muted/25 p-2">
                 <p className="text-muted-foreground">Prepared At</p>
@@ -396,7 +504,7 @@ export default function FinanceStatementHeader({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 print:hidden">
               {periodLabel && (
                 <Badge variant="outline" className="gap-1">
                   <CalendarDays className="h-3.5 w-3.5" />
@@ -409,13 +517,22 @@ export default function FinanceStatementHeader({
                 Statutory-style format
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="hidden text-xs text-muted-foreground print:block">
               Basis: {basis}. Verify with a registered accountant before official filing.
             </p>
             {children}
           </div>
 
-          <div className="flex gap-2 print:hidden">
+          <div className="flex flex-col gap-2 print:hidden sm:flex-row lg:items-end">
+            <div className="min-w-36">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">Report Date</p>
+              <Input
+                type="date"
+                value={reportDateInput}
+                onChange={(event) => setReportDateInput(event.target.value || dateInputValue())}
+                className="h-10"
+              />
+            </div>
             {onExport && (
               <Button variant="outline" className="h-10 gap-2" onClick={onExport}>
                 <Download className="h-4 w-4" />
@@ -430,26 +547,17 @@ export default function FinanceStatementHeader({
         </div>
         <div className="finance-report-footer hidden border-t px-4 py-3 text-[10px] text-slate-700 print:block">
           <div className="finance-signature-grid grid grid-cols-4 gap-4">
-            <div className="finance-signature-box">
-              <p className="finance-signature-label font-semibold text-slate-900">{reportSettings.createdByLabel || "Created By"}</p>
-              <p className="finance-signature-name mt-2 min-h-7 border-b pb-1 font-medium">{operatorName}</p>
-              <p className="finance-signature-caption pt-1 text-[9px]">Name / Signature</p>
-            </div>
-            <div className="finance-signature-box">
-              <p className="finance-signature-label font-semibold text-slate-900">{reportSettings.checkedByLabel || "Checked By"}</p>
-              <p className="finance-signature-name mt-2 min-h-7 border-b pb-1">&nbsp;</p>
-              <p className="finance-signature-caption pt-1 text-[9px]">Name / Signature</p>
-            </div>
-            <div className="finance-signature-box">
-              <p className="finance-signature-label font-semibold text-slate-900">{reportSettings.printedByLabel || "Printed By"}</p>
-              <p className="finance-signature-name mt-2 min-h-7 border-b pb-1 font-medium">{operatorName}</p>
-              <p className="finance-signature-caption pt-1 text-[9px]">Name / Signature</p>
-            </div>
-            <div className="finance-signature-box">
-              <p className="finance-signature-label font-semibold text-slate-900">{reportSettings.authorizedByLabel || "Authorized By"}</p>
-              <p className="finance-signature-name mt-2 min-h-7 border-b pb-1">&nbsp;</p>
-              <p className="finance-signature-caption pt-1 text-[9px]">Name / Signature</p>
-            </div>
+            {signatureRoles.map((role) => (
+              <div className="finance-signature-box" key={role.label}>
+                <p className="finance-signature-label font-semibold text-slate-900">{role.label}</p>
+                <div className="finance-signature-image-wrap mt-1 min-h-6">
+                  {role.signature && <img src={role.signature} alt={`${role.label} signature`} className="finance-signature-image max-h-8 object-contain" />}
+                </div>
+                <p className="finance-signature-name mt-1 min-h-6 border-b pb-1 font-medium">{role.name || "\u00a0"}</p>
+                <p className="finance-signature-caption pt-1 text-[9px]">Name / Signature</p>
+                {role.note && <p className="finance-signature-note pt-0.5 text-[9px]">{role.note}</p>}
+              </div>
+            ))}
           </div>
           <p className="finance-report-footer-note mt-3 text-center">
             Printed At: {preparedAt}. {reportSettings.footerNote}

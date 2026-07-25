@@ -10,9 +10,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { menuFoodImage } from "@/lib/menuImages";
+import { orders as ordersApi } from "@/lib/api";
+import { fromApiOrder } from "@/lib/transforms";
 import { balanceMoneyInput, formatMoneyInput, parseMoneyInput, sanitizeMoneyInput } from "@/lib/moneyInput";
-import { Plus, Minus, ShoppingCart, XCircle, Banknote, CreditCard, Smartphone, SplitSquareHorizontal, Search } from "lucide-react";
+import { postRestaurantBillToAccounts } from "@/lib/accountingAutoPost";
+import { printRestaurantBill } from "@/lib/restaurantBill";
+import { Plus, Minus, ShoppingCart, XCircle, Banknote, CreditCard, Smartphone, SplitSquareHorizontal, Search, Printer } from "lucide-react";
 import { useOrders } from "@/contexts/OrdersContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import type { Order } from "@/types";
 
@@ -34,6 +39,7 @@ const statusColorMap: Record<string, string> = {
 
 const TablesPage = () => {
   const { allTables, setTables, allOrders, setAllOrders, closeTable } = useOrders();
+  const { settings } = useSettings();
   const [liveMenuItems, setLiveMenuItems] = useState<LiveMenuItem[]>([]);
 
   useEffect(() => {
@@ -134,7 +140,14 @@ const TablesPage = () => {
     setPaymentDialog(true);
   };
 
-  const confirmCloseTable = () => {
+  const printSelectedBill = async (order = selectedOrder) => {
+    if (!order) return;
+    const printableOrder: Order = order.paymentMethod ? order : { ...order, paymentMethod };
+    const printed = await printRestaurantBill(printableOrder, settings, allTables);
+    if (!printed) toast.error("Popup blocked. Please allow popups to print bill.");
+  };
+
+  const confirmCloseTable = async () => {
     if (!selectedTableId || !selectedOrder) return;
     let splitPayment: Order["splitPayment"];
     if (paymentMethod === "split") {
@@ -150,9 +163,13 @@ const TablesPage = () => {
       }
       splitPayment = { cash, online };
     }
-    closeTable(selectedTableId, paymentMethod, splitPayment);
+    const paidOrder: Order = { ...selectedOrder, status: "completed", paymentMethod, splitPayment };
+    await closeTable(selectedTableId, paymentMethod, splitPayment);
+    await printSelectedBill(paidOrder);
+    postRestaurantBillToAccounts(paidOrder).catch(() => toast.warning("Payment saved, finance auto-entry pending"));
     setPaymentDialog(false);
     setSelectedOrder(null);
+    toast.success("Payment recorded, bill printed, and table closed");
   };
 
   const addToCart = (menuItemId: string) => setCart(prev => ({ ...prev, [menuItemId]: (prev[menuItemId] || 0) + 1 }));
@@ -169,11 +186,10 @@ const TablesPage = () => {
   }, 0);
   const cartItemCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
-  const createOrder = () => {
+  const createOrder = async () => {
     if (!newOrderTable || cartItemCount === 0) return;
-    const orderId = `o${Date.now()}`;
-    const newOrder: Order = {
-      id: orderId,
+    const draftOrder: Order = {
+      id: `temp-${Date.now()}`,
       tableId: newOrderTable.id,
       type: "dine-in",
       status: "pending",
@@ -184,16 +200,39 @@ const TablesPage = () => {
       total: cartTotal,
       createdAt: new Date().toISOString(),
     };
-    setAllOrders(prev => [...prev, newOrder]);
+    let savedOrder = draftOrder;
+    try {
+      const created = await ordersApi.create({
+        table_id: Number.isFinite(Number(newOrderTable.id)) ? Number(newOrderTable.id) : null,
+        type: draftOrder.type,
+        status: draftOrder.status,
+        total: draftOrder.total,
+        customer_name: draftOrder.customerName ?? null,
+        payment_method: null,
+        split_cash: null,
+        split_online: null,
+        items: draftOrder.items.map((item) => ({
+          menu_item_id: Number.isFinite(Number(item.menuItemId)) ? Number(item.menuItemId) : null,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      });
+      savedOrder = fromApiOrder(created);
+      toast.success("Table order saved");
+    } catch {
+      toast.warning("Order saved locally. Backend sync failed.");
+    }
+    setAllOrders(prev => [...prev.filter((item) => item.id !== savedOrder.id), savedOrder]);
     setTables(allTables.map(t =>
-      t.id === newOrderTable.id ? { ...t, status: "occupied" as const, orderId } : t
+      t.id === newOrderTable.id ? { ...t, status: "occupied" as const, orderId: savedOrder.id } : t
     ));
     setNewOrderDialog(false);
     setCart({});
     setNewOrderTableId(null);
   };
 
-  const addItemsToOrder = () => {
+  const addItemsToOrder = async () => {
     if (!newOrderTable || cartItemCount === 0) return;
     const existingOrder = allOrders.find(o => o.id === newOrderTable.orderId);
     if (!existingOrder) return;
@@ -210,10 +249,28 @@ const TablesPage = () => {
       else mergedItems.push(newItem);
     }
     const newTotal = mergedItems.reduce((sum, i) => sum + i.quantity * i.price, 0);
+    const updatedLocal = { ...existingOrder, items: mergedItems, total: newTotal };
 
     setAllOrders(prev => prev.map(o =>
-      o.id === existingOrder.id ? { ...o, items: mergedItems, total: newTotal } : o
+      o.id === existingOrder.id ? updatedLocal : o
     ));
+    const numericOrderId = Number(existingOrder.id);
+    if (Number.isFinite(numericOrderId)) {
+      try {
+        const updated = await ordersApi.update(numericOrderId, {
+          items: mergedItems.map((item) => ({
+            menu_item_id: Number.isFinite(Number(item.menuItemId)) ? Number(item.menuItemId) : null,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          total: newTotal,
+        });
+        setAllOrders(prev => prev.map(o => o.id === existingOrder.id ? fromApiOrder(updated) : o));
+      } catch {
+        toast.warning("Items added locally. Backend sync failed.");
+      }
+    }
     setNewOrderDialog(false);
     setCart({});
     setNewOrderTableId(null);
@@ -557,9 +614,15 @@ const TablesPage = () => {
               </div>
             )}
 
-            <Button className="w-full h-11 rounded-xl shadow-lg shadow-primary/20" onClick={confirmCloseTable}>
-              Confirm Payment & Close Table
-            </Button>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Button variant="outline" className="h-11 rounded-xl gap-2" onClick={() => printSelectedBill()}>
+                <Printer className="h-4 w-4" />
+                Print Bill
+              </Button>
+              <Button className="h-11 rounded-xl shadow-lg shadow-primary/20" onClick={confirmCloseTable}>
+                Pay, Print & Close
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

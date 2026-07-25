@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
@@ -111,6 +112,8 @@ export default function StockControlPage() {
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [productPickerSearch, setProductPickerSearch] = useState("");
   const [form, setForm] = useState<StockForm>({
     productId: "",
     type: "increase",
@@ -156,6 +159,22 @@ export default function StockControlPage() {
   );
 
   const selectedProduct = products.find((product) => product.id === form.productId);
+
+  const pickerProducts = useMemo(() => {
+    const q = productPickerSearch.trim().toLowerCase();
+    return products
+      .filter((product) => {
+        if (!q) return true;
+        return (
+          product.name.toLowerCase().includes(q) ||
+          product.sku.toLowerCase().includes(q) ||
+          product.category.toLowerCase().includes(q) ||
+          (product.barcode || "").toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, 80);
+  }, [productPickerSearch, products]);
 
   const ledgerRows = useMemo<LedgerRow[]>(() => products.map((product) => {
     const productId = product.id;
@@ -296,18 +315,71 @@ export default function StockControlPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Product</Label>
-                  <Select value={form.productId} onValueChange={(value) => setForm((prev) => ({ ...prev, productId: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} - {product.sku}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 w-full justify-between rounded-xl px-3 font-normal"
+                      >
+                        <span className={selectedProduct ? "min-w-0 truncate text-left text-foreground" : "text-muted-foreground"}>
+                          {selectedProduct ? `${selectedProduct.name} - ${selectedProduct.sku}` : "Search / select product"}
+                        </span>
+                        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[min(92vw,560px)] p-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          autoFocus
+                          className="h-10 pl-9"
+                          placeholder="Search product, SKU, barcode, category..."
+                          value={productPickerSearch}
+                          onChange={(event) => setProductPickerSearch(event.target.value)}
+                        />
+                      </div>
+                      <div className="mt-2 max-h-80 overflow-y-auto rounded-lg border">
+                        {pickerProducts.length === 0 ? (
+                          <div className="space-y-2 p-4 text-center text-sm text-muted-foreground">
+                            <p>{products.length === 0 ? "No products available for stock adjustment." : "No product matched your search."}</p>
+                            {products.length === 0 && (
+                              <Button asChild size="sm" variant="outline">
+                                <Link to="/inventory/products">Add Products</Link>
+                              </Button>
+                            )}
+                          </div>
+                        ) : pickerProducts.map((product) => {
+                          const status = getProductStatus(product);
+                          return (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                setForm((prev) => ({ ...prev, productId: product.id }));
+                                setProductPickerSearch("");
+                                setProductPickerOpen(false);
+                              }}
+                              className={`flex w-full items-center justify-between gap-3 border-b px-3 py-2.5 text-left text-sm last:border-b-0 hover:bg-muted ${
+                                form.productId === product.id ? "bg-primary/10 text-primary" : ""
+                              }`}
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate font-semibold">{product.name}</span>
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {product.sku} | {product.category} | Stock: {formatQty(product.stock)} {product.unit || "pcs"}
+                                </span>
+                              </span>
+                              <Badge variant="outline" className={`${stockTone[status]} shrink-0`}>
+                                {statusLabel(status)}
+                              </Badge>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label>Action</Label>

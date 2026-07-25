@@ -17,11 +17,13 @@ import inventoryWorkflowImg from "@/assets/landing-inventory-workflow.jpg";
 import financeWorkflowImg from "@/assets/landing-finance-workflow.jpg";
 
 const navLinks = [
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Modules", href: "#modules" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Testimonials", href: "#testimonials" },
+  { label: "Home", to: "/" },
+  { label: "How it works", to: "/how-it-works" },
+  { label: "Features", to: "/features" },
+  { label: "Modules", to: "/modules" },
+  { label: "Pricing", to: "/pricing" },
+  { label: "About", to: "/about" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const features = [
@@ -153,24 +155,24 @@ const visualStories = [
 
 const footerLinks = {
   Product: [
-    { label: "Order Management", href: "#features" },
-    { label: "Inventory Tracking", href: "#features" },
-    { label: "Table Management", href: "#features" },
-    { label: "Kitchen Display", href: "#features" },
-    { label: "Analytics & Reports", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
+    { label: "Order Management", to: "/features" },
+    { label: "Inventory Tracking", to: "/features" },
+    { label: "Table Management", to: "/features" },
+    { label: "Kitchen Display", to: "/features" },
+    { label: "Analytics & Reports", to: "/features" },
+    { label: "Pricing", to: "/pricing" },
   ],
   Resources: [
-    { label: "How it Works", href: "#how-it-works" },
-    { label: "Testimonials", href: "#testimonials" },
-    { label: "Module Comparison", href: "#modules" },
-    { label: "Free Trial", href: "/signup" },
+    { label: "How it Works", to: "/how-it-works" },
+    { label: "Testimonials", to: "/features" },
+    { label: "Module Comparison", to: "/modules" },
+    { label: "Free Trial", to: "/signup" },
   ],
   Company: [
-    { label: "About Us", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Contact", href: "#" },
-    { label: "Blog", href: "#" },
+    { label: "About Us", to: "/about" },
+    { label: "Contact", to: "/contact" },
+    { label: "Customer Stories", to: "/features" },
+    { label: "Start Trial", to: "/signup" },
   ],
 };
 
@@ -214,7 +216,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Navbar */}
-      <nav className={`sticky top-0 z-50 border-b transition-all duration-300 ${scrolled ? "border-border/60 bg-background/85 backdrop-blur-xl shadow-sm" : "border-transparent bg-background/40 backdrop-blur-md"}`}>
+      <nav className={`sticky top-0 z-50 border-b supports-[backdrop-filter]:backdrop-blur-xl transition-all duration-300 ${scrolled ? "border-border/60 bg-background/90 shadow-sm" : "border-border/30 bg-background/80 shadow-sm"}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="group flex items-center gap-2">
             <div className="relative">
@@ -224,29 +226,29 @@ export default function LandingPage() {
             <span className="font-display text-xl font-bold tracking-tight">Mero Pasal</span>
           </Link>
 
-          <div className="hidden items-center gap-5 lg:gap-7 md:flex">
+          <div className="hidden items-center gap-4 xl:gap-6 lg:flex">
             {navLinks.map((l) => (
-              <a key={l.href} href={l.href} className="relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground after:absolute after:bottom-[-4px] after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full">
+              <Link key={l.to} to={l.to} className="relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground after:absolute after:bottom-[-4px] after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full">
                 {l.label}
-              </a>
+              </Link>
             ))}
           </div>
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 lg:flex">
             <Button variant="ghost" asChild><Link to="/login">Log in</Link></Button>
             <Button asChild className="shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow">
               <Link to="/signup">Start Free Trial <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
 
-          <button className="md:hidden text-foreground" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+          <button className="lg:hidden text-foreground" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
         {mobileMenuOpen && (
-          <div className="border-t border-border bg-background px-4 pb-4 pt-2 md:hidden animate-fade-in">
+          <div className="border-t border-border bg-background px-4 pb-4 pt-2 lg:hidden animate-fade-in">
             {navLinks.map((l) => (
-              <a key={l.href} href={l.href} className="block py-2 text-sm text-muted-foreground" onClick={() => setMobileMenuOpen(false)}>{l.label}</a>
+              <Link key={l.to} to={l.to} className="block py-2 text-sm text-muted-foreground" onClick={() => setMobileMenuOpen(false)}>{l.label}</Link>
             ))}
             <div className="mt-3 flex flex-col gap-2">
               <Button variant="outline" asChild><Link to="/login">Log in</Link></Button>
@@ -257,7 +259,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-slate-950">
+      <section id="home" className="relative scroll-mt-20 overflow-hidden bg-slate-950">
         <img
           src={cafeWorkflowImg}
           alt=""
@@ -401,13 +403,13 @@ export default function LandingPage() {
       </section>
 
       {/* Visual workflow stories */}
-      <section className="relative border-t border-border/50 bg-background py-16 sm:py-24">
+      <section id="about" className="relative scroll-mt-20 border-t border-border/50 bg-background py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="mx-auto max-w-2xl text-center">
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">Built for real businesses</Badge>
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">About Mero Pasal</Badge>
               <h2 className="font-display text-3xl font-bold sm:text-5xl">Looks simple. Works everywhere.</h2>
-              <p className="mt-4 text-muted-foreground">Cafe counter, retail shelf, and finance desk - all connected in one business flow.</p>
+              <p className="mt-4 text-muted-foreground">Mero Pasal is built for Nepali businesses that need billing, inventory, restaurant operations, and finance in one clean system.</p>
             </div>
           </Reveal>
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
@@ -939,6 +941,80 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Contact */}
+      <section id="contact" className="scroll-mt-20 border-t border-border/50 bg-background py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <Reveal>
+              <div>
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary">Contact</Badge>
+                <h2 className="font-display text-3xl font-bold sm:text-5xl">Need setup for your shop?</h2>
+                <p className="mt-4 max-w-xl text-muted-foreground">
+                  We can configure Mero Pasal for restaurant, pharmacy, clothes, hardware, grocery, electronics, or mixed inventory business.
+                </p>
+                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                  {[
+                    { icon: Phone, label: "Call", value: "9867077179", href: "tel:9867077179" },
+                    { icon: Mail, label: "Email", value: "info@yetibytes.com.np", href: "mailto:info@yetibytes.com.np" },
+                    { icon: MapPin, label: "Location", value: "Kathmandu, Nepal", href: "/contact" },
+                    { icon: Sparkles, label: "Website", value: "yetibytes.com.np", href: "https://yetibytes.com.np" },
+                  ].map((item) => (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+                      className="group rounded-xl border border-border/60 bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg hover:shadow-primary/10"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                        <item.icon className="h-5 w-5" />
+                      </span>
+                      <span className="mt-3 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{item.label}</span>
+                      <span className="mt-1 block text-sm font-semibold">{item.value}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-xl shadow-primary/10">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    "Business type configuration",
+                    "Restaurant QR menu setup",
+                    "Inventory category setup",
+                    "Finance/account opening balance",
+                    "Printer and invoice format",
+                    "Staff role and access setup",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/70 p-3 text-sm">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                        <Check className="h-3 w-3 text-primary" />
+                      </span>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 rounded-xl bg-primary/10 p-5">
+                  <p className="text-sm font-semibold text-primary">Implementation flow</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    First we choose business type, then configure modules, branches, users, products, accounts, bills, printers, and reports according to the client.
+                  </p>
+                </div>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <Button className="flex-1" asChild>
+                    <Link to="/signup">Start Free Trial</Link>
+                  </Button>
+                  <Button variant="outline" className="flex-1" asChild>
+                    <a href="tel:9867077179">Call Now</a>
+                  </Button>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="border-t border-border/50">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
@@ -1011,7 +1087,7 @@ export default function LandingPage() {
                 <ul className="space-y-2.5">
                   {links.map((l) => (
                     <li key={l.label}>
-                      <a href={l.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">{l.label}</a>
+                      <Link to={l.to} className="text-sm text-muted-foreground transition-colors hover:text-foreground">{l.label}</Link>
                     </li>
                   ))}
                 </ul>

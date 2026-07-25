@@ -21,8 +21,8 @@ const planIcon: Record<string, React.ElementType> = { cafe: Coffee, inventory: P
 
 const statusColor: Record<string, string> = {
   active:    "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  trial:     "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  suspended: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  trial:     "bg-green-500/15 text-green-400 border-green-500/30",
+  suspended: "bg-red-500/15 text-red-400 border-red-500/30",
   expired:   "bg-red-500/15 text-red-400 border-red-500/30",
   cancelled: "bg-slate-600/30 text-slate-400 border-slate-600/40",
 };
@@ -108,7 +108,7 @@ export default function SuperAdminUsers() {
           <Button variant="ghost" size="icon" onClick={load} className="text-slate-400 hover:text-white hover:bg-slate-800">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
-          <Button onClick={() => navigate("/super-admin/companies")} className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 shrink-0" size="sm">
+          <Button onClick={() => navigate("/super-admin/companies")} className="bg-green-600 hover:bg-green-500 text-white gap-2 shrink-0" size="sm">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Add Client</span>
           </Button>
@@ -117,9 +117,9 @@ export default function SuperAdminUsers() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Clients", value: stats.total, color: "text-indigo-400", bg: "bg-indigo-500/10", icon: Users },
+          { label: "Total Clients", value: stats.total, color: "text-green-400", bg: "bg-green-500/10", icon: Users },
           { label: "Active", value: stats.active, color: "text-emerald-400", bg: "bg-emerald-500/10", icon: UserCheck },
-          { label: "Trial", value: stats.trial, color: "text-blue-400", bg: "bg-blue-500/10", icon: Shield },
+          { label: "Trial", value: stats.trial, color: "text-green-400", bg: "bg-green-500/10", icon: Shield },
           { label: "Inactive", value: stats.inactive, color: "text-slate-400", bg: "bg-slate-700/50", icon: UserX },
         ].map((s) => (
           <Card key={s.label} className="bg-slate-900 border-slate-800">
@@ -140,7 +140,7 @@ export default function SuperAdminUsers() {
           <Input
             placeholder="Search by name, email, or contact…"
             value={search} onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500"
+            className="pl-9 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-green-500"
           />
         </div>
         <div className="flex gap-2">
@@ -182,7 +182,7 @@ export default function SuperAdminUsers() {
             <Card key={c.id} className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-indigo-600/20 flex items-center justify-center shrink-0 text-sm font-bold text-indigo-400">
+                  <div className="w-9 h-9 rounded-full bg-green-600/20 flex items-center justify-center shrink-0 text-sm font-bold text-green-400">
                     {initials(c)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -201,7 +201,7 @@ export default function SuperAdminUsers() {
                 </div>
                 <div className="flex gap-2 mt-3 pt-3 border-t border-slate-800">
                   <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1 border-slate-700 text-slate-300 hover:bg-slate-800" onClick={() => setViewClient(c)}><Eye className="w-3.5 h-3.5" />View</Button>
-                  <Button size="sm" variant="outline" className={cn("h-8 text-xs", c.status === "active" ? "border-amber-800/50 text-amber-400 hover:bg-amber-500/10" : "border-emerald-800/50 text-emerald-400 hover:bg-emerald-500/10")} onClick={() => toggleStatus(c)}>
+                  <Button size="sm" variant="outline" className={cn("h-8 text-xs", c.status === "active" ? "border-red-800/50 text-red-400 hover:bg-red-500/10" : "border-emerald-800/50 text-emerald-400 hover:bg-emerald-500/10")} onClick={() => toggleStatus(c)}>
                     {c.status === "active" ? <Ban className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                   </Button>
                   <Button size="sm" variant="outline" className="h-8 text-xs border-red-900/50 text-red-400 hover:bg-red-500/10" onClick={() => setDeleteId(c.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
@@ -237,7 +237,7 @@ export default function SuperAdminUsers() {
                 <TableRow key={c.id} className="border-slate-800 hover:bg-slate-800/40">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex items-center justify-center shrink-0 text-xs font-bold text-indigo-400">{initials(c)}</div>
+                      <div className="w-8 h-8 rounded-full bg-green-600/20 flex items-center justify-center shrink-0 text-xs font-bold text-green-400">{initials(c)}</div>
                       <div className="min-w-0">
                         <p className="font-medium text-white text-sm">{c.business_name}</p>
                         <p className="text-xs text-slate-500 truncate max-w-[180px]">{c.email}</p>
@@ -259,7 +259,7 @@ export default function SuperAdminUsers() {
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700" onClick={() => setViewClient(c)}><Eye className="w-3.5 h-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700" onClick={() => navigate("/super-admin/companies")}><Pencil className="w-3.5 h-3.5" /></Button>
                       {c.status === "active" ? (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10" title="Suspend" onClick={() => toggleStatus(c)}><Ban className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10" title="Suspend" onClick={() => toggleStatus(c)}><Ban className="w-3.5 h-3.5" /></Button>
                       ) : (
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10" title="Activate" onClick={() => toggleStatus(c)}><CheckCircle2 className="w-3.5 h-3.5" /></Button>
                       )}
@@ -280,7 +280,7 @@ export default function SuperAdminUsers() {
           {viewClient && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-indigo-600/20 flex items-center justify-center text-xl font-bold text-indigo-400 shrink-0">
+                <div className="w-14 h-14 rounded-full bg-green-600/20 flex items-center justify-center text-xl font-bold text-green-400 shrink-0">
                   {initials(viewClient)}
                 </div>
                 <div>
@@ -302,7 +302,7 @@ export default function SuperAdminUsers() {
               </div>
               <div className="flex flex-col gap-2 pt-1">
                 {viewClient.status === "active" ? (
-                  <Button variant="outline" className="border-amber-800/50 text-amber-400 hover:bg-amber-500/10 gap-2" onClick={() => toggleStatus(viewClient)}>
+                  <Button variant="outline" className="border-red-800/50 text-red-400 hover:bg-red-500/10 gap-2" onClick={() => toggleStatus(viewClient)}>
                     <Ban className="w-4 h-4" />Suspend
                   </Button>
                 ) : (
@@ -336,3 +336,4 @@ export default function SuperAdminUsers() {
     </div>
   );
 }
+

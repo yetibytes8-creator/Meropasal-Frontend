@@ -182,7 +182,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const handleSignOut = () => { signOut(); navigate("/"); };
 
   return (
-    <div className="min-h-screen flex bg-background overflow-x-hidden">
+    <div className="h-dvh min-h-dvh flex bg-background overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-64 border-r bg-card flex-col shrink-0">
         <div className="p-6 border-b">
@@ -193,7 +193,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <SidebarFooter onBack={handleBack} onSignOut={handleSignOut} />
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 max-w-full">
+      <div className="flex-1 flex min-h-0 flex-col min-w-0 max-w-full">
         {/* Mobile / Tablet Header */}
         <header className="lg:hidden h-14 flex items-center justify-between border-b px-4 bg-card shrink-0">
           <div>
@@ -205,7 +205,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </Button>
         </header>
 
-        <main className="flex-1 min-w-0 overflow-auto overflow-x-hidden">
+        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain">
           <div className="min-w-0 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">{children}</div>
         </main>
       </div>

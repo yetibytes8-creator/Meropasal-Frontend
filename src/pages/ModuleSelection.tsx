@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coffee, Package, LogOut, Sparkles, Crown, Clock } from "lucide-react";
+import { Coffee, LogOut, Sparkles, Crown, Clock } from "lucide-react";
+import { getBusinessProfileFromSystemConfig } from "@/lib/businessProfiles";
 
 const ModuleSelection = () => {
-  const { user, profile, subscription, signOut, setActiveModule, canAccessModule, isTrialExpired } = useAuth();
+  const { user, profile, subscription, signOut, setActiveModule, canAccessModule, isTrialExpired, systemConfig } = useAuth();
   const navigate = useNavigate();
+  const businessProfile = getBusinessProfileFromSystemConfig(systemConfig, subscription?.plan?.module_access);
+  const BusinessIcon = businessProfile.icon;
 
   const selectModule = (module: "restaurant" | "inventory") => {
     if (!canAccessModule(module)) {
@@ -107,11 +110,11 @@ const ModuleSelection = () => {
           >
             <CardHeader className="text-center py-6 sm:py-10">
               <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-inventory/10 mx-auto mb-4 group-hover:bg-inventory/20 transition-colors">
-                <Package className="w-8 h-8 sm:w-10 sm:h-10 text-inventory" />
+                <BusinessIcon className="w-8 h-8 sm:w-10 sm:h-10 text-inventory" />
               </div>
-              <CardTitle className="text-xl font-display">Shop Inventory</CardTitle>
+              <CardTitle className="text-xl font-display">{businessProfile.inventoryLabel}</CardTitle>
               <CardDescription className="mt-2">
-                Product, stock, purchase, supplier, sale, return, report, and alerts
+                {businessProfile.description}
               </CardDescription>
               {!canAccessModule("inventory") && (
                 <Badge variant="outline" className="mt-3 text-muted-foreground">

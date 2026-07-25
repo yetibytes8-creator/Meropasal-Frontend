@@ -48,7 +48,7 @@ export function generateKotHTML(order: Order, settings: BusinessSettings, tableT
     </section>
   `;
 
-  return `<!DOCTYPE html><html><head><title>KOT #${esc(order.id.slice(1))}</title>
+  return `<!DOCTYPE html><html><head><link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" /><title>KOT #${esc(order.id.slice(1))}</title>
     <style>
       body{font-family:Arial,sans-serif;margin:0;background:#fff;color:#111}
       .ticket{width:300px;margin:0 auto;padding:${kot.compactView ? "10px" : "16px"} 12px;page-break-after:always}

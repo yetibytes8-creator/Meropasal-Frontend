@@ -24,7 +24,7 @@ const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 5 * 60 * 1000;
 
 const TEST_ACCOUNTS = [
-  { label: "Yeti Bytes", email: "superadmin@yetibyts.com", password: "SuperAdmin@1234", color: "bg-indigo-500/10 text-indigo-700 border-indigo-200" },
+  { label: "Yeti Bytes", email: "superadmin@yetibytes.com", password: "SuperAdmin@1234", color: "bg-indigo-500/10 text-indigo-700 border-indigo-200" },
   { label: "Client Admin", email: "admin@test.com", password: "Admin@1234", color: "bg-purple-500/10 text-purple-700 border-purple-200" },
   { label: "Restaurant", email: "restaurant@test.com", password: "Test@1234", color: "bg-orange-500/10 text-orange-700 border-orange-200" },
   { label: "Inventory", email: "inventory@test.com", password: "Test@1234", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200" },

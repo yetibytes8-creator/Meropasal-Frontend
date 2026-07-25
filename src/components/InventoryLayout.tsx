@@ -20,7 +20,7 @@ import { useStaffAuth } from "@/contexts/StaffAuthContext";
 import StaffProfileBadge from "@/components/StaffProfileBadge";
 import { canAccessRoute, type StaffRole } from "@/lib/rbac";
 import AppTopBar from "@/components/AppTopBar";
-import FinanceSidebarMenu from "@/components/FinanceSidebarMenu";
+import { getBusinessProfileFromSystemConfig } from "@/lib/businessProfiles";
 
 const inventoryNav = [
   { title: "Dashboard", url: "/inventory", icon: LayoutDashboard },
@@ -58,6 +58,7 @@ const inventoryNavGroups = [
   ...group,
   items: group.items.map((title) => inventoryNav.find((item) => item.title === title)).filter(Boolean) as typeof inventoryNav,
 }));
+const INVENTORY_PANEL_FALLBACK_LABEL = "Inventory Panel";
 
 function InventorySidebarContent() {
   const { state } = useSidebar();
@@ -65,7 +66,16 @@ function InventorySidebarContent() {
   const location = useLocation();
   const { settings } = useSettings();
   const { staffUser } = useStaffAuth();
-  const { canAccessFeature } = useAuth();
+  const { canAccessFeature, systemConfig, subscription } = useAuth();
+  const businessProfile = getBusinessProfileFromSystemConfig(systemConfig, subscription?.plan?.module_access);
+  const panelLabel = businessProfile.moduleLabel ? `${businessProfile.moduleLabel} Panel` : INVENTORY_PANEL_FALLBACK_LABEL;
+  const displayTitle = (title: string) => {
+    if (title === "Products") return businessProfile.productLabel;
+    if (title === "Stock Control") return businessProfile.stockLabel;
+    if (title === "Purchases") return businessProfile.purchaseLabel;
+    if (title === "Sales (POS)") return businessProfile.salesLabel;
+    return title;
+  };
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Overview: true,
     Stock: true,
@@ -90,7 +100,7 @@ function InventorySidebarContent() {
   return (
     // hidden on mobile — bottom nav handles navigation there
     <Sidebar collapsible="icon" className="hidden md:flex border-r-0 print:hidden">
-      <SidebarContent className="bg-sidebar bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.2),transparent_42%),linear-gradient(180deg,hsl(var(--sidebar-background)),hsl(4_38%_11%))] border-r border-sidebar-border/70">
+      <SidebarContent className="bg-sidebar bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.26),transparent_42%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.11),transparent_38%),linear-gradient(180deg,hsl(var(--sidebar-background)),hsl(151_42%_9%))] border-r border-sidebar-border/70">
         <div className="p-4 flex items-center gap-3">
           {settings.logo
             ? <img src={settings.logo} alt={settings.businessName} className="w-8 h-8 rounded object-contain shrink-0" />
@@ -103,7 +113,7 @@ function InventorySidebarContent() {
           )}
         </div>
         <SidebarGroup>
-          <SidebarGroupLabel>Inventory Panel</SidebarGroupLabel>
+          <SidebarGroupLabel>{panelLabel}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {collapsed ? (
@@ -138,7 +148,7 @@ function InventorySidebarContent() {
                             <SidebarMenuSubItem key={item.title}>
                               <SidebarMenuSubButton asChild isActive={location.pathname === item.url} size="sm">
                                 <NavLink to={item.url} end>
-                                  <span>{item.title}</span>
+                                  <span>{displayTitle(item.title)}</span>
                                 </NavLink>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -152,14 +162,6 @@ function InventorySidebarContent() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {!collapsed && canAccessFeature("finance") && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Finance</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <FinanceSidebarMenu base="/inventory" />
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
     </Sidebar>
   );
@@ -179,9 +181,9 @@ export default function InventoryLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full overflow-x-hidden print:block print:min-h-0">
+        <div className="h-dvh min-h-dvh flex w-full overflow-hidden print:block print:h-auto print:min-h-0 print:overflow-visible">
           <InventorySidebarContent />
-          <div className="flex-1 flex flex-col min-w-0 max-w-full print:block">
+          <div className="flex-1 flex min-h-0 flex-col min-w-0 max-w-full print:block">
             <AppTopBar
               module="inventory"
               onSignOut={handleSignOut}
@@ -215,7 +217,7 @@ export default function InventoryLayout({ children }: { children: ReactNode }) {
             </header>
             )}
             {/* pb-20 on mobile reserves space above the fixed bottom nav */}
-            <main className="print-root flex-1 min-w-0 max-w-full p-3 sm:p-4 md:p-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 overflow-auto overflow-x-hidden print:block print:overflow-visible print:p-0 print:pb-0">{children}</main>
+            <main className="app-workspace print-root flex-1 min-h-0 min-w-0 max-w-full p-3 sm:p-4 md:p-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain print:block print:overflow-visible print:p-0 print:pb-0">{children}</main>
           </div>
         </div>
       </SidebarProvider>

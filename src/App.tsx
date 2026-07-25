@@ -46,6 +46,7 @@ function StaffModuleSelection() {
 }
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const MarketingInfoPage = lazy(() => import("./pages/MarketingInfoPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SignupPage = lazy(() => import("./pages/SignupPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -250,7 +251,12 @@ function AppRoutes() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/how-it-works" element={<MarketingInfoPage />} />
+          <Route path="/features" element={<MarketingInfoPage />} />
+          <Route path="/modules" element={<MarketingInfoPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/about" element={<MarketingInfoPage />} />
+          <Route path="/contact" element={<MarketingInfoPage />} />
           <Route path="/qr-menu" element={<PublicMenuPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -362,6 +368,10 @@ function AppRoutes() {
       <Route path="/signup" element={<SmartHomeRedirect />} />
       <Route path="/modules" element={<SmartHomeRedirect />} />
       <Route path="/account" element={<AccountPage />} />
+      <Route path="/how-it-works" element={<MarketingInfoPage />} />
+      <Route path="/features" element={<MarketingInfoPage />} />
+      <Route path="/about" element={<MarketingInfoPage />} />
+      <Route path="/contact" element={<MarketingInfoPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/trial-expired" element={<TrialExpiredPage />} />
       <Route path="/access-denied" element={<AccessDeniedPage />} />
@@ -380,6 +390,7 @@ function AppRoutes() {
       <Route path="/finance/tax-rates" element={<FinanceGuard><FinanceLayout><TaxRatesPage /></FinanceLayout></FinanceGuard>} />
       <Route path="/finance/balance-transfer" element={<FinanceGuard><FinanceLayout><BalanceTransferPage /></FinanceLayout></FinanceGuard>} />
       <Route path="/finance/chart-of-accounts" element={<FinanceGuard><FinanceLayout><ChartOfAccountsPage /></FinanceLayout></FinanceGuard>} />
+      <Route path="/finance/settings" element={<FinanceGuard><FinanceLayout><SettingsPage /></FinanceLayout></FinanceGuard>} />
       {accountingModuleSlugs.map((slug) => (
         <Route key={`finance-${slug}`} path={`/finance/${slug}`} element={<FinanceGuard><FinanceLayout><AccountingModulePage /></FinanceLayout></FinanceGuard>} />
       ))}

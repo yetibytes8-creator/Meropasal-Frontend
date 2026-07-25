@@ -22,14 +22,20 @@ import {
   ShieldAlert, Loader2, RefreshCw, CreditCard, Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  buildBusinessSystemConfig,
+  getBusinessProfile,
+  profileModuleAccess,
+  resolveBusinessProfile,
+} from "@/lib/businessProfiles";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const statusColor: Record<CompanyStatus, string> = {
-  active:    "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  trial:     "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  suspended: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  cancelled: "bg-slate-600/30 text-slate-400 border-slate-600/40",
+  active:    "bg-emerald-50 text-emerald-700 border-emerald-200",
+  trial:     "bg-green-50 text-green-700 border-green-200",
+  suspended: "bg-red-50 text-red-700 border-red-200",
+  cancelled: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
 const planLabel: Record<CompanyPlan, string> = {
@@ -45,9 +51,9 @@ const planIcon: Record<CompanyPlan, React.ElementType> = {
 };
 
 const planColor: Record<CompanyPlan, string> = {
-  cafe: "text-orange-400 bg-orange-500/10",
-  inventory: "text-emerald-400 bg-emerald-500/10",
-  combo: "text-indigo-400 bg-indigo-500/10",
+  cafe: "text-red-700 bg-red-50 border border-red-100",
+  inventory: "text-emerald-700 bg-emerald-50 border border-emerald-100",
+  combo: "text-teal-700 bg-teal-50 border border-teal-100",
 };
 
 const PLAN_OPTIONS = [
@@ -57,14 +63,97 @@ const PLAN_OPTIONS = [
 ];
 
 const emptyForm = {
-  name: "", businessType: "" as BusinessType | "",
+  name: "", businessType: "general_inventory" as BusinessType | "",
   contactPerson: "", email: "", phone: "",
   address: "", city: "", country: "Nepal",
-  plan: "cafe" as CompanyPlan,
+  plan: "inventory" as CompanyPlan,
   planId: "",
   status: "trial" as CompanyStatus,
   maxUsers: "5", expiresAt: "", notes: "", logo: "",
 };
+
+const demoPlanOptions = [
+  { id: 101, name: "Restaurant Starter", module_access: "cafe" },
+  { id: 102, name: "Inventory Pro", module_access: "inventory" },
+  { id: 103, name: "Combo Business Suite", module_access: "combo" },
+];
+
+const demoCompanies: Company[] = [
+  {
+    id: "demo-clothes",
+    userId: 9901,
+    name: "Himalayan Clothing Store",
+    businessType: "clothing",
+    contactPerson: "Preview Owner",
+    email: "clothes@preview.local",
+    phone: "9800000001",
+    address: "New Road",
+    city: "Kathmandu",
+    country: "Nepal",
+    plan: "inventory",
+    planId: 102,
+    planName: "Inventory Pro",
+    subscriptionId: 9001,
+    status: "active",
+    createdAt: "2026-07-17",
+    expiresAt: "2027-07-17",
+    maxUsers: 8,
+    activeUsers: 4,
+    monthlyRevenue: 2500,
+    notes: "Preview: size, color, SKU, branch stock and finance mapping enabled.",
+  },
+  {
+    id: "demo-pharmacy",
+    userId: 9902,
+    name: "City Pharmacy",
+    businessType: "pharmacy",
+    contactPerson: "Preview Pharmacist",
+    email: "pharmacy@preview.local",
+    phone: "9800000002",
+    address: "Lakeside",
+    city: "Pokhara",
+    country: "Nepal",
+    plan: "inventory",
+    planId: 102,
+    planName: "Inventory Pro",
+    subscriptionId: 9002,
+    status: "trial",
+    createdAt: "2026-07-18",
+    expiresAt: "2026-08-18",
+    maxUsers: 5,
+    activeUsers: 2,
+    monthlyRevenue: 1800,
+    notes: "Preview: batch, expiry, supplier, tax and low-stock warnings enabled.",
+  },
+  {
+    id: "demo-restaurant",
+    userId: 9903,
+    name: "Chiya Xpress",
+    businessType: "restaurant",
+    contactPerson: "Cafe Owner",
+    email: "restaurant@test.com",
+    phone: "9867077179",
+    address: "Setopool",
+    city: "Kathmandu",
+    country: "Nepal",
+    plan: "combo",
+    planId: 103,
+    planName: "Combo Business Suite",
+    subscriptionId: 9003,
+    status: "active",
+    createdAt: "2026-07-01",
+    expiresAt: "2027-07-01",
+    maxUsers: 10,
+    activeUsers: 6,
+    monthlyRevenue: 3500,
+    notes: "Preview: QR menu, kitchen, billing, purchase and finance enabled.",
+  },
+];
+
+function generatePreviewPassword() {
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `Mero@${suffix}123`;
+}
 
 // Map frontend Company from API response
 import type { SuperAdminClient } from "@/lib/api";
@@ -105,18 +194,18 @@ function CredentialsDialog({
   };
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-md sm:w-full bg-slate-900 border-slate-700 text-white">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md sm:w-full border-emerald-100 bg-white text-slate-900 shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
-            <KeyRound className="w-5 h-5 text-emerald-400" />
+          <DialogTitle className="flex items-center gap-2 text-emerald-950">
+            <KeyRound className="w-5 h-5 text-emerald-700" />
             Client Credentials Created
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
             <div className="flex items-start gap-2">
-              <ShieldAlert className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-emerald-300 leading-relaxed">
+              <ShieldAlert className="w-4 h-4 text-emerald-700 mt-0.5 shrink-0" />
+              <p className="text-xs text-emerald-800 leading-relaxed">
                 <strong>{name}</strong> has been created. Share these credentials with the client.
                 The password won't be shown again — save it now.
               </p>
@@ -125,19 +214,19 @@ function CredentialsDialog({
 
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-slate-400 text-xs">Email / Login ID</Label>
+              <Label className="text-slate-700 text-xs">Email / Login ID</Label>
               <div className="flex items-center gap-2">
-                <Input value={email} readOnly className="bg-slate-800 border-slate-700 text-white font-mono text-sm" />
-                <Button variant="outline" size="icon" className="shrink-0 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800" onClick={() => copy(email, "Email")}>
+                <Input value={email} readOnly className="border-slate-200 bg-slate-50 text-slate-900 font-mono text-sm" />
+                <Button variant="outline" size="icon" className="shrink-0 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => copy(email, "Email")}>
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-slate-400 text-xs">Password</Label>
+              <Label className="text-slate-700 text-xs">Password</Label>
               <div className="flex items-center gap-2">
-                <Input value={password} readOnly className="bg-slate-800 border-slate-700 text-white font-mono text-sm tracking-widest" />
-                <Button variant="outline" size="icon" className="shrink-0 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800" onClick={() => copy(password, "Password")}>
+                <Input value={password} readOnly className="border-slate-200 bg-slate-50 text-slate-900 font-mono text-sm tracking-widest" />
+                <Button variant="outline" size="icon" className="shrink-0 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => copy(password, "Password")}>
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
@@ -147,7 +236,7 @@ function CredentialsDialog({
           {/* Copy both at once */}
           <Button
             variant="outline"
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white gap-2"
+            className="w-full border-emerald-200 text-emerald-800 hover:bg-emerald-50 gap-2"
             onClick={() => copy(`Email: ${email}\nPassword: ${password}`, "ID & Password")}
           >
             <Copy className="w-4 h-4" />
@@ -193,25 +282,25 @@ function RecordPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm sm:w-full bg-slate-900 border-slate-700 text-white">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm sm:w-full border-emerald-100 bg-white text-slate-900 shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
-            <CreditCard className="w-5 h-5 text-green-400" />
+          <DialogTitle className="flex items-center gap-2 text-emerald-950">
+            <CreditCard className="w-5 h-5 text-emerald-700" />
             Record Payment
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-slate-400">Recording payment for <span className="text-white font-medium">{company?.name}</span></p>
+          <p className="text-sm text-slate-600">Recording payment for <span className="font-medium text-slate-950">{company?.name}</span></p>
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Amount (NPR)</Label>
+            <Label className="text-slate-700 text-xs">Amount (NPR)</Label>
             <Input type="number" placeholder="e.g. 4999" value={amount} onChange={(e) => setAmount(e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500" />
+              className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Payment Method</Label>
+            <Label className="text-slate-700 text-xs">Payment Method</Label>
             <Select value={provider} onValueChange={setProvider}>
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-700">
+              <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+              <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                 <SelectItem value="esewa">eSewa</SelectItem>
@@ -222,8 +311,8 @@ function RecordPaymentDialog({
             </Select>
           </div>
           <div className="flex gap-2 pt-1">
-            <Button variant="outline" className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800" onClick={onClose}>Cancel</Button>
-            <Button className="flex-1 bg-green-600 hover:bg-green-500 text-white" onClick={handleSave} disabled={saving}>
+            <Button variant="outline" className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50" onClick={onClose}>Cancel</Button>
+            <Button className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white" onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Record Payment"}
             </Button>
           </div>
@@ -324,7 +413,7 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-slate-500">{staff.length} staff member{staff.length !== 1 ? "s" : ""}</p>
-        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-500 text-white gap-1.5 h-8" onClick={openAdd}>
+        <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white gap-1.5 h-8" onClick={openAdd}>
           <Plus className="w-3.5 h-3.5" />Add Staff
         </Button>
       </div>
@@ -341,13 +430,13 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
       ) : (
         <div className="space-y-2">
           {staff.map((s) => (
-            <div key={s.id} className="flex items-center justify-between bg-slate-800/60 rounded-lg p-3">
+            <div key={s.id} className="flex items-center justify-between rounded-lg border border-emerald-100 bg-white p-3 shadow-sm">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">{s.name}</p>
+                <p className="text-sm font-medium text-slate-950 truncate">{s.name}</p>
                 <p className="text-xs text-slate-500 truncate">{s.email} · {s.role} · {s.department}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-700" onClick={() => openEdit(s)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => openEdit(s)}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => setDeleteId(s.id)}>
@@ -361,34 +450,34 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
 
       {/* Add/Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md sm:w-full bg-slate-900 border-slate-700 text-white">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md sm:w-full border-emerald-100 bg-white text-slate-900 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-white">{editingId ? "Edit Staff Member" : "Add Staff Member"}</DialogTitle>
+            <DialogTitle className="text-emerald-950">{editingId ? "Edit Staff Member" : "Add Staff Member"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-xs">Full Name</Label>
+              <Label className="text-slate-700 text-xs">Full Name</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white" />
+                className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs">Email</Label>
+                <Label className="text-slate-700 text-xs">Email</Label>
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white" />
+                  className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs">Phone</Label>
+                <Label className="text-slate-700 text-xs">Phone</Label>
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white" />
+                  className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs">Role</Label>
+                <Label className="text-slate-700 text-xs">Role</Label>
                 <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as ApiStaff["role"] })}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700">
+                  <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="cashier">Cashier</SelectItem>
@@ -398,10 +487,10 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs">Department</Label>
+                <Label className="text-slate-700 text-xs">Department</Label>
                 <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v as ApiStaff["department"] })}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700">
+                  <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
                     <SelectItem value="restaurant">Restaurant</SelectItem>
                     <SelectItem value="inventory">Inventory</SelectItem>
                     <SelectItem value="both">Both</SelectItem>
@@ -411,15 +500,15 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs">Salary (Rs.)</Label>
+                <Label className="text-slate-700 text-xs">Salary (Rs.)</Label>
                 <Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white" />
+                  className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs">Status</Label>
+                <Label className="text-slate-700 text-xs">Status</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as ApiStaff["status"] })}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700">
+                  <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="on-leave">On Leave</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
@@ -428,14 +517,14 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-xs">{editingId ? "New Password (leave blank to keep existing)" : "Password"}</Label>
+              <Label className="text-slate-700 text-xs">{editingId ? "New Password (leave blank to keep existing)" : "Password"}</Label>
               <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                 placeholder={editingId ? "" : "Min. 6 characters"}
-                className="bg-slate-800 border-slate-700 text-white" />
+                className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
             </div>
             <div className="flex gap-2 pt-1">
-              <Button variant="outline" className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={handleSave} disabled={saving}>
+              <Button variant="outline" className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white" onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? "Save Changes" : "Add Staff"}
               </Button>
             </div>
@@ -445,13 +534,13 @@ function ClientStaffTab({ clientId }: { clientId: number }) {
 
       {/* Delete confirm */}
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent className="bg-slate-900 border-slate-700 text-white">
+        <AlertDialogContent className="border-emerald-100 bg-white text-slate-900">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Remove staff member?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle className="text-slate-950">Remove staff member?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600">This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-slate-200 text-slate-700 hover:bg-slate-50 bg-transparent">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-500 text-white border-0">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -505,8 +594,9 @@ export default function CompaniesPage() {
       setApiAvailable(true);
     } catch (err) {
       setApiAvailable(false);
-      setCompanies([]);
-      toast.error(err instanceof Error ? err.message : "Backend unavailable. Super admin data could not be loaded.");
+      setCompanies(demoCompanies);
+      setPlanOptions(demoPlanOptions);
+      toast.info("Preview mode enabled. Demo companies are shown until the backend/API is connected.");
     } finally {
       setLoading(false);
     }
@@ -545,9 +635,32 @@ export default function CompaniesPage() {
 
   // ── Form helpers ─────────────────────────────────────────────────────────────
 
+  const findPlanIdForModule = (moduleAccess: CompanyPlan) => {
+    const match = planOptions.find((plan) => plan.module_access === moduleAccess);
+    return match ? String(match.id) : "";
+  };
+
+  const selectedBusinessProfile = getBusinessProfile(resolveBusinessProfile(form.businessType || "general_inventory"));
+
+  const applyBusinessType = (businessType: BusinessType) => {
+    const moduleAccess = profileModuleAccess(businessType);
+    setForm((current) => ({
+      ...current,
+      businessType,
+      plan: moduleAccess,
+      planId: findPlanIdForModule(moduleAccess),
+    }));
+  };
+
   const openAdd = () => {
     setEditCompany(null);
-    setForm({ ...emptyForm, expiresAt: new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0] });
+    const moduleAccess = profileModuleAccess(emptyForm.businessType);
+    setForm({
+      ...emptyForm,
+      plan: moduleAccess,
+      planId: findPlanIdForModule(moduleAccess),
+      expiresAt: new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
+    });
     setAddOpen(true);
   };
 
@@ -582,14 +695,11 @@ export default function CompaniesPage() {
 
     setSaving(true);
 
-    if (!apiAvailable) {
-      toast.error("Backend unavailable. Client changes cannot be saved.");
-      setSaving(false);
-      return;
-    }
-
     if (apiAvailable) {
       try {
+        const businessType = form.businessType || "general_inventory";
+        const systemConfig = buildBusinessSystemConfig(businessType);
+
         // Determine plan_id: prefer selected planId, else find from module_access
         let planId = parseInt(form.planId);
         if (!planId) {
@@ -601,7 +711,7 @@ export default function CompaniesPage() {
           // Update
           const updated = await superAdmin.updateClient(editCompany.userId, {
             business_name: form.name,
-            business_type: form.businessType || undefined,
+            business_type: businessType,
             contact_person: form.contactPerson,
             phone: form.phone,
             address: form.address,
@@ -612,6 +722,8 @@ export default function CompaniesPage() {
             max_users: parseInt(form.maxUsers) || 5,
             expires_at: form.expiresAt,
             internal_notes: form.notes,
+            finance_enabled: systemConfig.features.finance !== false,
+            system_config: systemConfig,
           });
           setCompanies((prev) => prev.map((c) => c.userId === editCompany.userId ? apiClientToCompany(updated) : c));
           toast.success(`${form.name} updated`);
@@ -619,7 +731,7 @@ export default function CompaniesPage() {
           // Create
           const result = await superAdmin.createClient({
             business_name: form.name,
-            business_type: form.businessType || "",
+            business_type: businessType,
             contact_person: form.contactPerson,
             email: form.email,
             phone: form.phone,
@@ -631,6 +743,8 @@ export default function CompaniesPage() {
             max_users: parseInt(form.maxUsers) || 5,
             expires_at: form.expiresAt,
             internal_notes: form.notes,
+            finance_enabled: systemConfig.features.finance !== false,
+            system_config: systemConfig,
           });
           setCompanies((prev) => [apiClientToCompany(result.client), ...prev]);
           setCredsData({ email: result.client.email, password: result.generated_password, name: form.name });
@@ -642,6 +756,42 @@ export default function CompaniesPage() {
         setSaving(false);
         return;
       }
+    } else {
+      const businessType = form.businessType || "general_inventory";
+      const localPlanId = parseInt(form.planId) || demoPlanOptions.find((plan) => plan.module_access === form.plan)?.id;
+      const localCompany: Company = {
+        id: editCompany?.id ?? `local-${Date.now()}`,
+        userId: editCompany?.userId ?? Date.now(),
+        name: form.name,
+        businessType,
+        contactPerson: form.contactPerson,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        country: form.country,
+        plan: form.plan,
+        planId: localPlanId,
+        planName: demoPlanOptions.find((plan) => plan.id === localPlanId)?.name ?? planLabel[form.plan],
+        subscriptionId: editCompany?.subscriptionId,
+        status: form.status,
+        createdAt: editCompany?.createdAt ?? new Date().toISOString().split("T")[0],
+        expiresAt: form.expiresAt,
+        maxUsers: parseInt(form.maxUsers) || 5,
+        activeUsers: editCompany?.activeUsers ?? 1,
+        monthlyRevenue: form.status === "active" ? (form.plan === "combo" ? 3500 : form.plan === "inventory" ? 2500 : 1800) : 0,
+        notes: form.notes || `${BUSINESS_TYPE_LABELS[businessType]} preview setup with role access and system config.`,
+      };
+      setCompanies((prev) =>
+        editCompany
+          ? prev.map((company) => (company.id === editCompany.id ? localCompany : company))
+          : [localCompany, ...prev]
+      );
+      if (!editCompany) {
+        setCredsData({ email: form.email, password: generatePreviewPassword(), name: form.name });
+        setCredsOpen(true);
+      }
+      toast.success(`${form.name} ${editCompany ? "updated" : "added"} in preview mode`);
     }
 
     setSaving(false);
@@ -652,7 +802,9 @@ export default function CompaniesPage() {
   const toggleStatus = async (id: string, newStatus: CompanyStatus) => {
     const c = companies.find((x) => x.id === id)!;
     if (!apiAvailable || !c.userId) {
-      toast.error("Backend unavailable. Status cannot be changed.");
+      setCompanies((prev) => prev.map((x) => x.id === id ? { ...x, status: newStatus } : x));
+      toast.success(`${c.name} is now ${newStatus} in preview mode`);
+      if (viewCompany?.id === id) setViewCompany((v) => v ? { ...v, status: newStatus } : v);
       return;
     }
     try {
@@ -670,8 +822,10 @@ export default function CompaniesPage() {
     if (!deleteId) return;
     const c = companies.find((x) => x.id === deleteId)!;
     if (!apiAvailable || !c.userId) {
-      toast.error("Backend unavailable. Client cannot be deleted.");
+      setCompanies((prev) => prev.filter((x) => x.id !== deleteId));
+      toast.success(`${c.name} removed from preview mode`);
       setDeleteId(null);
+      if (viewCompany?.id === deleteId) setViewCompany(null);
       return;
     }
     try {
@@ -711,19 +865,19 @@ export default function CompaniesPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Companies</h1>
-          <p className="text-slate-400 mt-1 text-sm">
+          <h1 className="text-2xl sm:text-3xl font-bold text-emerald-950">Companies</h1>
+          <p className="text-slate-600 mt-1 text-sm">
             Manage all organisations using Mero Pasal
-            {apiAvailable && <span className="ml-2 text-xs text-emerald-400">● Live</span>}
-            {!apiAvailable && <span className="ml-2 text-xs text-amber-400">● Backend unavailable</span>}
+            {apiAvailable && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">Live</span>}
+            {!apiAvailable && <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700">Preview mode</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 h-9 w-9"
+          <Button variant="outline" size="icon" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-9 w-9"
             onClick={loadClients} title="Refresh">
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
           </Button>
-          <Button onClick={openAdd} className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 shrink-0" size="sm">
+          <Button onClick={openAdd} className="bg-emerald-700 hover:bg-emerald-800 text-white gap-2 shrink-0 shadow-sm" size="sm">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Add Company</span>
           </Button>
@@ -732,11 +886,11 @@ export default function CompaniesPage() {
 
       {/* Expiry warning banner */}
       {expiringWarnings.length > 0 && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4">
           <div className="flex items-start gap-3">
-            <ShieldAlert className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+            <ShieldAlert className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-amber-300">
+              <p className="text-sm font-medium text-red-300">
                 {expiringWarnings.length} client{expiringWarnings.length > 1 ? "s" : ""} expiring within 14 days
               </p>
               <div className="mt-1.5 flex flex-wrap gap-2">
@@ -744,7 +898,7 @@ export default function CompaniesPage() {
                   const days = Math.ceil((new Date(c.expiresAt).getTime() - Date.now()) / 86400000);
                   return (
                     <button key={c.id} onClick={() => setViewCompany(c)}
-                      className="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1 hover:bg-amber-500/20 transition-colors">
+                      className="text-xs text-red-200 bg-red-500/10 border border-red-500/20 rounded-lg px-2 py-1 hover:bg-red-500/20 transition-colors">
                       {c.name} — {days}d left
                     </button>
                   );
@@ -758,14 +912,14 @@ export default function CompaniesPage() {
       {/* Quick stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total", value: stats.total, color: "text-indigo-400" },
-          { label: "Active", value: stats.active, color: "text-emerald-400" },
-          { label: "Trial", value: stats.trial, color: "text-blue-400" },
-          { label: "MRR", value: `Rs. ${stats.mrr.toLocaleString()}`, color: "text-green-400" },
+          { label: "Total", value: stats.total, color: "text-emerald-950" },
+          { label: "Active", value: stats.active, color: "text-emerald-700" },
+          { label: "Trial", value: stats.trial, color: "text-green-700" },
+          { label: "MRR", value: `Rs. ${stats.mrr.toLocaleString()}`, color: "text-red-700" },
         ].map((s) => (
-          <Card key={s.label} className="bg-slate-900 border-slate-800">
+          <Card key={s.label} className="border-emerald-100 bg-white shadow-sm">
             <CardContent className="p-3 sm:p-4">
-              <p className="text-xs text-slate-500">{s.label}</p>
+              <p className="text-xs font-medium text-slate-500">{s.label}</p>
               <p className={`text-lg sm:text-xl font-bold mt-0.5 ${s.color}`}>{s.value}</p>
             </CardContent>
           </Card>
@@ -775,16 +929,16 @@ export default function CompaniesPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input placeholder="Search by name, email, city…" value={search} onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+            className="pl-9 border-emerald-100 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
         </div>
         <div className="flex gap-2">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="flex-1 sm:w-36 sm:flex-none bg-slate-900 border-slate-700 text-slate-300">
+            <SelectTrigger className="flex-1 sm:w-36 sm:flex-none border-emerald-100 bg-white text-slate-800">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-700">
+            <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="trial">Trial</SelectItem>
@@ -793,10 +947,10 @@ export default function CompaniesPage() {
             </SelectContent>
           </Select>
           <Select value={filterPlan} onValueChange={setFilterPlan}>
-            <SelectTrigger className="flex-1 sm:w-36 sm:flex-none bg-slate-900 border-slate-700 text-slate-300">
+            <SelectTrigger className="flex-1 sm:w-36 sm:flex-none border-emerald-100 bg-white text-slate-800">
               <SelectValue placeholder="Plan" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-700">
+            <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
               <SelectItem value="all">All Plans</SelectItem>
               <SelectItem value="cafe">Cafe</SelectItem>
               <SelectItem value="inventory">Inventory</SelectItem>
@@ -821,17 +975,17 @@ export default function CompaniesPage() {
             const PlanIcon = planIcon[c.plan];
             const btLabel = c.businessType ? BUSINESS_TYPE_LABELS[c.businessType as BusinessType] : null;
             return (
-              <Card key={c.id} className="bg-slate-900 border-slate-800">
+              <Card key={c.id} className="border-emerald-100 bg-white shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-                      <Building2 className="w-5 h-5 text-indigo-400" />
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5 text-emerald-700" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-semibold text-white truncate">{c.name}</p>
-                          <p className="text-xs text-slate-400 truncate">
+                          <p className="font-semibold text-slate-950 truncate">{c.name}</p>
+                          <p className="text-xs text-slate-500 truncate">
                             {c.contactPerson}{btLabel ? ` · ${btLabel}` : ""} · {c.city}
                           </p>
                         </div>
@@ -850,15 +1004,15 @@ export default function CompaniesPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-slate-800">
-                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setViewCompany(c)}>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => setViewCompany(c)}>
                       <Eye className="w-3.5 h-3.5" />View
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => openEdit(c)}>
+                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => openEdit(c)}>
                       <Pencil className="w-3.5 h-3.5" />Edit
                     </Button>
                     {c.status === "active" && (
-                      <Button size="sm" variant="outline" className="h-8 text-xs border-amber-800/50 text-amber-400 hover:bg-amber-500/10" onClick={() => toggleStatus(c.id, "suspended")}>
+                      <Button size="sm" variant="outline" className="h-8 text-xs border-red-800/50 text-red-400 hover:bg-red-500/10" onClick={() => toggleStatus(c.id, "suspended")}>
                         <Ban className="w-3.5 h-3.5" />
                       </Button>
                     )}
@@ -886,19 +1040,19 @@ export default function CompaniesPage() {
 
       {/* Desktop table */}
       {!loading && (
-        <div className="hidden md:block rounded-xl border border-slate-800 bg-slate-900 overflow-x-auto">
+        <div className="hidden md:block rounded-xl border border-emerald-100 bg-white shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-transparent">
-                <TableHead className="text-slate-400">Company</TableHead>
-                <TableHead className="text-slate-400">Type</TableHead>
-                <TableHead className="text-slate-400">Contact</TableHead>
-                <TableHead className="text-slate-400">Plan</TableHead>
-                <TableHead className="text-slate-400">Status</TableHead>
-                <TableHead className="text-slate-400 text-right">Users</TableHead>
-                <TableHead className="text-slate-400 text-right">MRR</TableHead>
-                <TableHead className="text-slate-400">Expires</TableHead>
-                <TableHead className="text-slate-400 text-right">Actions</TableHead>
+              <TableRow className="border-emerald-100 hover:bg-transparent">
+                <TableHead className="text-slate-600">Company</TableHead>
+                <TableHead className="text-slate-600">Type</TableHead>
+                <TableHead className="text-slate-600">Contact</TableHead>
+                <TableHead className="text-slate-600">Plan</TableHead>
+                <TableHead className="text-slate-600">Status</TableHead>
+                <TableHead className="text-slate-600 text-right">Users</TableHead>
+                <TableHead className="text-slate-600 text-right">MRR</TableHead>
+                <TableHead className="text-slate-600">Expires</TableHead>
+                <TableHead className="text-slate-600 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -918,25 +1072,25 @@ export default function CompaniesPage() {
                     : null;
                   const expiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 14;
                   return (
-                    <TableRow key={c.id} className="border-slate-800 hover:bg-slate-800/40">
+                    <TableRow key={c.id} className="border-slate-100 hover:bg-emerald-50/50">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-                            <Building2 className="w-4 h-4 text-indigo-400" />
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                            <Building2 className="w-4 h-4 text-emerald-700" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-white text-sm truncate max-w-[150px]">{c.name}</p>
+                            <p className="font-medium text-slate-950 text-sm truncate max-w-[150px]">{c.name}</p>
                             <p className="text-xs text-slate-500 truncate">{c.city}, {c.country}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <span className="flex items-center gap-1 text-xs text-slate-600">
                           <Store className="w-3 h-3" />{btLabel}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <p className="text-sm text-slate-300">{c.contactPerson}</p>
+                        <p className="text-sm text-slate-800">{c.contactPerson}</p>
                         <p className="text-xs text-slate-500 truncate max-w-[150px]">{c.email}</p>
                       </TableCell>
                       <TableCell>
@@ -949,26 +1103,26 @@ export default function CompaniesPage() {
                           {c.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right text-sm text-slate-300">
+                      <TableCell className="text-right text-sm text-slate-700">
                         {c.activeUsers}<span className="text-slate-600">/{c.maxUsers}</span>
                       </TableCell>
-                      <TableCell className="text-right text-sm font-semibold text-green-400">
+                      <TableCell className="text-right text-sm font-semibold text-emerald-700">
                         {c.monthlyRevenue > 0 ? `Rs. ${c.monthlyRevenue.toLocaleString()}` : <span className="text-slate-600">—</span>}
                       </TableCell>
-                      <TableCell className={cn("text-sm", expiringSoon ? "text-amber-400 font-medium" : "text-slate-400")}>
+                      <TableCell className={cn("text-sm", expiringSoon ? "text-red-400 font-medium" : "text-slate-400")}>
                         {c.expiresAt || "—"}
                         {expiringSoon && <span className="ml-1 text-xs">({daysLeft}d)</span>}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700" onClick={() => setViewCompany(c)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => setViewCompany(c)}>
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700" onClick={() => openEdit(c)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => openEdit(c)}>
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
                           {c.status === "active" && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10" title="Suspend" onClick={() => toggleStatus(c.id, "suspended")}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10" title="Suspend" onClick={() => toggleStatus(c.id, "suspended")}>
                               <Ban className="w-3.5 h-3.5" />
                             </Button>
                           )}
@@ -996,29 +1150,29 @@ export default function CompaniesPage() {
 
       {/* ── Add / Edit Dialog ──────────────────────────────────────────────────── */}
       <Dialog open={addOpen} onOpenChange={(o) => { if (!o) { setAddOpen(false); setEditCompany(null); } }}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-indigo-400" />
+        <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden border-emerald-100 bg-white p-0 text-slate-900 shadow-2xl sm:w-full">
+          <DialogHeader className="sticky top-0 z-10 border-b border-emerald-100 bg-white/95 px-5 py-4 backdrop-blur">
+            <DialogTitle className="flex items-center gap-2 text-emerald-950">
+              <Building2 className="w-5 h-5 text-emerald-700" />
               {editCompany ? "Edit Company" : "Add New Company"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-5">
+          <div className="space-y-5 overflow-y-auto px-5 py-4 pb-28">
             {/* Logo */}
             <div className="space-y-2">
-              <Label className="text-slate-300 text-sm">Company Logo</Label>
+              <Label className="text-slate-700 text-sm">Company Logo</Label>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
-                  {form.logo ? <img src={form.logo} alt="Logo" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-slate-600" />}
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50 flex items-center justify-center overflow-hidden shrink-0">
+                  {form.logo ? <img src={form.logo} alt="Logo" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-emerald-700/50" />}
                 </div>
                 <div className="flex flex-col gap-2">
                   <input ref={logoRef} type="file" accept="image/*" hidden onChange={handleLogoUpload} />
-                  <Button type="button" variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800 gap-2" onClick={() => logoRef.current?.click()}>
+                  <Button type="button" variant="outline" size="sm" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 gap-2" onClick={() => logoRef.current?.click()}>
                     <Upload className="w-3.5 h-3.5" />Upload Logo
                   </Button>
                   {form.logo && (
-                    <Button type="button" variant="ghost" size="sm" className="text-slate-500 hover:text-red-400 gap-1.5 h-7" onClick={() => setForm((f) => ({ ...f, logo: "" }))}>
+                    <Button type="button" variant="ghost" size="sm" className="text-slate-500 hover:bg-red-50 hover:text-red-700 gap-1.5 h-7" onClick={() => setForm((f) => ({ ...f, logo: "" }))}>
                       <X className="w-3 h-3" />Remove
                     </Button>
                   )}
@@ -1026,103 +1180,140 @@ export default function CompaniesPage() {
               </div>
             </div>
 
-            <Separator className="bg-slate-800" />
+            <Separator className="bg-emerald-100" />
 
             {/* Company name */}
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                <Building2 className="w-3 h-3 text-slate-500" />Company Name <span className="text-red-400">*</span>
+              <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                <Building2 className="w-3 h-3 text-slate-400" />Company Name <span className="text-red-600">*</span>
               </Label>
               <Input placeholder="e.g. Himalayan Cafe Pvt. Ltd." value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
             </div>
 
             {/* Business Type */}
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                <Store className="w-3 h-3 text-slate-500" />Business Type
+              <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                <Store className="w-3 h-3 text-slate-400" />Business Type
               </Label>
-              <Select value={form.businessType || "other"} onValueChange={(v) => setForm({ ...form, businessType: v as BusinessType })}>
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-700">
+              <Select value={form.businessType || "general_inventory"} onValueChange={(v) => applyBusinessType(v as BusinessType)}>
+                <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+                <SelectContent className="max-h-72 overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl">
                   {Object.entries(BUSINESS_TYPE_LABELS).map(([key, label]) => (
                     <SelectItem key={key} value={key}>{label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="border-emerald-200 bg-white text-emerald-700">
+                    {selectedBusinessProfile.moduleLabel}
+                  </Badge>
+                  <Badge className="border-red-200 bg-white text-red-700">
+                    {selectedBusinessProfile.salesLabel}
+                  </Badge>
+                  <Badge className="border-green-200 bg-white text-green-700">
+                    {selectedBusinessProfile.purchaseLabel}
+                  </Badge>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">{selectedBusinessProfile.description}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {selectedBusinessProfile.keyFields.slice(0, 6).map((field) => (
+                    <span key={field} className="rounded-full border border-emerald-100 bg-white px-2 py-0.5 text-[11px] text-slate-700">
+                      {field}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-md border border-emerald-100 bg-white p-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Setup</p>
+                    <p className="mt-1 text-xs text-slate-600">{selectedBusinessProfile.setupChecklist[0] || "Module setup"}</p>
+                  </div>
+                  <div className="rounded-md border border-green-100 bg-white p-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-green-700">Categories</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {(selectedBusinessProfile.defaultCategories || [selectedBusinessProfile.productLabel]).slice(0, 3).join(", ")}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-red-100 bg-white p-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">Finance</p>
+                    <p className="mt-1 text-xs text-slate-600">{selectedBusinessProfile.financeMapping?.[0] || "Sales / purchase auto mapping"}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Contact + email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <Users className="w-3 h-3 text-slate-500" />Contact Person <span className="text-red-400">*</span>
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <Users className="w-3 h-3 text-slate-400" />Contact Person <span className="text-red-600">*</span>
                 </Label>
                 <Input placeholder="Full name" value={form.contactPerson}
                   onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <Mail className="w-3 h-3 text-slate-500" />Login Email <span className="text-red-400">*</span>
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <Mail className="w-3 h-3 text-slate-400" />Login Email <span className="text-red-600">*</span>
                 </Label>
                 <Input type="email" placeholder="client@business.com" value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   disabled={!!editCompany}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500 disabled:opacity-60" />
+                  className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600 disabled:opacity-60" />
               </div>
             </div>
 
             {/* Phone + city */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <Phone className="w-3 h-3 text-slate-500" />Phone
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <Phone className="w-3 h-3 text-slate-400" />Phone
                 </Label>
                 <Input placeholder="+977-98XXXXXXXX" value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <MapPin className="w-3 h-3 text-slate-500" />City
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3 text-slate-400" />City
                 </Label>
                 <Input placeholder="Kathmandu" value={form.city}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
               </div>
             </div>
 
             {/* Address + country */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <MapPin className="w-3 h-3 text-slate-500" />Address
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3 text-slate-400" />Address
                 </Label>
                 <Input placeholder="Street, Area" value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium">Country</Label>
+                <Label className="text-slate-700 text-xs font-medium">Country</Label>
                 <Input placeholder="Nepal" value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600" />
               </div>
             </div>
 
-            <Separator className="bg-slate-800" />
+            <Separator className="bg-emerald-100" />
 
             {/* Plan + Status + Users + Expiry */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <Package className="w-3 h-3 text-slate-500" />Module Plan <span className="text-red-400">*</span>
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <Package className="w-3 h-3 text-slate-400" />Module Plan <span className="text-red-600">*</span>
                 </Label>
                 <Select value={form.plan} onValueChange={(v) => setForm({ ...form, plan: v as CompanyPlan })}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700">
+                  <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
                     <SelectItem value="cafe">Restaurant / Cafe</SelectItem>
                     <SelectItem value="inventory">Shop Inventory</SelectItem>
                     <SelectItem value="combo">Both Modules (Combo)</SelectItem>
@@ -1130,10 +1321,10 @@ export default function CompaniesPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium">Status</Label>
+                <Label className="text-slate-700 text-xs font-medium">Status</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as CompanyStatus })}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700">
+                  <SelectTrigger className="border-slate-200 bg-white text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectContent className="border-emerald-100 bg-white text-slate-900 shadow-xl">
                     <SelectItem value="trial">Trial</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="suspended">Suspended</SelectItem>
@@ -1142,39 +1333,39 @@ export default function CompaniesPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <Users className="w-3 h-3 text-slate-500" />Max Users
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <Users className="w-3 h-3 text-slate-400" />Max Users
                 </Label>
                 <Input type="number" inputMode="numeric" min={1} max={500} value={form.maxUsers}
                   onChange={(e) => setForm({ ...form, maxUsers: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-xs font-medium flex items-center gap-1.5">
-                  <Calendar className="w-3 h-3 text-slate-500" />Subscription Expires <span className="text-red-400">*</span>
+                <Label className="text-slate-700 text-xs font-medium flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3 text-slate-400" />Subscription Expires <span className="text-red-600">*</span>
                 </Label>
                 <Input type="date" value={form.expiresAt}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white focus-visible:ring-indigo-500" />
+                  className="border-slate-200 bg-white text-slate-900 focus-visible:ring-emerald-600" />
               </div>
             </div>
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-xs font-medium">Internal Notes</Label>
+              <Label className="text-slate-700 text-xs font-medium">Internal Notes</Label>
               <Textarea placeholder="Any internal notes about this company…" value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                rows={2} className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-indigo-500 resize-none" />
+                rows={2} className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-600 resize-none" />
             </div>
 
             {/* Submit */}
-            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            <div className="-mx-5 flex flex-col-reverse gap-3 border-t border-emerald-100 bg-white px-5 py-4 sm:flex-row">
               <Button variant="outline" onClick={() => { setAddOpen(false); setEditCompany(null); }}
-                className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800 gap-2">
+                className="w-full sm:w-auto border-slate-200 text-slate-700 hover:bg-slate-50 gap-2">
                 <X className="w-4 h-4" />Cancel
               </Button>
               <Button onClick={handleSave} disabled={saving}
-                className="w-full sm:flex-1 bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
+                className="w-full sm:flex-1 bg-emerald-700 hover:bg-emerald-800 text-white gap-2 shadow-sm">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 {editCompany ? "Save Changes" : "Add Company"}
               </Button>
@@ -1185,25 +1376,25 @@ export default function CompaniesPage() {
 
       {/* ── Company Detail Dialog ──────────────────────────────────────────────── */}
       <Dialog open={!!viewCompany} onOpenChange={(o) => !o && setViewCompany(null)}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-white">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full max-h-[90vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-white">Company Details</DialogTitle>
+            <DialogTitle className="text-emerald-950">Company Details</DialogTitle>
           </DialogHeader>
           {viewCompany && (
             <Tabs defaultValue="info">
-              <TabsList className="w-full bg-slate-800 mb-4">
-                <TabsTrigger value="info" className="flex-1 data-[state=active]:bg-indigo-600">Info</TabsTrigger>
-                <TabsTrigger value="payments" className="flex-1 data-[state=active]:bg-indigo-600" onClick={() => openPaymentHistory(viewCompany)}>Payments</TabsTrigger>
-                <TabsTrigger value="staff" className="flex-1 data-[state=active]:bg-indigo-600">Staff</TabsTrigger>
+              <TabsList className="w-full bg-emerald-50 mb-4">
+                <TabsTrigger value="info" className="flex-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white">Info</TabsTrigger>
+                <TabsTrigger value="payments" className="flex-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white" onClick={() => openPaymentHistory(viewCompany)}>Payments</TabsTrigger>
+                <TabsTrigger value="staff" className="flex-1 data-[state=active]:bg-emerald-700 data-[state=active]:text-white">Staff</TabsTrigger>
               </TabsList>
 
               <TabsContent value="info" className="space-y-5">
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-indigo-600/20 flex items-center justify-center shrink-0">
-                    <Building2 className="w-7 h-7 text-indigo-400" />
+                  <div className="w-14 h-14 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                    <Building2 className="w-7 h-7 text-emerald-700" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-white">{viewCompany.name}</h3>
+                    <h3 className="text-lg font-bold text-slate-950">{viewCompany.name}</h3>
                     {viewCompany.businessType && (
                       <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                         <Store className="w-3 h-3" />
@@ -1222,7 +1413,7 @@ export default function CompaniesPage() {
                   </div>
                 </div>
 
-                <Separator className="bg-slate-800" />
+                <Separator className="bg-emerald-100" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   {[
@@ -1237,47 +1428,47 @@ export default function CompaniesPage() {
                       <p className="text-slate-500 text-xs flex items-center gap-1.5 mb-0.5">
                         <Icon className="w-3 h-3" />{label}
                       </p>
-                      <p className={`text-white font-medium ${breakAll ? "break-all" : "truncate"}`}>{value}</p>
+                      <p className={`font-medium text-slate-950 ${breakAll ? "break-all" : "truncate"}`}>{value}</p>
                     </div>
                   ))}
                 </div>
 
-                <Separator className="bg-slate-800" />
+                <Separator className="bg-emerald-100" />
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-center">
                     <p className="text-xs text-slate-500">Users</p>
-                    <p className="text-lg font-bold text-white mt-0.5">{viewCompany.activeUsers}<span className="text-slate-600 text-sm">/{viewCompany.maxUsers}</span></p>
+                    <p className="text-lg font-bold text-slate-950 mt-0.5">{viewCompany.activeUsers}<span className="text-slate-500 text-sm">/{viewCompany.maxUsers}</span></p>
                   </div>
-                  <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="rounded-lg border border-emerald-100 bg-white p-3 text-center shadow-sm">
                     <p className="text-xs text-slate-500">MRR</p>
                     <p className="text-sm font-bold text-green-400 mt-0.5">{viewCompany.monthlyRevenue > 0 ? `Rs. ${viewCompany.monthlyRevenue.toLocaleString()}` : "—"}</p>
                   </div>
-                  <div className="bg-slate-800 rounded-lg p-3 text-center">
+                  <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-center">
                     <p className="text-xs text-slate-500">Days Left</p>
-                    <p className="text-lg font-bold text-white mt-0.5">
+                    <p className="text-lg font-bold text-slate-950 mt-0.5">
                       {viewCompany.expiresAt ? Math.max(0, Math.ceil((new Date(viewCompany.expiresAt).getTime() - Date.now()) / 86400000)) : "—"}
                     </p>
                   </div>
                 </div>
 
                 {viewCompany.notes && (
-                  <div className="bg-slate-800/60 rounded-lg p-3">
+                  <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
                     <p className="text-xs text-slate-500 mb-1">Internal Notes</p>
-                    <p className="text-sm text-slate-300">{viewCompany.notes}</p>
+                    <p className="text-sm text-slate-700">{viewCompany.notes}</p>
                   </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                  <Button variant="outline" className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800 gap-2" onClick={() => openEdit(viewCompany)}>
+                  <Button variant="outline" className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50 gap-2" onClick={() => openEdit(viewCompany)}>
                     <Pencil className="w-4 h-4" />Edit
                   </Button>
-                  <Button variant="outline" className="flex-1 border-green-800/50 text-green-400 hover:bg-green-500/10 gap-2"
+                  <Button variant="outline" className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 gap-2"
                     onClick={() => { setPaymentCompany(viewCompany); setPaymentOpen(true); }}>
                     <Banknote className="w-4 h-4" />Record Payment
                   </Button>
                   {viewCompany.status === "active" && (
-                    <Button variant="outline" className="flex-1 border-amber-800/50 text-amber-400 hover:bg-amber-500/10 gap-2" onClick={() => toggleStatus(viewCompany.id, "suspended")}>
+                    <Button variant="outline" className="flex-1 border-red-200 text-red-700 hover:bg-red-50 gap-2" onClick={() => toggleStatus(viewCompany.id, "suspended")}>
                       <Ban className="w-4 h-4" />Suspend
                     </Button>
                   )}
@@ -1287,11 +1478,11 @@ export default function CompaniesPage() {
                     </Button>
                   )}
                   {viewCompany.status === "trial" && (
-                    <Button className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white gap-2" onClick={() => toggleStatus(viewCompany.id, "active")}>
+                    <Button className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white gap-2" onClick={() => toggleStatus(viewCompany.id, "active")}>
                       <CheckCircle2 className="w-4 h-4" />Activate
                     </Button>
                   )}
-                  <Button variant="outline" className="border-red-900/50 text-red-400 hover:bg-red-500/10 gap-2 sm:w-auto"
+                  <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 gap-2 sm:w-auto"
                     onClick={() => { setDeleteId(viewCompany.id); setViewCompany(null); }}>
                     <Trash2 className="w-4 h-4" />
                     <span className="sm:hidden">Delete</span>
@@ -1317,14 +1508,14 @@ export default function CompaniesPage() {
                   <>
                     <div className="space-y-2">
                       {viewPayments.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between bg-slate-800/60 rounded-lg p-3">
+                        <div key={p.id} className="flex items-center justify-between rounded-lg border border-emerald-100 bg-white p-3 shadow-sm">
                           <div>
-                            <p className="text-sm font-medium text-white capitalize">{p.provider}</p>
+                            <p className="text-sm font-medium text-slate-950 capitalize">{p.provider}</p>
                             <p className="text-xs text-slate-500">{p.paid_at ? new Date(p.paid_at).toLocaleDateString() : new Date(p.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-bold text-green-400">Rs. {Number(p.amount).toLocaleString()}</p>
-                            <Badge variant="outline" className={`text-[10px] border ${p.status === "paid" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-amber-400 border-amber-500/30 bg-amber-500/10"}`}>
+                            <Badge variant="outline" className={`text-[10px] border ${p.status === "paid" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-red-400 border-red-500/30 bg-red-500/10"}`}>
                               {p.status}
                             </Badge>
                           </div>
@@ -1349,15 +1540,15 @@ export default function CompaniesPage() {
 
       {/* ── Delete Confirm ────────────────────────────────────────────────────── */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent className="bg-slate-900 border-slate-700 text-white w-[calc(100vw-2rem)] max-w-md sm:w-full">
+        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md border-emerald-100 bg-white text-slate-900 sm:w-full">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Remove company?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              This will permanently delete <strong className="text-white">{companies.find((c) => c.id === deleteId)?.name}</strong> and all their data. This cannot be undone.
+            <AlertDialogTitle className="text-slate-950">Remove company?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600">
+              This will permanently delete <strong className="text-slate-950">{companies.find((c) => c.id === deleteId)?.name}</strong> and all their data. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col-reverse sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="w-full sm:w-auto border-slate-200 text-slate-700 hover:bg-slate-50 bg-transparent">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white border-0">
               Delete Company
             </AlertDialogAction>
@@ -1386,3 +1577,4 @@ export default function CompaniesPage() {
     </div>
   );
 }
+

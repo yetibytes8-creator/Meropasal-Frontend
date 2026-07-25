@@ -1,17 +1,20 @@
 export type CompanyPlan = "cafe" | "inventory" | "combo";
 export type CompanyStatus = "active" | "trial" | "suspended" | "cancelled";
 export type BusinessType =
-  | "cafe" | "restaurant" | "hardware" | "pharmacy"
-  | "supermarket" | "bakery" | "clothing" | "electronics" | "other";
+  | "cafe" | "restaurant" | "general_inventory" | "hardware" | "pharmacy" | "kirana"
+  | "supermarket" | "bakery" | "clothing" | "footwear" | "electronics" | "other";
 
 export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
   cafe: "Cafe",
   restaurant: "Restaurant",
+  general_inventory: "General Inventory",
   hardware: "Hardware Store",
   pharmacy: "Pharmacy",
+  kirana: "Kirana / Grocery",
   supermarket: "Supermarket",
   bakery: "Bakery",
   clothing: "Clothing Store",
+  footwear: "Footwear Store",
   electronics: "Electronics",
   other: "Other",
 };

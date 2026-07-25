@@ -39,7 +39,7 @@ export default defineConfig(() => ({
         name: "Mero Pasal",
         short_name: "Mero Pasal",
         description: "Cafe & Inventory Management System",
-        theme_color: "#c0392b",
+        theme_color: "#15803d",
         background_color: "#f7f6f5",
         display: "standalone",
         orientation: "portrait",

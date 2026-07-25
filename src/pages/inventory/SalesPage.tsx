@@ -26,6 +26,7 @@ import { balanceMoneyInput, formatMoneyInput, parseMoneyInput, sanitizeMoneyInpu
 import { useBarcodeScanner } from "@/hooks/use-barcode-scanner";
 import { useSettings } from "@/contexts/SettingsContext";
 import { postInventorySaleToAccounts } from "@/lib/accountingAutoPost";
+import { productImage } from "@/lib/productImages";
 import type { Product, BusinessSettings } from "@/types";
 
 interface CartItem { product: Product; quantity: number; }
@@ -78,7 +79,7 @@ const generateInvoiceHTML = (sale: SaleRecord, s: BusinessSettings) => {
   const paymentQrHtml = showPaymentQr
     ? `<div class="qr"><img src="${esc(s.paymentQr.image!)}" alt="payment qr"/><p>Scan to pay${s.paymentQr.provider ? ` via ${esc(s.paymentQr.provider)}` : ""}</p>${s.paymentQr.accountName ? `<p>${esc(s.paymentQr.accountName)}</p>` : ""}${s.paymentQr.accountNumber ? `<p>${esc(s.paymentQr.accountNumber)}</p>` : ""}</div>`
     : "";
-  return `<!DOCTYPE html><html><head><title>Bill #${esc(sale.billNumber)}</title>
+  return `<!DOCTYPE html><html><head><link rel="icon" type="image/png" href="/logo.png?v=mero-pasal-print" /><title>Bill #${esc(sale.billNumber)}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;max-width:350px;margin:0 auto;padding:16px;color:#333;font-size:12px}.header{text-align:center;margin-bottom:12px}.shop-name{font-size:20px;font-weight:bold;letter-spacing:1px}.tagline{font-size:10px;color:#666;margin-top:2px}.line{border-top:1px dashed #999;margin:8px 0}.info{display:flex;justify-content:space-between;font-size:11px;margin:2px 0}table{width:100%;border-collapse:collapse;margin:6px 0}th{text-align:left;font-size:11px;padding:4px 2px;border-bottom:1px solid #999}th:nth-child(2),th:nth-child(3),th:nth-child(4){text-align:right}td{padding:3px 2px;font-size:11px}td:nth-child(2),td:nth-child(3),td:nth-child(4){text-align:right}.summary-row{display:flex;justify-content:space-between;padding:2px 0;font-size:12px}.total-row{font-size:16px;font-weight:bold;border-top:2px solid #333;padding-top:6px;margin-top:4px}.qr{text-align:center;border:1px dashed #999;padding:8px;margin:10px auto;max-width:170px}.qr img{width:135px;height:135px;object-fit:contain}.qr p{font-size:10px;margin-top:2px}.footer{text-align:center;margin-top:12px;font-size:10px;color:#666}</style></head><body>
 <div class="header">${logoHtml}<div class="shop-name">${esc(s.businessName.toUpperCase())}</div><div class="tagline">${esc(s.address)}</div>${s.taxNumber ? `<div class="tagline">PAN/VAT: ${esc(s.taxNumber)}</div>` : ""}</div>
 <div class="line"></div>
@@ -131,6 +132,7 @@ const SalesPage = () => {
   const [splitOnline, setSplitOnline] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [salesHistory, setSalesHistory] = useState<SaleRecord[]>([]);
+  const [checkoutPreviewOpen, setCheckoutPreviewOpen] = useState(false);
   const [invoiceDialog, setInvoiceDialog] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState<SaleRecord | null>(null);
   const [lastScannedCode, setLastScannedCode] = useState("");
@@ -296,6 +298,19 @@ const SalesPage = () => {
     }
   }, [cart.length, grandTotal, paymentMethod, splitCash]);
 
+  const openCheckoutPreview = () => {
+    if (cart.length === 0) { toast.error("Cart is empty!"); return; }
+    if (paymentMethod === "split") {
+      const c = parseMoneyInput(splitCash);
+      const o = parseMoneyInput(splitOnline);
+      if (Math.abs(c + o - grandTotal) > 0.01) {
+        toast.error(`Cash + Online must equal Rs. ${grandTotal.toFixed(2)}`);
+        return;
+      }
+    }
+    setCheckoutPreviewOpen(true);
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) { toast.error("Cart is empty!"); return; }
 
@@ -342,6 +357,7 @@ const SalesPage = () => {
     setSalesHistory(prev => [sale, ...prev]);
     setCurrentInvoice(sale);
     setInvoiceDialog(true);
+    setCheckoutPreviewOpen(false);
     postInventorySaleToAccounts(sale).catch(() => toast.warning("Sale saved, finance auto-entry pending"));
     clearCart();
     setMobileView("products");
@@ -460,17 +476,17 @@ const SalesPage = () => {
 
   // -- Product Panel --------------------------------------------------------
   const ProductPanel = () => (
-    <div className="flex flex-col gap-3 h-full">
+    <div className="flex h-full flex-col gap-3">
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="relative rounded-[1.4rem] border border-emerald-100 bg-card p-2 shadow-sm">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-700" />
         <Input
           ref={searchRef}
           data-barcode-target="true"
           placeholder="Search by name or scan barcode..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="pl-10 h-11 bg-background"
+          className="h-12 border-0 bg-transparent pl-10 text-base shadow-none focus-visible:ring-0"
         />
         {search && (
           <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -487,10 +503,10 @@ const SalesPage = () => {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors",
+                "min-h-10 rounded-2xl border px-4 py-2 text-xs font-black whitespace-nowrap transition-all",
                 activeCategory === cat
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  ? "border-emerald-700 bg-emerald-700 text-white shadow-sm"
+                  : "border-emerald-100 bg-card text-muted-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
               )}
             >
               {cat}
@@ -507,12 +523,13 @@ const SalesPage = () => {
             <p className="text-sm">No products found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {filteredProducts.map(product => {
               const cartItem = cart.find(c => c.product.id === product.id);
               const inCart = !!cartItem;
               const outOfStock = product.stock <= 0;
               const lowStock = product.stock > 0 && product.stock <= product.minStock;
+              const resolvedImage = productImage(product.name, product.category, product.image);
 
               return (
                 <button
@@ -520,17 +537,17 @@ const SalesPage = () => {
                   onClick={() => !outOfStock && addToCart(product)}
                   disabled={outOfStock}
                   className={cn(
-                    "relative flex flex-col rounded-xl border text-left transition-all overflow-hidden group",
+                    "group relative flex min-h-[210px] flex-col overflow-hidden rounded-[1.35rem] border text-left transition-all",
                     outOfStock
-                      ? "opacity-50 cursor-not-allowed border-border bg-muted/30"
+                      ? "opacity-60 cursor-not-allowed border-border bg-muted/30"
                       : inCart
-                        ? "border-primary/60 bg-primary/5 shadow-sm"
-                        : "bg-card border-border hover:border-primary/40 hover:shadow-md"
+                        ? "border-emerald-600 bg-emerald-50 shadow-md ring-1 ring-emerald-200"
+                        : "border-emerald-100 bg-card hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg"
                   )}
                 >
                   {/* Cart quantity badge */}
                   {inCart && (
-                    <span className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow">
+                    <span className="absolute right-2 top-2 z-10 flex h-7 min-w-7 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-black text-white shadow">
                       {cartItem.quantity}
                     </span>
                   )}
@@ -543,26 +560,36 @@ const SalesPage = () => {
                   )}
 
                   {/* Image */}
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-16 sm:h-20 object-cover transition-transform group-hover:scale-105" />
-                  ) : (
-                    <div className="w-full h-16 sm:h-20 bg-muted flex items-center justify-center">
-                      <Package className="w-6 h-6 text-muted-foreground" />
+                  <div className="relative h-28 w-full overflow-hidden bg-gradient-to-br from-emerald-50 to-slate-100 sm:h-32">
+                    <img
+                      src={resolvedImage}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(event) => {
+                        event.currentTarget.src = productImage(product.name, product.category, null);
+                      }}
+                    />
+                    <div className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-emerald-800 shadow-sm">
+                      {product.category}
                     </div>
-                  )}
+                  </div>
 
                   {/* Info */}
-                  <div className="p-2 flex-1 flex flex-col">
-                    <span className="text-xs sm:text-sm font-semibold line-clamp-2 leading-tight flex-1">{product.name}</span>
-                    <div className="flex items-center justify-between mt-1.5 gap-1">
-                      <span className="text-xs sm:text-sm font-bold text-primary">Rs.  {product.price.toFixed(2)}</span>
+                  <div className="flex flex-1 flex-col p-3">
+                    <span className="line-clamp-2 min-h-10 text-sm font-black leading-tight text-foreground">{product.name}</span>
+                    <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">{product.sku}</p>
+                    <div className="mt-auto flex items-end justify-between gap-1 pt-3">
+                      <span>
+                        <span className="block text-[10px] font-bold uppercase text-muted-foreground">Price</span>
+                        <span className="text-base font-black text-emerald-700">Rs. {product.price.toFixed(2)}</span>
+                      </span>
                       <span className={cn(
-                        "text-[9px] font-semibold px-1.5 py-0.5 rounded-full",
+                        "rounded-full px-2.5 py-1 text-[10px] font-black",
                         outOfStock ? "bg-destructive/10 text-destructive" :
                         lowStock ? "bg-warning/10 text-warning" :
-                        "bg-muted text-muted-foreground"
+                        "bg-emerald-50 text-emerald-700"
                       )}>
-                        {product.stock}
+                        {product.stock} left
                       </span>
                     </div>
                   </div>
@@ -577,15 +604,15 @@ const SalesPage = () => {
 
   // -- Cart Panel -----------------------------------------------------------
   const CartPanel = () => (
-    <Card className="h-full flex flex-col lg:sticky lg:top-4 border-2 border-border/60">
+    <Card className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-emerald-100 shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-6.5rem)]">
       {/* Cart header */}
-      <CardHeader className="pb-2 pt-3 px-4 shrink-0">
+      <CardHeader className="shrink-0 border-b bg-gradient-to-r from-emerald-50 to-background px-4 pb-3 pt-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4 text-primary" />
+          <CardTitle className="text-lg font-black flex items-center gap-2">
+            <span className="rounded-xl bg-emerald-700 p-2 text-white"><ShoppingCart className="h-4 w-4" /></span>
             Order
             {cartCount > 0 && (
-              <Badge className="bg-primary text-primary-foreground text-xs px-1.5">{cartCount}</Badge>
+              <Badge className="bg-red-600 text-white text-xs px-1.5">{cartCount}</Badge>
             )}
           </CardTitle>
           {cart.length > 0 && (
@@ -596,26 +623,35 @@ const SalesPage = () => {
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col gap-3 px-4 pb-4 overflow-hidden">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-3 px-4 pb-4 pt-3">
         {/* Cart items */}
-        <div className={cn("flex-1 overflow-y-auto space-y-2 min-h-0", cart.length === 0 && "flex items-center justify-center")}>
+        <div
+          className={cn(
+            "space-y-2 overflow-y-auto pr-1",
+            cart.length === 0
+              ? "flex min-h-44 items-center justify-center"
+              : "max-h-[38vh] min-h-0 lg:max-h-[34vh] xl:max-h-[36vh]",
+          )}
+        >
           {cart.length === 0 ? (
             <div className="text-center text-muted-foreground py-4">
-              <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-20" />
-              <p className="text-sm">Cart is empty</p>
-              <p className="text-xs mt-0.5">Click products to add them</p>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                <ShoppingCart className="h-7 w-7" />
+              </div>
+              <p className="text-base font-black text-foreground">Cart is empty</p>
+              <p className="text-xs mt-0.5">Product card click garepachi yaha item auncha</p>
             </div>
           ) : cart.map(item => (
-            <div key={item.product.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 border border-border/50">
+            <div key={item.product.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-2xl border border-emerald-100 bg-card p-3 shadow-sm">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-semibold truncate leading-tight">{item.product.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Rs.  {item.product.price.toFixed(2)}
-                  <span className="font-bold text-primary ml-1.5">= Rs.  {(item.product.price * item.quantity).toFixed(2)}</span>
+                <p className="truncate text-sm font-bold leading-tight">{item.product.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Rs. {item.product.price.toFixed(2)}
+                  <span className="ml-1.5 font-bold text-emerald-700">= Rs. {(item.product.price * item.quantity).toFixed(2)}</span>
                 </p>
               </div>
-              <div className="flex items-center gap-0.5 shrink-0 bg-background rounded-lg border p-0.5">
-                <button onClick={() => updateQuantity(item.product.id, -1)} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <div className="flex shrink-0 items-center gap-0.5 rounded-xl border bg-muted/40 p-0.5">
+                <button onClick={() => updateQuantity(item.product.id, -1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
                   <Minus className="w-4 h-4" />
                 </button>
                 <input
@@ -624,13 +660,13 @@ const SalesPage = () => {
                   min={1}
                   value={item.quantity}
                   onChange={(e) => setExactQuantity(item.product.id, e.target.value)}
-                  className="w-10 text-center text-sm font-bold tabular-nums bg-transparent border-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                  className="w-9 rounded border-0 bg-transparent text-center text-sm font-black tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                 />
-                <button onClick={() => updateQuantity(item.product.id, 1)} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                <button onClick={() => updateQuantity(item.product.id, 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              <button onClick={() => removeFromCart(item.product.id)} className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0">
+              <button onClick={() => removeFromCart(item.product.id)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -639,10 +675,8 @@ const SalesPage = () => {
 
         {cart.length > 0 && (
           <>
-            <Separator />
-
             {/* Customer */}
-            <div className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl border bg-background px-3 py-2 shadow-sm">
               <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <Input
                 placeholder="Customer name (optional)"
@@ -653,7 +687,7 @@ const SalesPage = () => {
             </div>
 
             {/* Discount */}
-            <div className="rounded-xl border bg-background p-3 space-y-3">
+            <div className="space-y-3 rounded-2xl border bg-background p-3 shadow-sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <Tag className="w-3.5 h-3.5 text-muted-foreground" />
@@ -674,7 +708,7 @@ const SalesPage = () => {
               </div>
 
               <div className="grid grid-cols-[auto,1fr] gap-2">
-                <div className="flex rounded-lg border bg-muted p-1">
+                <div className="flex rounded-xl border bg-muted p-1">
                   {DISCOUNT_MODES.map((mode) => (
                     <button
                       key={mode.id}
@@ -701,7 +735,7 @@ const SalesPage = () => {
                     value={discountInput}
                     onChange={(e) => setDiscountInput(sanitizeMoneyInput(e.target.value))}
                     onBlur={handleDiscountBlur}
-                    className="h-11 pr-12 text-base font-semibold"
+                    className="h-11 rounded-xl pr-12 text-base font-semibold"
                   />
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
                     {discountMode === "percent" ? "%" : "Rs."}
@@ -759,7 +793,7 @@ const SalesPage = () => {
             </div>
 
             {/* Price breakdown */}
-            <div className="rounded-xl bg-muted/40 p-3 space-y-1.5">
+            <div className="rounded-2xl bg-emerald-50/70 p-3 space-y-1.5">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-medium text-foreground">Rs.  {subtotal.toFixed(2)}</span>
@@ -777,20 +811,20 @@ const SalesPage = () => {
                 </div>
               )}
               <Separator className="my-1" />
-              <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center">
                 <span className="text-sm font-bold">Total</span>
-                <span className="text-xl font-bold text-primary">Rs.  {grandTotal.toFixed(2)}</span>
+                <span className="text-2xl font-black text-emerald-700">Rs. {grandTotal.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Payment method */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {PAYMENT_METHODS.map(m => (
                 <button
                   key={m.id}
                   onClick={() => m.id === "split" ? selectSplitPayment() : setPaymentMethod(m.id)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 text-xs font-semibold transition-all min-h-[56px]",
+                    "flex min-h-[58px] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 py-3 text-xs font-bold transition-all",
                     paymentMethod === m.id ? m.active : `bg-card ${m.inactive}`
                   )}
                 >
@@ -853,11 +887,11 @@ const SalesPage = () => {
 
             {/* Checkout */}
             <Button
-              className="w-full h-14 text-base font-bold gap-2 rounded-xl shadow-lg"
-              onClick={handleCheckout}
+              className="h-14 w-full rounded-2xl bg-red-600 text-base font-black gap-2 shadow-lg hover:bg-red-700"
+              onClick={openCheckoutPreview}
             >
               <Receipt className="w-5 h-5" />
-              Checkout - Rs.  {grandTotal.toFixed(2)}
+              Preview Bill - Rs.  {grandTotal.toFixed(2)}
             </Button>
           </>
         )}
@@ -868,10 +902,10 @@ const SalesPage = () => {
   const todaySales = salesHistory.filter(s => s.status !== "refunded" && new Date(s.date).toDateString() === new Date().toDateString());
 
   return (
-    <div className="flex flex-col gap-3 animate-fade-in pb-20 md:pb-0 md:h-[calc(100vh-5rem)]">
+    <div className="flex flex-col gap-4 animate-fade-in pb-20 md:pb-0 md:h-[calc(100vh-5rem)]">
 
       {/* -- Header -- */}
-      <div className="flex items-center justify-between gap-3 shrink-0">
+      <div className="flex shrink-0 items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm">
         <div>
           <h1 className="page-header">Point of Sale</h1>
           <p className="page-description hidden sm:block">Fast billing - scanner ready</p>
@@ -901,11 +935,11 @@ const SalesPage = () => {
       </div>
 
       {/* -- Mobile: tab switch -- */}
-      <div className="lg:hidden flex rounded-xl bg-muted p-1 gap-1 shrink-0 h-11">
+      <div className="lg:hidden flex h-12 shrink-0 gap-1 rounded-2xl border bg-card p-1 shadow-sm">
         <button
           onClick={() => setMobileView("products")}
           className={cn(
-            "flex-1 h-9 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2",
+            "flex-1 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2",
             mobileView === "products" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
           )}
         >
@@ -914,7 +948,7 @@ const SalesPage = () => {
         <button
           onClick={() => setMobileView("cart")}
           className={cn(
-            "flex-1 h-9 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 relative",
+            "relative flex-1 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2",
             mobileView === "cart" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
           )}
         >
@@ -929,16 +963,16 @@ const SalesPage = () => {
       </div>
 
       {/* -- Main layout -- */}
-      <div className="flex-1 min-h-0 lg:grid lg:grid-cols-5 lg:gap-4">
+      <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] lg:gap-4">
 
         {/* Products - shown on mobile only when products tab is active */}
-        <div className={cn("lg:col-span-3 lg:flex lg:flex-col", mobileView === "products" ? "flex flex-col h-full" : "hidden")}>
-          <ProductPanel />
+        <div className={cn("lg:flex lg:flex-col", mobileView === "products" ? "flex h-full flex-col" : "hidden")}>
+          {ProductPanel()}
         </div>
 
         {/* Cart - shown on mobile only when cart tab is active */}
-        <div className={cn("lg:col-span-2", mobileView === "cart" ? "block h-full" : "hidden lg:block")}>
-          <CartPanel />
+        <div className={cn(mobileView === "cart" ? "block h-full" : "hidden lg:block")}>
+          {CartPanel()}
         </div>
       </div>
 
@@ -1193,6 +1227,88 @@ const SalesPage = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* -- Checkout Preview Dialog -- */}
+      <Dialog open={checkoutPreviewOpen} onOpenChange={setCheckoutPreviewOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full max-h-[88vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-primary" />
+              Bill Preview
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-xl border bg-muted/40 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-bold">{settings.businessName || "Mero Pasal"}</p>
+                  <p className="text-xs text-muted-foreground">{settings.taxNumber ? `PAN/VAT: ${settings.taxNumber}` : "PAN/VAT: Not set"}</p>
+                  <p className="text-xs text-muted-foreground">{customerName.trim() || "Walk-in customer"}</p>
+                </div>
+                <Badge variant="outline" className="capitalize">{paymentMethod}</Badge>
+              </div>
+            </div>
+
+            <div className="rounded-xl border overflow-hidden">
+              <div className="grid grid-cols-[1fr_56px_92px] bg-muted/60 px-3 py-2 text-xs font-bold text-muted-foreground">
+                <span>Item</span>
+                <span className="text-center">Qty</span>
+                <span className="text-right">Amount</span>
+              </div>
+              <div className="divide-y">
+                {cart.map((item) => (
+                  <div key={item.product.id} className="grid grid-cols-[1fr_56px_92px] items-center px-3 py-2 text-sm">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{item.product.name}</p>
+                      <p className="text-xs text-muted-foreground">Rs. {item.product.price.toFixed(2)} each</p>
+                    </div>
+                    <span className="text-center font-semibold">{item.quantity}</span>
+                    <span className="text-right font-semibold">Rs. {(item.product.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-card p-3 space-y-2 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Subtotal</span>
+                <span>Rs. {subtotal.toFixed(2)}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount ({discountLabel})</span>
+                  <span>-Rs. {discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-muted-foreground">
+                <span>VAT ({taxEnabled ? taxPercent : 0}%)</span>
+                <span>+Rs. {taxAmount.toFixed(2)}</span>
+              </div>
+              {paymentMethod === "split" && (
+                <div className="flex justify-between text-amber-700">
+                  <span>Cash / Online</span>
+                  <span>{parseMoneyInput(splitCash).toFixed(2)} / {parseMoneyInput(splitOnline).toFixed(2)}</span>
+                </div>
+              )}
+              <Separator />
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span className="text-primary">Rs. {grandTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button variant="outline" onClick={() => setCheckoutPreviewOpen(false)}>
+                Edit Bill
+              </Button>
+              <Button className="gap-2" onClick={handleCheckout}>
+                <Receipt className="w-4 h-4" />
+                Confirm & Save Bill
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Clock, MapPin, Phone, Search, ShoppingBag, Sparkles, Table2 } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Megaphone, Phone, Search, ShoppingBag, Sparkles, Table2 } from "lucide-react";
 import { publicMenu, type ApiPublicMenu } from "@/lib/api";
 import { applyMenuImageFallback, menuFoodImage } from "@/lib/menuImages";
+import { activeQrMenuAds, readQrMenuAds, type QrMenuAd } from "@/lib/qrMenuAds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+
+const greenMenuTheme = {
+  "--primary": "151 75% 31%",
+  "--primary-foreground": "0 0% 100%",
+} as CSSProperties & Record<string, string>;
 
 export default function PublicMenuPage() {
   const [params] = useSearchParams();
@@ -142,6 +148,10 @@ export default function PublicMenuPage() {
   }, [categories, data]);
 
   const totalVisible = items.length + combos.length;
+  const qrAds = useMemo(() => {
+    const apiAds = (data as (ApiPublicMenu & { advertisements?: QrMenuAd[] }) | null)?.advertisements;
+    return activeQrMenuAds(apiAds?.length ? apiAds : readQrMenuAds()).slice(0, 3);
+  }, [data]);
 
   if (error) {
     return (
@@ -168,81 +178,83 @@ export default function PublicMenuPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fffaf7] pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-      <section className="relative overflow-hidden bg-primary px-3 pb-10 pt-4 text-primary-foreground sm:px-6 sm:pb-16 sm:pt-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.12),transparent_45%)]" />
-        <div className="relative mx-auto flex max-w-6xl flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <main style={greenMenuTheme} className="qr-menu-page min-h-screen bg-[#f4fbf6] pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-slate-950">
+      <section className="qr-menu-hero relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-800 to-green-700 px-3 pb-20 pt-4 text-white sm:px-6 sm:pb-24 sm:pt-6">
+        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(135deg,rgba(255,255,255,.24)_1px,transparent_1px)] [background-size:24px_24px]" />
+        <div className="qr-menu-sweep absolute inset-y-0 -left-1/3 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-emerald-950/25 to-transparent" />
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
-            <div className="flex items-center gap-3">
+            <div className="qr-menu-enter flex items-center gap-3">
               {data.business.logo ? (
-                <img src={data.business.logo} alt={data.business.business_name} className="h-11 w-11 rounded-xl bg-white object-contain p-1 shadow-sm sm:h-16 sm:w-16 sm:rounded-2xl" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                <img src={data.business.logo} alt={data.business.business_name} className="h-14 w-14 rounded-3xl border-2 border-white bg-white object-contain p-1.5 shadow-2xl shadow-emerald-950/30 sm:h-20 sm:w-20" onError={(e) => { e.currentTarget.style.display = "none"; }} />
               ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 sm:h-16 sm:w-16 sm:rounded-2xl">
+                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/15 shadow-2xl shadow-emerald-950/30 sm:h-20 sm:w-20">
                   <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7" />
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-xs font-medium opacity-90 sm:text-sm">Welcome to</p>
-                <h1 className="line-clamp-2 break-words text-2xl font-extrabold leading-tight sm:text-5xl">{data.business.business_name}</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-100 sm:text-sm">Welcome to</p>
+                <h1 className="line-clamp-2 break-words text-3xl font-extrabold leading-tight min-[430px]:text-4xl sm:text-6xl">{data.business.business_name}</h1>
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-1.5 text-xs sm:mt-4 sm:gap-2 sm:text-sm">
+            <div className="qr-menu-enter mt-4 flex flex-wrap gap-1.5 text-xs sm:gap-2 sm:text-sm [animation-delay:80ms]">
               {data.table && (
-                <Badge className="h-7 gap-1 rounded-full bg-white px-2.5 text-primary hover:bg-white sm:h-9 sm:px-3">
+                <Badge className="h-8 gap-1 rounded-full bg-white px-3 text-emerald-800 shadow-sm hover:bg-white sm:h-9">
                   <Table2 className="h-3.5 w-3.5" />
                   Table {data.table.number}
                 </Badge>
               )}
               {data.business.address && (
-                <span className="inline-flex min-h-7 max-w-full items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 sm:min-h-9 sm:px-3">
+                <span className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-full border border-white/10 bg-white/15 px-3 py-1 backdrop-blur sm:min-h-9">
                   <MapPin className="h-3.5 w-3.5" />
                   <span className="truncate">{data.business.address}</span>
                 </span>
               )}
               {data.business.phone && (
-                <span className="inline-flex min-h-7 items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 sm:min-h-9 sm:px-3">
+                <span className="inline-flex min-h-8 items-center gap-1 rounded-full border border-white/10 bg-white/15 px-3 py-1 backdrop-blur sm:min-h-9">
                   <Phone className="h-3.5 w-3.5" />
                   {data.business.phone}
                 </span>
               )}
             </div>
           </div>
-          <div className="hidden grid-cols-2 gap-2 rounded-2xl bg-white/15 p-2 text-sm backdrop-blur sm:grid md:min-w-64">
-            <div className="rounded-xl bg-white/15 px-3 py-2">
+          <div className="qr-menu-enter grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-white/12 p-2 text-sm shadow-2xl shadow-emerald-950/20 backdrop-blur md:min-w-72 [animation-delay:120ms]">
+            <div className="rounded-2xl bg-white/15 px-4 py-3 transition hover:bg-white/20">
               <Sparkles className="mb-1 h-4 w-4" />
-              <p className="text-lg font-bold">{(data.items.length + data.combos.length).toLocaleString()}</p>
+              <p className="text-2xl font-bold">{(data.items.length + data.combos.length).toLocaleString()}</p>
               <p className="text-xs opacity-85">Menu choices</p>
             </div>
-            <div className="rounded-xl bg-white/15 px-3 py-2">
+            <div className="rounded-2xl bg-white/15 px-4 py-3 transition hover:bg-white/20">
               <Clock className="mb-1 h-4 w-4" />
-              <p className="text-lg font-bold">Open</p>
+              <p className="text-2xl font-bold">Open</p>
               <p className="text-xs opacity-85">Ready to serve</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-2.5 pb-6 sm:px-6">
-        <div className="sticky top-0 z-10 -mt-6 rounded-xl border bg-white/95 p-2 shadow-sm backdrop-blur sm:-mt-8 sm:rounded-2xl sm:p-3">
+      <section className="mx-auto max-w-7xl px-2.5 pb-6 sm:px-6">
+        <div className="qr-menu-enter sticky top-0 z-10 -mt-12 rounded-[1.75rem] border border-emerald-100 bg-white/95 p-2.5 shadow-2xl shadow-emerald-900/12 backdrop-blur sm:-mt-12 sm:p-3 [animation-delay:170ms]">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tea, snacks, meals..." className="h-10 rounded-xl border-border/80 bg-white pl-11 text-sm shadow-none sm:h-12 sm:text-base" />
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-700" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tea, snacks, meals..." className="h-11 rounded-2xl border-emerald-100 bg-emerald-50/35 pl-11 text-sm shadow-none focus-visible:ring-primary sm:h-12 sm:text-base" />
             </div>
           </div>
-          <div className="mt-2 grid auto-cols-[8.25rem] grid-flow-col gap-2 overflow-x-auto pb-1 [scrollbar-width:none] sm:auto-cols-[9.5rem] lg:flex lg:flex-wrap lg:overflow-visible lg:pb-0">
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
               {categoryPreviews.map((entry) => (
                 <button
                   key={entry.name}
                   type="button"
-                  className={`flex h-12 min-w-0 shrink-0 snap-start items-center gap-2 rounded-xl border p-1.5 text-left transition sm:h-14 ${
+                  className={`qr-category-tile flex h-[3.25rem] min-w-0 items-center gap-2 rounded-2xl border p-1.5 text-left transition duration-200 hover:-translate-y-0.5 sm:h-14 ${
                     category === entry.name
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "bg-white hover:border-primary/50 hover:bg-muted/50"
+                      ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-emerald-900/18"
+                      : "border-emerald-100 bg-white hover:border-primary/50 hover:bg-emerald-50"
                   }`}
                   onClick={() => setCategory(entry.name)}
                 >
-                  <img src={entry.image} alt={entry.label} className="h-9 w-9 shrink-0 rounded-lg object-cover sm:h-10 sm:w-10" onError={(e) => applyMenuImageFallback(e.currentTarget, entry.label, entry.label)} />
+                  <img src={entry.image} alt={entry.label} className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm sm:h-10 sm:w-10" onError={(e) => applyMenuImageFallback(e.currentTarget, entry.label, entry.label)} />
                   <span className="min-w-0">
                     <span className="block truncate text-xs font-bold capitalize sm:text-sm">{entry.label}</span>
                     <span className={`block text-[10px] sm:text-[11px] ${category === entry.name ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{entry.count} items</span>
@@ -252,12 +264,53 @@ export default function PublicMenuPage() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3 sm:mt-5">
-          <div>
-            <p className="text-xs font-medium text-primary sm:text-sm">{category === "all" ? "Full menu" : category}</p>
-            <h2 className="text-lg font-extrabold tracking-tight sm:text-2xl">Choose your order</h2>
+        {qrAds.length > 0 && (
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {qrAds.map((ad) => {
+              const content = (
+                <div className="group relative flex min-h-28 overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-900 via-emerald-700 to-red-600 p-3 text-white shadow-lg shadow-emerald-900/12 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                  <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_0,transparent_28%),linear-gradient(135deg,rgba(255,255,255,.22)_1px,transparent_1px)] [background-size:auto,18px_18px]" />
+                  {ad.image ? (
+                    <img
+                      src={ad.image}
+                      alt={ad.title}
+                      className="relative z-10 h-24 w-24 shrink-0 rounded-2xl border border-white/25 object-cover shadow-md sm:h-28 sm:w-28"
+                      onError={(e) => applyMenuImageFallback(e.currentTarget, ad.title || "Offer", "Offer")}
+                    />
+                  ) : (
+                    <div className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-white/25 bg-white/15 shadow-md sm:h-28 sm:w-28">
+                      <Megaphone className="h-9 w-9" />
+                    </div>
+                  )}
+                  <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-3">
+                    <Badge className="mb-2 w-fit rounded-full bg-white px-2 py-0 text-[10px] font-bold text-emerald-800 hover:bg-white">Advertisement</Badge>
+                    <h3 className="line-clamp-2 text-base font-extrabold leading-tight sm:text-lg">{ad.title}</h3>
+                    {ad.subtitle && <p className="mt-1 line-clamp-2 text-xs text-white/85 sm:text-sm">{ad.subtitle}</p>}
+                    {ad.link && (
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-white/90">
+                        View details <ExternalLink className="h-3 w-3" />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+              return ad.link ? (
+                <a key={ad.id} href={ad.link} target="_blank" rel="noreferrer" className="block">
+                  {content}
+                </a>
+              ) : (
+                <div key={ad.id}>{content}</div>
+              );
+            })}
           </div>
-          <Badge variant="outline" className="h-7 rounded-full bg-white px-2.5 text-xs sm:h-8 sm:px-3 sm:text-sm">
+        )}
+
+        <div className="qr-menu-enter mt-5 flex flex-wrap items-end justify-between gap-3 sm:mt-6 [animation-delay:220ms]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary sm:text-sm">{category === "all" ? "Full menu" : category}</p>
+            <h2 className="text-xl font-extrabold tracking-tight sm:text-3xl">Choose your order</h2>
+          </div>
+          <Badge variant="outline" className="h-8 rounded-full border-emerald-100 bg-white px-3 text-xs shadow-sm sm:h-9 sm:px-4 sm:text-sm">
             {totalVisible} items
           </Badge>
         </div>
@@ -268,11 +321,12 @@ export default function PublicMenuPage() {
               <h2 className="text-lg font-extrabold">Combo Offers</h2>
               <Badge className="bg-primary/10 text-primary hover:bg-primary/10">{combos.length} offers</Badge>
             </div>
-            <div className="grid grid-cols-1 gap-2.5 min-[390px]:grid-cols-2 min-[620px]:grid-cols-3 md:grid-cols-4 md:gap-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 md:gap-3 xl:grid-cols-5 2xl:grid-cols-6">
               {combos.map((combo) => (
-                <Card key={`combo-${combo.id}`} className="group overflow-hidden rounded-xl border-primary/20 bg-white shadow-sm">
-                  <div className="relative aspect-[5/3] overflow-hidden bg-muted sm:aspect-[4/3]">
-                    <img src={menuFoodImage(combo.name, combo.category || "Combo", combo.image)} alt={combo.name} className="h-full w-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, combo.name, combo.category || "Combo")} />
+                <Card key={`combo-${combo.id}`} className="qr-item-card group overflow-hidden rounded-3xl border-primary/20 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/12">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                    <img src={menuFoodImage(combo.name, combo.category || "Combo", combo.image)} alt={combo.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" onError={(e) => applyMenuImageFallback(e.currentTarget, combo.name, combo.category || "Combo")} />
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/38 to-transparent opacity-80" />
                     {comboHasOffer(combo) && (
                       <div className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm sm:left-3 sm:top-3 sm:px-3 sm:py-1 sm:text-xs">
                         {offerPercent(Number(combo.price), Number(combo.original_price))}% off
@@ -307,14 +361,14 @@ export default function PublicMenuPage() {
         ) : (
           <>
             {items.length > 0 && (
-                <div className="mt-5 space-y-5 sm:space-y-6">
+              <div className="mt-5 space-y-5 sm:space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-extrabold">{category === "offers" ? "Menu Item Offers" : "Menu Items"}</h2>
-                  <Badge variant="outline" className="hidden rounded-full bg-white sm:inline-flex">{items.filter(itemHasOffer).length} priority offers</Badge>
+                  <h2 className="text-xl font-extrabold sm:text-2xl">{category === "offers" ? "Menu Item Offers" : "Menu Items"}</h2>
+                  <Badge variant="outline" className="hidden rounded-full border-emerald-100 bg-white shadow-sm sm:inline-flex">{items.filter(itemHasOffer).length} priority offers</Badge>
                 </div>
                 {itemSections.map((section) => (
                   <section key={section.categoryName} className="space-y-3 sm:space-y-4">
-                    <div className="flex items-end justify-between gap-3 border-b pb-2">
+                    <div className="flex items-end justify-between gap-3 rounded-3xl border border-emerald-100 bg-white px-4 py-3 shadow-sm">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">Category</p>
                         <h3 className="text-lg font-extrabold sm:text-xl">{section.categoryName}</h3>
@@ -328,17 +382,18 @@ export default function PublicMenuPage() {
                           <div className="h-px flex-1 bg-border" />
                           <span className="text-xs text-muted-foreground">{subSection.list.length}</span>
                         </div>
-                        <div className="grid grid-cols-1 gap-2.5 min-[390px]:grid-cols-2 min-[620px]:grid-cols-3 md:grid-cols-4 md:gap-3 xl:grid-cols-5">
+                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 md:gap-3 xl:grid-cols-5 2xl:grid-cols-6">
                           {subSection.list.map((item) => (
-                            <Card key={item.id} className={`group overflow-hidden rounded-xl bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${itemHasOffer(item) ? "border-primary/35 ring-1 ring-primary/10" : ""}`}>
-                              <div className="relative aspect-[5/3] overflow-hidden bg-muted sm:aspect-[4/3]">
+                            <Card key={item.id} className={`qr-item-card group overflow-hidden rounded-3xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-emerald-900/12 ${itemHasOffer(item) ? "border-primary/35 ring-1 ring-primary/10" : "border-emerald-100"}`}>
+                              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                                 <img
                                   src={menuFoodImage(item.name, item.category, item.image)}
                                   alt={item.name}
-                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                                   onError={(e) => applyMenuImageFallback(e.currentTarget, item.name, item.category)}
                                 />
-                                <div className="absolute right-1.5 top-1.5 rounded-full bg-white/95 px-2 py-0.5 text-xs font-extrabold text-primary shadow-sm sm:right-3 sm:top-3 sm:px-3 sm:py-1 sm:text-sm">
+                                <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/28 to-transparent opacity-75" />
+                                <div className="absolute right-1.5 top-1.5 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-extrabold text-primary shadow-sm sm:right-3 sm:top-3 sm:px-3 sm:py-1 sm:text-sm">
                                   {data.business.currency_symbol}{Number(item.price).toLocaleString()}
                                 </div>
                                 {itemHasOffer(item) && (
@@ -355,7 +410,7 @@ export default function PublicMenuPage() {
                                       {item.sub_category && <Badge variant="outline" className="px-1.5 py-0 text-[10px] capitalize sm:text-xs">{item.sub_category}</Badge>}
                                       {itemHasOffer(item) && <Badge className="hidden bg-primary/10 text-primary hover:bg-primary/10 sm:inline-flex">Offer</Badge>}
                                     </div>
-                                    <h2 className="line-clamp-2 text-sm font-bold leading-snug sm:text-base">{item.name}</h2>
+                                    <h2 className="line-clamp-2 min-h-9 text-sm font-bold leading-snug sm:min-h-10 sm:text-base">{item.name}</h2>
                                   </div>
                                 </div>
                                 {itemHasOffer(item) && (
