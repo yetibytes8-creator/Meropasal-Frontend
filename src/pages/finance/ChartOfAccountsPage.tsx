@@ -11,15 +11,15 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { chartAccounts, type ApiChartAccount } from "@/lib/api";
 import { useList } from "@/hooks/use-data";
 import FinanceStatementHeader from "@/components/FinanceStatementHeader";
-import { BookOpenCheck, FolderPlus, FolderTree, Pencil, Plus, Save } from "lucide-react";
+import { ArrowRight, BookOpenCheck, FolderPlus, FolderTree, Pencil, Plus, Save, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const accountTypes = [
-  { value: "asset", label: "Asset", normal: "Debit", range: "1000 - 1999" },
-  { value: "liability", label: "Liability", normal: "Credit", range: "2000 - 2999" },
-  { value: "equity", label: "Equity", normal: "Credit", range: "3000 - 3999" },
-  { value: "income", label: "Income", normal: "Credit", range: "4000 - 4999" },
-  { value: "expense", label: "Expense", normal: "Debit", range: "5000 - 5999" },
+  { value: "asset", label: "Asset", normal: "Debit", range: "1000 - 1999", meaning: "Business ko sampatti", examples: "Cash, bank, stock, customer due" },
+  { value: "liability", label: "Liability", normal: "Credit", range: "2000 - 2999", meaning: "Business le tirna parne", examples: "Supplier due, VAT/TDS, loan" },
+  { value: "equity", label: "Equity", normal: "Credit", range: "3000 - 3999", meaning: "Owner ko capital", examples: "Capital, drawing, retained earning" },
+  { value: "income", label: "Income", normal: "Credit", range: "4000 - 4999", meaning: "Business ko kamai", examples: "Sales, service, online sale" },
+  { value: "expense", label: "Expense", normal: "Debit", range: "5000 - 5999", meaning: "Business ko kharcha", examples: "Purchase, rent, salary, delivery" },
 ] as const;
 
 type AccountType = typeof accountTypes[number]["value"];
@@ -55,11 +55,11 @@ const defaultSubGroups: Record<string, string[]> = {
 };
 
 const colorByType: Record<AccountType, string> = {
-  asset: "bg-sky-50 text-sky-700 border-sky-200",
+  asset: "bg-green-50 text-green-700 border-green-200",
   liability: "bg-red-50 text-red-700 border-red-200",
-  equity: "bg-violet-50 text-violet-700 border-violet-200",
+  equity: "bg-slate-50 text-slate-700 border-slate-200",
   income: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  expense: "bg-amber-50 text-amber-700 border-amber-200",
+  expense: "bg-rose-50 text-rose-700 border-rose-200",
 };
 
 const typeLabel = (type: AccountType) => accountTypes.find((item) => item.value === type)?.label ?? type;
@@ -106,6 +106,7 @@ export default function ChartOfAccountsPage() {
   const [editing, setEditing] = useState<ApiChartAccount | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [query, setQuery] = useState("");
+  const [categoryQuery, setCategoryQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<AccountType | "all">("all");
   const [customCategories, setCustomCategories] = useState<CustomAccountCategory[]>(() => readCustomCategories());
   const [categoryOpen, setCategoryOpen] = useState(false);
@@ -174,6 +175,25 @@ export default function ChartOfAccountsPage() {
     const subGroupCount = new Set(rows.map((row) => row.sub_group).filter(Boolean)).size;
     return { ...type, count: rows.length, groupCount, subGroupCount };
   });
+
+  const visibleGroupsForType = (accountType: AccountType) => {
+    const q = categoryQuery.trim().toLowerCase();
+    return Array.from(new Set([
+      ...(defaultGroups[accountType] ?? []),
+      ...customCategories.filter((category) => category.account_type === accountType).map((category) => category.group),
+      ...accounts.filter((account) => account.account_type === accountType).map((account) => account.group).filter(Boolean),
+    ]))
+      .filter((group) => {
+        if (!q) return true;
+        const subGroups = Array.from(new Set([
+          ...(defaultSubGroups[group] ?? []),
+          ...customCategories.filter((category) => category.account_type === accountType && category.group === group).map((category) => category.sub_group).filter(Boolean),
+          ...accounts.filter((account) => account.account_type === accountType && account.group === group).map((account) => account.sub_group).filter(Boolean),
+        ]));
+        return group.toLowerCase().includes(q) || subGroups.some((subGroup) => subGroup.toLowerCase().includes(q));
+      })
+      .sort();
+  };
 
   const openAdd = () => {
     setEditing(null);
@@ -264,19 +284,59 @@ export default function ChartOfAccountsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="page-header">Chart of Accounts</h1>
-          <p className="page-description">Group, sub-group, and ledger setup for accounting entries</p>
+      <section className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm print:hidden">
+        <div className="h-1 bg-gradient-to-r from-green-600 via-green-500 to-red-500" />
+        <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[1.2fr_0.8fr] lg:p-6">
+          <div>
+            <Badge className="mb-3 border-green-200 bg-green-50 text-green-700 hover:bg-green-50">
+              Accounting setup
+            </Badge>
+            <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Chart of Accounts</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Ledger banाउँदा pahila account type choose garnus, tespachi group, sub-group ani ledger name rakhnus. Sales, purchase, payment, refund sabai report yahi structure bata milcha.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {[
+                ["1", "Account Type", "Asset, Liability, Equity, Income, Expense"],
+                ["2", "Group", "Cash & Bank, Payable, Revenue"],
+                ["3", "Sub Group", "Bank Account, Supplier Ledger"],
+                ["4", "Ledger", "Nabil Bank, Sales Revenue, Rent"],
+              ].map(([step, title, text]) => (
+                <div key={step} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-600 text-xs font-black text-white">{step}</span>
+                    <p className="font-bold text-slate-950">{title}</p>
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-green-100 bg-green-50/60 p-4">
+            <p className="text-sm font-black text-green-900">Quick Actions</p>
+            <div className="mt-3 grid gap-2">
+              <Button onClick={openAdd} className="h-11 justify-between rounded-xl bg-green-600 text-white hover:bg-green-700">
+                <span className="inline-flex items-center gap-2"><Plus className="h-4 w-4" /> Add Ledger</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={() => openCategoryCreate()} className="h-11 justify-between rounded-xl border-green-200 bg-white text-green-800 hover:bg-green-50">
+                <span className="inline-flex items-center gap-2"><FolderPlus className="h-4 w-4" /> Create Group / Sub Group</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="mt-4 rounded-xl border border-green-200 bg-white p-3">
+              <p className="text-xs font-bold uppercase text-green-700">Simple rule</p>
+              <p className="mt-1 text-sm leading-6 text-slate-700">
+                Business sanga vako kura Asset. Business le tirna parne kura Liability. Kamai Income. Kharcha Expense.
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" onClick={() => openCategoryCreate()} className="gap-2">
-            <FolderPlus className="h-4 w-4" /> Create Category
-          </Button>
-          <Button onClick={openAdd} className="gap-2">
-            <Plus className="h-4 w-4" /> Add Ledger
-          </Button>
-        </div>
+      </section>
+
+      <div className="hidden print:block">
+        <h1 className="page-header">Chart of Accounts</h1>
+        <p className="page-description">Group, sub-group, and ledger setup for accounting entries</p>
       </div>
 
       <FinanceStatementHeader
@@ -385,43 +445,66 @@ export default function ChartOfAccountsPage() {
         </div>
       </FinanceStatementHeader>
 
-      <Card className="print:hidden">
-        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FolderTree className="h-4 w-4" />Account Structure Summary</CardTitle></CardHeader>
+      <Card className="border-green-100 shadow-sm print:hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FolderTree className="h-4 w-4 text-green-700" />
+            Account Types
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Kun ledger kun type ma parcha vanne quick guide.</p>
+        </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {summary.map((row) => (
-            <div key={row.value} className="rounded-xl border bg-card p-4">
-              <Badge variant="outline" className={colorByType[row.value]}>{row.label}</Badge>
-              <p className="mt-3 text-2xl font-bold">{row.count}</p>
-              <p className="text-xs text-muted-foreground">{row.groupCount} groups • {row.subGroupCount} sub-groups • {row.normal}</p>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">{row.range}</p>
-            </div>
+            <button
+              key={row.value}
+              type="button"
+              onClick={() => setTypeFilter(row.value)}
+              className={`rounded-xl border bg-white p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${typeFilter === row.value ? "border-green-400 ring-2 ring-green-100" : "border-slate-200"}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="outline" className={colorByType[row.value]}>{row.label}</Badge>
+                <span className="font-mono text-xs text-slate-500">{row.range}</span>
+              </div>
+              <p className="mt-3 text-2xl font-black">{row.count}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">{row.meaning}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">{row.examples}</p>
+              <p className="mt-3 text-xs text-muted-foreground">{row.groupCount} groups, {row.subGroupCount} sub-groups, {row.normal}</p>
+            </button>
           ))}
         </CardContent>
       </Card>
 
-      <Card className="print:hidden">
-        <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 text-base"><FolderPlus className="h-4 w-4" />Group / Sub Group Master</CardTitle>
-          <Button size="sm" variant="outline" className="gap-2" onClick={() => openCategoryCreate()}>
-            <Plus className="h-4 w-4" /> Add
-          </Button>
+      <Card className="border-green-100 shadow-sm print:hidden">
+        <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FolderPlus className="h-4 w-4 text-green-700" />
+              Group / Sub Group Master
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">Main category ra tesko tala sub category search/add garna milcha.</p>
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+            <div className="relative min-w-0 sm:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search group or sub group..." value={categoryQuery} onChange={(e) => setCategoryQuery(e.target.value)} />
+            </div>
+            <Button size="sm" variant="outline" className="h-10 gap-2 border-green-200 text-green-800 hover:bg-green-50" onClick={() => openCategoryCreate()}>
+              <Plus className="h-4 w-4" /> Add
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {accountTypes.map((type) => {
-            const groups = Array.from(new Set([
-              ...(defaultGroups[type.value] ?? []),
-              ...customCategories.filter((category) => category.account_type === type.value).map((category) => category.group),
-              ...accounts.filter((account) => account.account_type === type.value).map((account) => account.group).filter(Boolean),
-            ])).sort();
+            const groups = visibleGroupsForType(type.value);
             return (
-              <div key={type.value} className="rounded-xl border bg-card p-3">
-                <div className="mb-3 flex items-center justify-between gap-2">
+              <div key={type.value} className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <Badge variant="outline" className={colorByType[type.value]}>{type.label}</Badge>
-                  <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => openCategoryCreate(type.value)}>
+                  <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-green-800 hover:bg-green-50" onClick={() => openCategoryCreate(type.value)}>
                     <Plus className="mr-1 h-3 w-3" /> Group
                   </Button>
                 </div>
-                <div className="space-y-2">
+                <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                   {groups.map((group) => {
                     const subGroups = Array.from(new Set([
                       ...(defaultSubGroups[group] ?? []),
@@ -432,7 +515,7 @@ export default function ChartOfAccountsPage() {
                       <div key={group} className="rounded-lg border bg-muted/20 p-2">
                         <div className="flex items-center justify-between gap-2">
                           <p className="truncate text-sm font-semibold">{group}</p>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => openCategoryCreate(type.value, group)}>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] text-green-800 hover:bg-green-50" onClick={() => openCategoryCreate(type.value, group)}>
                             <Plus className="mr-1 h-3 w-3" /> Sub
                           </Button>
                         </div>
@@ -447,6 +530,11 @@ export default function ChartOfAccountsPage() {
                       </div>
                     );
                   })}
+                  {groups.length === 0 && (
+                    <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                      No group found
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -454,8 +542,11 @@ export default function ChartOfAccountsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_220px] print:hidden">
-        <Input placeholder="Search code, ledger, group, sub-group..." value={query} onChange={(e) => setQuery(e.target.value)} />
+      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:grid-cols-[1fr_220px] print:hidden">
+        <div className="relative min-w-0">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Search code, ledger, group, sub-group..." value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
         <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as AccountType | "all")}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -654,7 +745,7 @@ export default function ChartOfAccountsPage() {
             <div className="flex items-center justify-between rounded-xl border p-3">
               <div>
                 <p className="text-sm font-medium">Active Ledger</p>
-                <p className="text-xs text-muted-foreground">Inactive ledger report मा रहन्छ तर new posting मा hide गर्न सकिन्छ</p>
+                <p className="text-xs text-muted-foreground">Inactive ledger report ma rahanchha, tara new posting ma hide garna milcha.</p>
               </div>
               <Switch checked={form.is_active} onCheckedChange={(is_active) => setForm({ ...form, is_active })} />
             </div>
