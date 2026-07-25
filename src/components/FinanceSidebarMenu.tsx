@@ -67,47 +67,20 @@ function pathnameOnly(url: string) {
 
 const financeGroups = [
   {
-    title: "Overview",
-    items: ["Dashboard", "Day Book", "Transactions"],
+    title: "Daily Work",
+    items: ["Dashboard", "Day Book", "Transactions", "Income", "Payment In / Out", "Refunds & Returns"],
   },
   {
-    title: "Accounting Setup",
-    items: ["Chart of Accounts", "Opening Balance", "Journal Voucher", "Customer/Supplier Ledger"],
+    title: "Setup",
+    items: ["Chart of Accounts", "Opening Balance", "Journal Voucher", "Customer/Supplier Ledger", "Report & Signature Settings"],
   },
   {
-    title: "Sales & Purchases",
-    items: ["Income", "Sales Register", "Purchase Register", "Refunds & Returns", "Payroll & Payables", "Payment In / Out"],
+    title: "Bank & Tax",
+    items: ["Cash & Banks", "Bank Reconciliation", "Cheque Management", "Balance Transfer", "Tax & Rates"],
   },
   {
-    title: "Bank, Tax & Branch",
-    items: [
-      "Cash & Banks",
-      "Bank Reconciliation",
-      "Cheque Management",
-      "Balance Transfer",
-      "Tax & Rates",
-      "TDS Compliance",
-      "VAT & TDS Reconciliation",
-      "Stock Valuation",
-      "Branch Reporting",
-    ],
-  },
-  {
-    title: "Reports & Control",
-    items: [
-      "Cash Flow",
-      "MIS Dashboard",
-      "Financial Statements",
-      "Ratio Analysis",
-      "Provisional Report",
-      "5 Year Projection",
-      "Reports",
-      "Approval Workflow",
-      "Document Attachments",
-      "Report & Signature Settings",
-      "Audit Trail",
-      "Fiscal Year Closing",
-    ],
+    title: "Reports",
+    items: ["Reports", "Sales Register", "Purchase Register", "Approval Workflow", "Document Attachments", "Audit Trail"],
   },
 ];
 
@@ -128,9 +101,9 @@ export default function FinanceSidebarMenu({ base }: { base: FinanceBase }) {
     const current = `${location.pathname}${location.search}`;
     const match = groupedNav.find((group) =>
       group.items.some((item) => location.pathname === pathnameOnly(item.url) || current === item.url) ||
-      (group.title === "Reports & Control" && pinned.some((item) => current === item.url)),
+      (group.title === "Reports" && pinned.some((item) => current === item.url)),
     );
-    return match?.title || "Overview";
+    return match?.title || "Daily Work";
   }, [groupedNav, location.pathname, location.search, pinned]);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set([activeGroup]));
 
@@ -195,7 +168,7 @@ export default function FinanceSidebarMenu({ base }: { base: FinanceBase }) {
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
-                    {group.title === "Reports & Control" && (
+                    {group.title === "Reports" && (
                       <>
                         <SidebarMenuSubItem>
                           <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-white/45">
