@@ -25,9 +25,21 @@ type LiveMenuItem = { id: string; name: string; price: number; available: boolea
 const formatNPR = (amount: number) => `Rs. ${amount.toFixed(2)}`;
 
 const statusStyles: Record<string, { bg: string; label: string }> = {
-  available: { bg: "border-success/40 bg-success/5", label: "bg-success/10 text-success border-success/20" },
-  occupied: { bg: "border-restaurant/40 bg-restaurant/5", label: "bg-restaurant/10 text-restaurant border-restaurant/20" },
-  reserved: { bg: "border-warning/40 bg-warning/5", label: "bg-warning/10 text-warning border-warning/20" },
+  available: { bg: "border-success/40 bg-success/5 hover:border-success/70", label: "bg-success/10 text-success border-success/20" },
+  occupied: { bg: "border-destructive/45 bg-destructive/8 ring-1 ring-destructive/10 hover:border-destructive/70", label: "bg-destructive/10 text-destructive border-destructive/25" },
+  reserved: { bg: "border-warning/45 bg-warning/10 hover:border-warning/70", label: "bg-warning/10 text-warning border-warning/20" },
+};
+
+const tableStatusLabel: Record<string, string> = {
+  available: "Available",
+  occupied: "Occupied / Pack",
+  reserved: "Booked",
+};
+
+const tableStatusDot: Record<string, string> = {
+  available: "bg-success",
+  occupied: "bg-destructive",
+  reserved: "bg-warning",
 };
 
 const statusColorMap: Record<string, string> = {
@@ -299,8 +311,8 @@ const TablesPage = () => {
       <div className="flex flex-wrap gap-3 sm:gap-4">
         {Object.entries(counts).map(([status, count]) => (
           <div key={status} className="flex items-center gap-2 text-sm">
-            <div className={cn("w-3 h-3 rounded-full shrink-0", status === "available" ? "bg-success" : status === "occupied" ? "bg-restaurant" : "bg-warning")} />
-            <span className="capitalize text-muted-foreground">{status}: {count}</span>
+            <div className={cn("w-3 h-3 rounded-full shrink-0", tableStatusDot[status])} />
+            <span className="text-muted-foreground">{tableStatusLabel[status] || status}: {count}</span>
           </div>
         ))}
       </div>
@@ -310,9 +322,11 @@ const TablesPage = () => {
           <Card key={table.id} className={cn("cursor-pointer transition-all hover:shadow-md", statusStyles[table.status].bg)} onClick={() => handleTableClick(table)}>
             <CardContent className="p-3 sm:p-5 text-center">
               <div className="text-2xl sm:text-3xl font-bold mb-2">{table.number}</div>
-              <Badge variant="outline" className={statusStyles[table.status].label}>{table.status}</Badge>
+              <Badge variant="outline" className={statusStyles[table.status].label}>{tableStatusLabel[table.status] || table.status}</Badge>
               <p className="text-xs text-muted-foreground mt-2">{table.seats} seats</p>
               {table.status === "available" && <p className="text-xs text-success mt-2 font-medium">Click to create order</p>}
+              {table.status === "reserved" && <p className="text-xs text-warning mt-2 font-medium">Booked table</p>}
+              {table.status === "occupied" && <p className="text-xs text-destructive mt-2 font-medium">Click to view bill/order</p>}
               {table.orderId && (() => {
                 const order = allOrders.find(o => o.id === table.orderId);
                 return order ? (
