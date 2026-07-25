@@ -24,6 +24,7 @@ const statusColor: Record<string, string> = {
   ready: "bg-success/10 text-success border-success/20",
   completed: "bg-muted text-muted-foreground",
   cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+  refunded: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const OrdersPage = () => {
@@ -285,6 +286,8 @@ const OrdersPage = () => {
               <SelectItem value="preparing">Preparing</SelectItem>
               <SelectItem value="ready">Ready</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterType} onValueChange={setFilterType}>
@@ -347,9 +350,13 @@ const OrdersPage = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                {order.status !== "completed" && order.status !== "cancelled" && (
+                {nextStatus[order.status] ? (
                   <div className="flex gap-2">
-                    <Button variant="outline" className="h-10 flex-1 rounded-xl gap-2" onClick={() => updateStatus(order.id, "cancelled")}>
+                    <Button
+                      variant="outline"
+                      className="h-10 flex-1 rounded-xl gap-2 border-destructive/30 bg-destructive/5 text-destructive hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => updateStatus(order.id, "cancelled")}
+                    >
                       <X className="w-3.5 h-3.5 shrink-0" />Cancel
                     </Button>
                     <Button className="h-10 flex-1 rounded-xl gap-2 capitalize" onClick={() => updateStatus(order.id, nextStatus[order.status])}>
@@ -358,6 +365,14 @@ const OrdersPage = () => {
                       {nextStatus[order.status] === "completed" && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
                       {nextStatus[order.status]}
                     </Button>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-muted bg-muted/40 px-3 py-2 text-center text-sm font-semibold text-muted-foreground">
+                    {order.status === "refunded"
+                      ? "Refunded - view refund note from Billing"
+                      : order.status === "cancelled"
+                        ? "Cancelled order"
+                        : "Completed - ready for billing"}
                   </div>
                 )}
               </div>
