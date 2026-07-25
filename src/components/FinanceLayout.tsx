@@ -28,7 +28,7 @@ function FinanceSidebarContent() {
       <SidebarContent className="bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.28),transparent_42%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.12),transparent_38%),linear-gradient(180deg,hsl(151_42%_13%),hsl(151_42%_9%))] text-white">
         <div className="m-3 rounded-2xl border border-white/10 bg-white/8 p-3 shadow-sm backdrop-blur flex items-center gap-3">
           {settings.logo
-            ? <img src={settings.logo} alt={settings.businessName} className="w-9 h-9 rounded-xl object-contain shrink-0 bg-white/90 p-1" />
+            ? <img src={settings.logo} alt={settings.businessName} className="w-9 h-9 rounded-xl object-contain shrink-0 bg-white/90 p-1" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = cafeLogo; }} />
             : <img src={cafeLogo} alt="Finance" width={32} height={32} className="shrink-0 drop-shadow-sm" />
           }
           {!collapsed && (

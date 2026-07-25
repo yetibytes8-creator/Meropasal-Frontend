@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/StatCard";
 import { customers as customersApi, menuItems as menuItemsApi, ingredients as ingredientsApi, alertsApi, type ApiCustomer, type ApiMenuItem, type ApiAlert } from "@/lib/api";
 import { fromApiIngredient } from "@/lib/transforms";
-import { menuFoodImage } from "@/lib/menuImages";
+import { applyMenuImageFallback, menuFoodImage } from "@/lib/menuImages";
 import { useOrders } from "@/contexts/OrdersContext";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,7 +152,12 @@ const RestaurantDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {menuItems.filter(m => m.available).slice(0, 6).map((item) => (
                 <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  <img src={menuFoodImage(item.name, item.category, item.image)} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
+                  <img
+                    src={menuFoodImage(item.name, item.category, item.image)}
+                    alt={item.name}
+                    className="w-10 h-10 rounded-lg object-cover"
+                    onError={(event) => applyMenuImageFallback(event.currentTarget, item.name, item.category)}
+                  />
                   <div className="flex-1">
                     <p className="font-medium text-sm">{item.name}</p>
                     <p className="text-xs text-muted-foreground">{item.category}</p>

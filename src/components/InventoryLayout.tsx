@@ -103,7 +103,7 @@ function InventorySidebarContent() {
       <SidebarContent className="bg-sidebar bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.26),transparent_42%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.11),transparent_38%),linear-gradient(180deg,hsl(var(--sidebar-background)),hsl(151_42%_9%))] border-r border-sidebar-border/70">
         <div className="p-4 flex items-center gap-3">
           {settings.logo
-            ? <img src={settings.logo} alt={settings.businessName} className="w-8 h-8 rounded object-contain shrink-0" />
+            ? <img src={settings.logo} alt={settings.businessName} className="w-8 h-8 rounded object-contain shrink-0" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = cafeLogo; }} />
             : <img src={cafeLogo} alt="Mero Pasal" width={32} height={32} className="shrink-0 drop-shadow-sm" />
           }
           {!collapsed && (

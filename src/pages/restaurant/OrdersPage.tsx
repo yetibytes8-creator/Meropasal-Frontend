@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { menuFoodImage } from "@/lib/menuImages";
+import { applyMenuImageFallback, menuFoodImage } from "@/lib/menuImages";
 import { Plus, Minus, Clock, ShoppingCart, Search, Trash2, X, ChefHat, CheckCircle, Receipt } from "lucide-react";
 import type { Order } from "@/types";
 import { toast } from "sonner";
@@ -215,7 +215,12 @@ const OrdersPage = () => {
                       <button onClick={() => addToCart(item.id)} className="text-left focus:outline-none">
                         {item.image ? (
                           <div className="aspect-square w-full overflow-hidden bg-muted">
-                            <img src={item.image} alt={item.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                              onError={(event) => applyMenuImageFallback(event.currentTarget, item.name, item.category)}
+                            />
                           </div>
                         ) : (
                           <div className="aspect-square w-full bg-muted flex items-center justify-center">
@@ -331,7 +336,12 @@ const OrdersPage = () => {
                   return (
                     <div key={idx} className="flex items-center gap-2 text-sm min-w-0">
                       {menuItem?.image && (
-                        <img src={menuItem.image} alt={item.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                        <img
+                          src={menuItem.image}
+                          alt={item.name}
+                          className="w-8 h-8 rounded object-cover flex-shrink-0"
+                          onError={(event) => applyMenuImageFallback(event.currentTarget, item.name, menuItem.category)}
+                        />
                       )}
                       <span className="flex-1 min-w-0 truncate">{item.quantity}x {item.name}</span>
                       <span className="text-muted-foreground">Rs. {(item.quantity * item.price).toFixed(2)}</span>

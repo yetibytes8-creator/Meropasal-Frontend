@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { menuFoodImage } from "@/lib/menuImages";
+import { applyMenuImageFallback, menuFoodImage } from "@/lib/menuImages";
 import { orders as ordersApi } from "@/lib/api";
 import { fromApiOrder } from "@/lib/transforms";
 import { balanceMoneyInput, formatMoneyInput, parseMoneyInput, sanitizeMoneyInput } from "@/lib/moneyInput";
@@ -347,7 +347,14 @@ const TablesPage = () => {
                   const menuItem = menuItemMap[item.menuItemId];
                   return (
                     <div key={idx} className="flex items-center gap-3 text-sm">
-                      {menuItem?.image && <img src={menuItem.image} alt={item.name} className="w-10 h-10 rounded object-cover flex-shrink-0" />}
+                      {menuItem?.image && (
+                        <img
+                          src={menuItem.image}
+                          alt={item.name}
+                          className="w-10 h-10 rounded object-cover flex-shrink-0"
+                          onError={(event) => applyMenuImageFallback(event.currentTarget, item.name, menuItem.category)}
+                        />
+                      )}
                       <div className="flex-1">
                         <p className="font-medium">{item.name}</p>
                         <p className="text-xs text-muted-foreground">Qty: {item.quantity} × {formatNPR(item.price)}</p>
@@ -431,7 +438,12 @@ const TablesPage = () => {
                   >
                     {/* Thumbnail */}
                     {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                        onError={(event) => applyMenuImageFallback(event.currentTarget, item.name, item.category)}
+                      />
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
                         <span className="text-xl">🍽️</span>
