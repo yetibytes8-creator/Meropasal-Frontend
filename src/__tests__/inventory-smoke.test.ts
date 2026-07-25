@@ -90,7 +90,7 @@ describe("inventory module smoke coverage", () => {
     expect(serializers).toContain("validate_logo");
     expect(views).toContain("change_password");
     expect(views).toContain("validate_password");
-    expect(settings).toContain("SECRET_KEY must be set when DEBUG=False");
+    expect(settings).toContain("Set a strong SECRET_KEY in backend/.env before running with DEBUG=False.");
     expect(settings).toContain("SESSION_COOKIE_SECURE");
     expect(staffProfile).toContain("updateStaffPassword");
     expect(staffProfile).not.toContain("staffUser.password");
@@ -122,7 +122,7 @@ describe("inventory module smoke coverage", () => {
     expect(statementHeader).toContain("settings.businessName");
     expect(statementHeader).toContain("Fiscal Year (AD)");
     expect(statementHeader).toContain("Statutory-style format");
-    expect(financeDashboard).toContain("Overview Details");
+    expect(financeDashboard).toContain("Monthly Summary");
     expect(financeDashboard).toContain("TableFooter");
     expect(financeReports).toContain("Total Income");
     expect(financeReports).toContain("TableFooter");
