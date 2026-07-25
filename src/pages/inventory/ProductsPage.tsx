@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { products as productsApi } from "@/lib/api";
 import { fromApiProduct } from "@/lib/transforms";
 import { useList } from "@/hooks/use-data";
@@ -10,11 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, CheckCircle2, Plus, Search, Pencil, Trash2, Package, Save, ArrowUpDown, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Plus, Search, Pencil, Trash2, Package, Save, ArrowUpDown, ChevronLeft, ChevronRight, XCircle, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getBusinessProfileFromSystemConfig } from "@/lib/businessProfiles";
+import { fileToDataUrl, imageUrlToDataUrl } from "@/lib/imageFileStore";
 import type { Product } from "@/types";
 
 const DEFAULT_CATEGORIES = [
@@ -389,6 +390,7 @@ const ProductsPage = () => {
   const [categorySearch, setCategorySearch] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "name", dir: "asc" });
   const [page, setPage] = useState(1);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const categories = useMemo(
     () => Array.from(new Set([...profileCategories, ...products.map((p) => p.category).filter(Boolean)])).sort(),
@@ -463,6 +465,29 @@ const ProductsPage = () => {
     });
     setCategorySearch("");
     setDialogOpen(true);
+  };
+
+  const saveImageLocally = async () => {
+    try {
+      const dataUrl = await imageUrlToDataUrl(form.image);
+      setForm((current) => ({ ...current, image: dataUrl }));
+      toast.success("Image saved in this product record");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save image locally");
+    }
+  };
+
+  const uploadImageFile = async (file?: File) => {
+    if (!file) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setForm((current) => ({ ...current, image: dataUrl }));
+      toast.success("Image uploaded and saved in this product");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not upload image");
+    } finally {
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
   };
 
   const handleSave = async () => {
@@ -712,7 +737,7 @@ const ProductsPage = () => {
                 </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Image URL</Label>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   {form.image ? (
                     <img src={form.image} alt="" className="w-12 h-12 rounded-md object-cover border shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   ) : (
@@ -720,8 +745,24 @@ const ProductsPage = () => {
                       <Package className="w-5 h-5 text-muted-foreground" />
                     </div>
                   )}
-                  <Input placeholder="https://example.com/image.jpg" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+                  <Input className="min-w-56 flex-1" placeholder="https://example.com/image.jpg" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => uploadImageFile(e.target.files?.[0])}
+                  />
+                  <Button type="button" variant="outline" className="h-10 shrink-0 gap-2 rounded-xl" onClick={() => imageInputRef.current?.click()}>
+                    <Upload className="h-4 w-4" />
+                    Upload
+                  </Button>
+                  <Button type="button" variant="outline" className="h-10 shrink-0 gap-2 rounded-xl" onClick={saveImageLocally} disabled={!form.image || form.image.startsWith("data:image/")}>
+                    <Download className="h-4 w-4" />
+                    Save local
+                  </Button>
                 </div>
+                <p className="text-[11px] text-muted-foreground">Upload gareko image record bhitra save huncha. URL paste gareko xa bhane Save local le file jastai store garcha.</p>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
