@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { menuFoodImage } from "@/lib/menuImages";
-import { Plus, Minus, Clock, ShoppingCart, Search, Trash2, X, ChefHat, CheckCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Minus, Clock, ShoppingCart, Search, Trash2, X, ChefHat, CheckCircle, Receipt } from "lucide-react";
 import type { Order } from "@/types";
 import { toast } from "sonner";
 
@@ -22,9 +22,7 @@ const statusColor: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/20",
   preparing: "bg-info/10 text-info border-info/20",
   ready: "bg-success/10 text-success border-success/20",
-  completed: "bg-muted text-muted-foreground",
   cancelled: "bg-destructive/10 text-destructive border-destructive/20",
-  refunded: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const OrdersPage = () => {
@@ -108,7 +106,20 @@ const OrdersPage = () => {
     toast.success("Order deleted");
   };
 
+  const activeOrderStatuses = new Set(["pending", "preparing", "ready"]);
+  const statusLabel: Record<string, string> = {
+    pending: "Pending",
+    preparing: "Making",
+    ready: "Ready",
+  };
+  const nextStatusLabel: Record<string, string> = {
+    pending: "Start Making",
+    preparing: "Mark Ready",
+    ready: "Send to Billing",
+  };
+
   const filtered = allOrders.filter((o) => {
+    if (!activeOrderStatuses.has(o.status)) return false;
     const q = search.trim().toLowerCase();
     const matchesSearch = !q ||
       o.id.toLowerCase().includes(q) ||
@@ -283,11 +294,8 @@ const OrdersPage = () => {
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="preparing">Preparing</SelectItem>
+              <SelectItem value="preparing">Making</SelectItem>
               <SelectItem value="ready">Ready</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterType} onValueChange={setFilterType}>
@@ -308,7 +316,7 @@ const OrdersPage = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Order #{order.id.slice(1)}</CardTitle>
-                <Badge variant="outline" className={statusColor[order.status]}>{order.status}</Badge>
+                <Badge variant="outline" className={statusColor[order.status]}>{statusLabel[order.status] || order.status}</Badge>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
@@ -362,17 +370,13 @@ const OrdersPage = () => {
                     <Button className="h-10 flex-1 rounded-xl gap-2 capitalize" onClick={() => updateStatus(order.id, nextStatus[order.status])}>
                       {nextStatus[order.status] === "preparing" && <ChefHat className="w-3.5 h-3.5 shrink-0" />}
                       {nextStatus[order.status] === "ready" && <CheckCircle className="w-3.5 h-3.5 shrink-0" />}
-                      {nextStatus[order.status] === "completed" && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
-                      {nextStatus[order.status]}
+                      {nextStatus[order.status] === "completed" && <Receipt className="w-3.5 h-3.5 shrink-0" />}
+                      {nextStatusLabel[order.status]}
                     </Button>
                   </div>
                 ) : (
                   <div className="rounded-xl border border-muted bg-muted/40 px-3 py-2 text-center text-sm font-semibold text-muted-foreground">
-                    {order.status === "refunded"
-                      ? "Refunded - view refund note from Billing"
-                      : order.status === "cancelled"
-                        ? "Cancelled order"
-                        : "Completed - ready for billing"}
+                    Order moved out of active kitchen flow
                   </div>
                 )}
               </div>
