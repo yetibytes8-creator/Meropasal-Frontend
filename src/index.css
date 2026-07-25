@@ -868,6 +868,9 @@
   .print-root th {
     background: #e5e7eb !important;
     font-weight: 700 !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    hyphens: none !important;
   }
 
   .print-root tfoot td,
@@ -961,16 +964,25 @@
 
   .print-root .finance-accounting-register-table {
     table-layout: fixed !important;
-    font-size: 8px !important;
+    font-size: 7.6px !important;
   }
 
   .print-root .finance-accounting-register-table th,
   .print-root .finance-accounting-register-table td {
-    padding: 3px 4px !important;
+    padding: 2.5px 3px !important;
     overflow-wrap: anywhere !important;
     word-break: normal !important;
     white-space: normal !important;
     text-align: left !important;
+  }
+
+  .print-root .finance-accounting-register-table th {
+    font-size: 6.8px !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0 !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    hyphens: none !important;
   }
 
   .print-root .finance-accounting-register-table th:first-child,
@@ -1016,6 +1028,20 @@
   .print-root .finance-accounting-register-table [data-column-key="status"],
   .print-root .finance-accounting-register-table [data-column-key="type"] {
     width: 10% !important;
+  }
+
+  .print-root .finance-accounting-register-table [data-column-key="supplier"],
+  .print-root .finance-accounting-register-table [data-column-key="branch"],
+  .print-root .finance-accounting-register-table [data-column-key="vat"],
+  .print-root .finance-accounting-register-table [data-column-key="date"] {
+    width: 8% !important;
+  }
+
+  .print-root .finance-accounting-register-table [data-column-key="bill_no"],
+  .print-root .finance-accounting-register-table [data-column-key="paid_from"],
+  .print-root .finance-accounting-register-table [data-column-key="payable"],
+  .print-root .finance-accounting-register-table [data-column-key="invoice"] {
+    width: 9% !important;
   }
 
   .print-root .coa-print-report {

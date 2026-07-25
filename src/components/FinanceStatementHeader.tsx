@@ -87,7 +87,14 @@ function financePrintStyles() {
       white-space: normal !important;
       overflow-wrap: anywhere !important;
     }
-    th { background: #e5e7eb !important; font-weight: 800 !important; text-transform: uppercase; }
+    th {
+      background: #e5e7eb !important;
+      font-weight: 800 !important;
+      text-transform: uppercase;
+      overflow-wrap: normal !important;
+      word-break: keep-all !important;
+      hyphens: none !important;
+    }
     th:first-child, td:first-child { width: 22px !important; min-width: 22px !important; max-width: 28px !important; text-align: center !important; white-space: nowrap !important; }
     .finance-print-meta-table th:first-child, .finance-print-meta-table td:first-child,
     .finance-print-meta-table th:nth-child(3), .finance-print-meta-table td:nth-child(3) {
@@ -151,15 +158,23 @@ function financePrintStyles() {
     }
     .finance-accounting-register-table {
       table-layout: fixed !important;
-      font-size: 8px !important;
+      font-size: 7.6px !important;
     }
     .finance-accounting-register-table th,
     .finance-accounting-register-table td {
-      padding: 3px 4px !important;
+      padding: 2.5px 3px !important;
       overflow-wrap: anywhere !important;
       word-break: normal !important;
       white-space: normal !important;
       text-align: left !important;
+    }
+    .finance-accounting-register-table th {
+      font-size: 6.8px !important;
+      line-height: 1.12 !important;
+      letter-spacing: 0 !important;
+      overflow-wrap: normal !important;
+      word-break: keep-all !important;
+      hyphens: none !important;
     }
     .finance-accounting-register-table th:first-child,
     .finance-accounting-register-table td:first-child {
@@ -189,6 +204,14 @@ function financePrintStyles() {
     .finance-accounting-register-table [data-column-key="reason"] { width: 22% !important; }
     .finance-accounting-register-table [data-column-key="status"],
     .finance-accounting-register-table [data-column-key="type"] { width: 10% !important; }
+    .finance-accounting-register-table [data-column-key="supplier"],
+    .finance-accounting-register-table [data-column-key="branch"],
+    .finance-accounting-register-table [data-column-key="vat"],
+    .finance-accounting-register-table [data-column-key="date"] { width: 8% !important; }
+    .finance-accounting-register-table [data-column-key="bill_no"],
+    .finance-accounting-register-table [data-column-key="paid_from"],
+    .finance-accounting-register-table [data-column-key="payable"],
+    .finance-accounting-register-table [data-column-key="invoice"] { width: 9% !important; }
     .coa-print-report { display: block !important; margin-top: 6px !important; }
     .coa-print-section-title {
       margin: 8px 0 4px !important;
