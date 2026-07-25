@@ -29,8 +29,9 @@ import {
 import { toast } from "sonner";
 
 type ServiceType = ApiRestaurantService["service_type"];
+type ServiceMeta = { label: string; icon: ElementType; tone: string };
 
-const serviceMeta: Record<ServiceType, { label: string; icon: ElementType; tone: string }> = {
+const serviceMeta: Record<ServiceType, ServiceMeta> = {
   dine_in: { label: "Dine In", icon: Utensils, tone: "bg-primary/10 text-primary border-primary/20" },
   delivery: { label: "Delivery", icon: Bike, tone: "bg-info/10 text-info border-info/20" },
   takeaway: { label: "Takeaway", icon: Store, tone: "bg-success/10 text-success border-success/20" },
@@ -39,6 +40,15 @@ const serviceMeta: Record<ServiceType, { label: string; icon: ElementType; tone:
   stamp_program: { label: "Stamp Program", icon: Gift, tone: "bg-pink-50 text-pink-700 border-pink-200" },
   online_order: { label: "Online Order / SNS", icon: Wifi, tone: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   other: { label: "Other Service", icon: Truck, tone: "bg-muted text-foreground border-border" },
+};
+
+const getServiceMeta = (type: ApiRestaurantService["service_type"] | string): ServiceMeta => {
+  return serviceMeta[type as ServiceType] ?? serviceMeta.other;
+};
+
+const getServicePrice = (price: ApiRestaurantService["price"]): number => {
+  const numericPrice = Number(price);
+  return Number.isFinite(numericPrice) ? numericPrice : 0;
 };
 
 const defaultServices: Omit<ApiRestaurantService, "id" | "created_at">[] = [
@@ -66,7 +76,7 @@ export default function ServicesPage() {
 
   const openAdd = (type: ServiceType = "dine_in") => {
     setEditing(null);
-    setForm({ name: serviceMeta[type].label, service_type: type, description: "", price: 0, enabled: true, schedule: "Open hours" });
+    setForm({ name: getServiceMeta(type).label, service_type: type, description: "", price: 0, enabled: true, schedule: "Open hours" });
     setDialogOpen(true);
   };
 
@@ -76,7 +86,7 @@ export default function ServicesPage() {
       name: service.name,
       service_type: service.service_type,
       description: service.description,
-      price: Number(service.price),
+      price: getServicePrice(service.price),
       enabled: service.enabled,
       schedule: service.schedule,
     });
@@ -125,7 +135,7 @@ export default function ServicesPage() {
     const matchesQuery = !q
       || service.name.toLowerCase().includes(q)
       || service.description.toLowerCase().includes(q)
-      || serviceMeta[service.service_type].label.toLowerCase().includes(q);
+      || getServiceMeta(service.service_type).label.toLowerCase().includes(q);
     const matchesType = filter === "all" || service.service_type === filter;
     return matchesQuery && matchesType;
   });
@@ -174,7 +184,7 @@ export default function ServicesPage() {
         <CardContent>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((service) => {
-              const meta = serviceMeta[service.service_type];
+              const meta = getServiceMeta(service.service_type);
               const Icon = meta.icon;
               return (
                 <div key={service.id} className={`rounded-xl border bg-card p-4 shadow-sm ${service.enabled ? "" : "opacity-60"}`}>
@@ -194,7 +204,7 @@ export default function ServicesPage() {
                   <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                     <div className="rounded-lg bg-muted/50 p-2">
                       <p className="text-xs text-muted-foreground">Charge</p>
-                      <p className="font-semibold">Rs. {Number(service.price).toLocaleString()}</p>
+                      <p className="font-semibold">Rs. {getServicePrice(service.price).toLocaleString()}</p>
                     </div>
                     <div className="rounded-lg bg-muted/50 p-2">
                       <p className="text-xs text-muted-foreground">Schedule</p>
