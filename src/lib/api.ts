@@ -14,7 +14,9 @@ const ACCESS_KEY  = "mp_access";
 const REFRESH_KEY = "mp_refresh";
 const BRANCH_KEY = "mp_branch_id";
 
-// ── Token helpers ─────────────────────────────────────────────────────────────
+// Token helpers.
+// Keep token storage centralized so login, logout, and refresh behavior is easy
+// to change later.
 
 export function getAccessToken(): string | null  { return localStorage.getItem(ACCESS_KEY); }
 export function getRefreshToken(): string | null { return localStorage.getItem(REFRESH_KEY); }
@@ -38,7 +40,9 @@ export function setSelectedBranchId(branchId: string) {
   window.dispatchEvent(new CustomEvent("mp-branch-change", { detail: branchId || "all" }));
 }
 
-// ── Core fetch wrapper ────────────────────────────────────────────────────────
+// Core fetch wrapper.
+// All app API calls should go through request() so auth headers, branch scope,
+// JSON parsing, and error messages behave consistently.
 
 async function tryRefresh(): Promise<boolean> {
   const refresh = getRefreshToken();
@@ -105,7 +109,7 @@ export async function request<T = unknown>(
 
   let res = await fetch(`${BASE}${path}`, opts);
 
-  // Auto-refresh on 401 and retry once
+  // Retry once after refreshing the JWT access token.
   if (res.status === 401 && auth) {
     const refreshed = await tryRefresh();
     if (refreshed) {
