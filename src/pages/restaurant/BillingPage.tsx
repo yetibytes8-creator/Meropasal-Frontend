@@ -312,8 +312,8 @@ const BillingPage = () => {
                         <span className="rounded-lg bg-primary/5 px-3 py-2 text-right text-lg font-bold text-foreground xl:min-w-32">Rs. {order.total.toFixed(2)}</span>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:flex xl:justify-end">
                           {!order.paymentMethod && order.status !== "cancelled" && order.status !== "refunded" && (
-                            <Button className="col-span-2 h-10 rounded-lg px-4 text-sm font-semibold shadow-none sm:col-span-1" onClick={() => openPay(order)}>
-                              <Receipt className="mr-1.5 h-3.5 w-3.5 shrink-0" />Preview
+                            <Button className="col-span-2 h-10 rounded-lg bg-success px-4 text-sm font-semibold text-white shadow-none hover:bg-success/90 sm:col-span-1" onClick={() => openPay(order)}>
+                              <Receipt className="mr-1.5 h-3.5 w-3.5 shrink-0" />Bill / Pay
                             </Button>
                           )}
                           {order.status === "completed" && (
@@ -343,13 +343,15 @@ const BillingPage = () => {
 
       <Dialog open={!!payOrder} onOpenChange={(o) => !o && setPayOrder(null)}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full overflow-y-auto max-h-[90vh]">
-          <DialogHeader><DialogTitle>{payStep === "preview" ? "Bill Preview" : "Process Payment"}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{payStep === "preview" ? "Review Bill Before Payment" : "Collect Payment & Print Bill"}</DialogTitle>
+          </DialogHeader>
           {payOrder && (
             <div className="space-y-4">
               <div className="rounded-lg border bg-card">
                 <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tax Invoice Preview</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tax Invoice / Bill Preview</p>
                     <h3 className="mt-1 text-xl font-bold">{settings.businessName || "My Business"}</h3>
                     <p className="text-xs text-muted-foreground">{settings.address || "Business address"}</p>
                     <p className="text-xs text-muted-foreground">
@@ -463,11 +465,11 @@ const BillingPage = () => {
                   <Printer className="w-4 h-4 mr-2" />Print Preview
                 </Button>
                 {payStep === "preview" ? (
-                  <Button className="h-11 rounded-xl" onClick={() => setPayStep("payment")}>
+                  <Button className="h-11 rounded-xl bg-success text-white hover:bg-success/90" onClick={() => setPayStep("payment")}>
                     Continue to Payment
                   </Button>
                 ) : (
-                  <Button className="h-11 rounded-xl" onClick={confirmPayment}><CheckCircle2 className="w-4 h-4 mr-2" />Confirm Payment</Button>
+                  <Button className="h-11 rounded-xl bg-success text-white hover:bg-success/90" onClick={confirmPayment}><CheckCircle2 className="w-4 h-4 mr-2" />Confirm Payment & Print Bill</Button>
                 )}
               </div>
             </div>
