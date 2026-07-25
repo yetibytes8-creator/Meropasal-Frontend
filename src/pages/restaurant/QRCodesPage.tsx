@@ -60,6 +60,7 @@ export default function QRCodesPage() {
 
   const makeMenuUrl = useCallback((table: ApiTable) => {
     const params = new URLSearchParams({ business: user?.id ?? "", table: String(table.id) });
+    if (table.qr_order_token) params.set("token", table.qr_order_token);
     return `${window.location.origin}/qr-menu?${params.toString()}`;
   }, [user?.id]);
 

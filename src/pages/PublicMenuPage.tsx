@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Clock, ExternalLink, MapPin, Megaphone, Phone, Search, ShoppingBag, Sparkles, Table2 } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Megaphone, Minus, Phone, Plus, Search, Send, ShoppingBag, ShoppingCart, Sparkles, Table2, X } from "lucide-react";
 import { publicMenu, type ApiPublicMenu } from "@/lib/api";
 import { applyMenuImageFallback, menuFoodImage } from "@/lib/menuImages";
 import { activeQrMenuAds, readQrMenuAds, type QrMenuAd } from "@/lib/qrMenuAds";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 
 const greenMenuTheme = {
   "--primary": "151 75% 31%",
@@ -18,10 +19,14 @@ export default function PublicMenuPage() {
   const [params] = useSearchParams();
   const businessId = params.get("business");
   const tableId = params.get("table");
+  const qrToken = params.get("token");
   const [data, setData] = useState<ApiPublicMenu | null>(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [customerName, setCustomerName] = useState("");
+  const [sending, setSending] = useState(false);
 
   const itemHasOffer = (item: ApiPublicMenu["items"][number]) => Number(item.original_price || 0) > Number(item.price);
   const comboHasOffer = (combo: ApiPublicMenu["combos"][number]) => Number(combo.original_price || 0) > Number(combo.price);
@@ -152,6 +157,60 @@ export default function PublicMenuPage() {
     const apiAds = (data as (ApiPublicMenu & { advertisements?: QrMenuAd[] }) | null)?.advertisements;
     return activeQrMenuAds(apiAds?.length ? apiAds : readQrMenuAds()).slice(0, 3);
   }, [data]);
+
+  const cartLines = useMemo(() => {
+    if (!data) return [];
+    return Object.entries(cart).map(([key, quantity]) => {
+      const [type, id] = key.split(":") as ["item" | "combo", string];
+      const source = type === "combo"
+        ? data.combos.find((combo) => String(combo.id) === id)
+        : data.items.find((item) => String(item.id) === id);
+      if (!source) return null;
+      return { key, id, type, quantity, name: source.name, price: Number(source.price) };
+    }).filter(Boolean) as Array<{ key: string; id: string; type: "item" | "combo"; quantity: number; name: string; price: number }>;
+  }, [cart, data]);
+
+  const cartCount = cartLines.reduce((sum, line) => sum + line.quantity, 0);
+  const cartTotal = cartLines.reduce((sum, line) => sum + line.quantity * line.price, 0);
+  const canOrderFromQr = Boolean(data?.table && businessId && tableId && qrToken);
+
+  const updateCart = (key: string, quantity: number) => {
+    setCart((current) => {
+      const next = { ...current };
+      if (quantity <= 0) delete next[key];
+      else next[key] = Math.min(quantity, 20);
+      return next;
+    });
+  };
+
+  const submitOrder = async () => {
+    if (!data || !businessId || !tableId) return;
+    if (!qrToken) {
+      toast.error("Please scan the latest table QR to place an order.");
+      return;
+    }
+    if (cartLines.length === 0) {
+      toast.error("Please add at least one item.");
+      return;
+    }
+    setSending(true);
+    try {
+      await publicMenu.order({
+        business: businessId,
+        table: tableId,
+        token: qrToken,
+        customer_name: customerName,
+        items: cartLines.map((line) => ({ id: line.id, type: line.type, quantity: line.quantity })),
+      });
+      setCart({});
+      setCustomerName("");
+      toast.success("Order sent to kitchen.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Order could not be sent. Please call staff.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   if (error) {
     return (
@@ -347,6 +406,16 @@ export default function PublicMenuPage() {
                     <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
                       {combo.description || combo.items.map((item) => `${item.quantity}x ${item.menu_item_name}`).join(", ")}
                     </p>
+                    {canOrderFromQr && (
+                      <Button
+                        type="button"
+                        className="mt-3 h-10 w-full rounded-2xl bg-primary text-primary-foreground shadow-sm"
+                        onClick={() => updateCart(`combo:${combo.id}`, (cart[`combo:${combo.id}`] || 0) + 1)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -420,6 +489,16 @@ export default function PublicMenuPage() {
                                   </p>
                                 )}
                                 {item.description && <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground sm:mt-2 sm:text-sm">{item.description}</p>}
+                                {canOrderFromQr && (
+                                  <Button
+                                    type="button"
+                                    className="mt-3 h-10 w-full rounded-2xl bg-primary text-primary-foreground shadow-sm"
+                                    onClick={() => updateCart(`item:${item.id}`, (cart[`item:${item.id}`] || 0) + 1)}
+                                  >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add
+                                  </Button>
+                                )}
                               </CardContent>
                             </Card>
                           ))}
@@ -437,6 +516,61 @@ export default function PublicMenuPage() {
           <p className="mt-8 text-center text-sm text-muted-foreground">{data.business.receipt_footer}</p>
         )}
       </section>
+
+      {canOrderFromQr && cartCount > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-emerald-100 bg-white/96 p-3 shadow-2xl shadow-emerald-950/20 backdrop-blur">
+          <div className="mx-auto grid max-w-7xl gap-3 lg:grid-cols-[1fr_320px] lg:items-end">
+            <div className="min-w-0">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                    <ShoppingCart className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-extrabold">Your order</p>
+                    <p className="text-xs text-muted-foreground">Table {data.table?.number} • {cartCount} item{cartCount > 1 ? "s" : ""}</p>
+                  </div>
+                </div>
+                <Button type="button" variant="ghost" size="icon" className="rounded-full" onClick={() => setCart({})} title="Clear cart">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {cartLines.map((line) => (
+                  <div key={line.key} className="flex min-w-[220px] items-center justify-between gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold">{line.name}</p>
+                      <p className="text-xs text-muted-foreground">{data.business.currency_symbol}{line.price.toLocaleString()} each</p>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-full bg-white p-1 shadow-sm">
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateCart(line.key, line.quantity - 1)}>
+                        <Minus className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="w-6 text-center text-sm font-bold">{line.quantity}</span>
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateCart(line.key, line.quantity + 1)}>
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Input
+                value={customerName}
+                onChange={(event) => setCustomerName(event.target.value)}
+                placeholder="Name / note optional"
+                className="h-11 rounded-2xl border-emerald-100 bg-emerald-50/40"
+                maxLength={255}
+              />
+              <Button type="button" className="h-12 w-full rounded-2xl bg-primary text-base font-extrabold text-primary-foreground shadow-lg shadow-emerald-900/15" onClick={submitOrder} disabled={sending}>
+                <Send className="mr-2 h-4 w-4" />
+                {sending ? "Sending..." : `Send Order • ${data.business.currency_symbol}${cartTotal.toLocaleString()}`}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

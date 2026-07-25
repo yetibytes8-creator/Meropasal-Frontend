@@ -533,6 +533,7 @@ export interface ApiTable {
   seats: number;
   status: "available" | "occupied" | "reserved";
   order_id: number | null;
+  qr_order_token?: string;
 }
 
 export const tables = {
@@ -1305,9 +1306,17 @@ export interface ApiPublicMenu {
     currency_symbol: string;
     receipt_footer: string;
   };
-  table: { id: number; number: number; seats: number } | null;
+  table: { id: number; number: number; seats: number; qr_order_token?: string } | null;
   items: Array<Pick<ApiMenuItem, "id" | "name" | "category" | "sub_category" | "price" | "original_price" | "offer_label" | "description" | "image" | "available">>;
   combos: Array<Pick<ApiComboOffer, "id" | "name" | "category" | "price" | "original_price" | "description" | "image" | "available" | "items">>;
+}
+
+export interface ApiPublicOrderPayload {
+  business: string | number;
+  table: string | number;
+  token: string;
+  customer_name?: string;
+  items: Array<{ id: string | number; type: "item" | "combo"; quantity: number }>;
 }
 
 export const publicMenu = {
@@ -1316,4 +1325,6 @@ export const publicMenu = {
     if (tableId) params.set("table", String(tableId));
     return request<ApiPublicMenu>(`/public/menu/?${params.toString()}`, { auth: false });
   },
+  order: (payload: ApiPublicOrderPayload) =>
+    request<ApiOrder>("/public/menu/order/", { method: "POST", body: payload, auth: false }),
 };
