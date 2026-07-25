@@ -426,10 +426,10 @@ export default function SystemConfigurationPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full space-y-5">
       <section className="relative overflow-hidden rounded-2xl border border-green-100 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.07)]">
         <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green-600 via-green-500 to-red-500" />
-        <div className="relative grid gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_480px] xl:items-end">
+        <div className="relative grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] lg:items-end">
           <div className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-800">
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -470,7 +470,7 @@ export default function SystemConfigurationPage() {
         </div>
       </section>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[330px_minmax(0,1fr)]">
+      <div className="grid items-start gap-5 xl:grid-cols-[360px_minmax(0,1fr)] 2xl:grid-cols-[380px_minmax(0,1fr)]">
         <Card className="h-fit overflow-hidden border-green-100 bg-white text-slate-900 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
           <CardHeader className="border-b border-green-50 bg-gradient-to-r from-green-50 to-white p-4">
             <CardTitle className="flex items-center gap-2 text-base text-green-950">

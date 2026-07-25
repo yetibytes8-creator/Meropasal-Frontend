@@ -202,8 +202,8 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
           </Button>
         </header>
 
-        <main className="app-workspace min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-8 sm:p-6 lg:p-8">
-          <div className="mx-auto w-full max-w-[1600px]">
+        <main className="app-workspace min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6 lg:px-8 2xl:px-10">
+          <div className="mx-auto w-full max-w-[1920px]">
             {children}
           </div>
         </main>
