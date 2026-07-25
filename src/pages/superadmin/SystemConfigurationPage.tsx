@@ -24,7 +24,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -826,9 +825,17 @@ export default function SystemConfigurationPage() {
                                   enabled
                                     ? "border-green-200 bg-white text-green-800 hover:bg-green-50"
                                     : "border-slate-200 bg-white text-slate-600 hover:border-green-200 hover:bg-green-50 hover:text-green-800"
-                                )}
+                                  )}
                               >
-                                <Checkbox checked={enabled} className="pointer-events-none h-4 w-4" />
+                                <span
+                                  aria-hidden="true"
+                                  className={cn(
+                                    "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                                    enabled ? "border-green-600 bg-green-600 text-white" : "border-slate-300 bg-white"
+                                  )}
+                                >
+                                  {enabled && <Check className="h-3 w-3" />}
+                                </span>
                                 {enabled ? "Enabled for client" : "Enable this module"}
                               </button>
                             </div>
@@ -866,7 +873,15 @@ export default function SystemConfigurationPage() {
                                 : "border-slate-200 bg-slate-50 text-slate-500 hover:bg-white"
                             )}
                           >
-                            <Checkbox checked={active} className="pointer-events-none h-4 w-4" />
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                                active ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300 bg-white"
+                              )}
+                            >
+                              {active && <Check className="h-3 w-3" />}
+                            </span>
                             <span className="truncate">{feature.title}</span>
                           </button>
                         );
