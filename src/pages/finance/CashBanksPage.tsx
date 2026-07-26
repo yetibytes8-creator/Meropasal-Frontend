@@ -39,7 +39,7 @@ export default function CashBanksPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0 print-root">
+    <div className="finance-page print-root space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <div className="print:hidden">
         <h1 className="page-header">Cash & Banks</h1>
         <p className="page-description">Bank, counter cash, owner account, and due balance overview</p>

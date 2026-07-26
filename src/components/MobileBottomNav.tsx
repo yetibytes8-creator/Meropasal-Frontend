@@ -125,14 +125,14 @@ export default function MobileBottomNav({ module }: MobileBottomNavProps) {
   return (
     <>
       {/* Fixed bottom navigation bar — mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 border-t border-border pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur print:hidden">
-        <div className="flex h-16 items-stretch">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-green-100 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_34px_rgba(15,23,42,0.12)] backdrop-blur supports-[backdrop-filter]:bg-white/88 print:hidden md:hidden">
+        <div className="mx-auto flex h-16 max-w-screen-sm items-stretch px-1">
           {primary.map((item) => (
             <NavLink
               key={item.url}
               to={item.url}
               end={item.end}
-              className="flex-1 flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors"
+              className="flex-1 flex flex-col items-center justify-center gap-1 rounded-xl text-muted-foreground transition-colors"
               activeClassName="text-primary"
             >
               <item.icon className="w-5 h-5 shrink-0" />
@@ -144,7 +144,7 @@ export default function MobileBottomNav({ module }: MobileBottomNavProps) {
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
+              "flex-1 flex flex-col items-center justify-center gap-1 rounded-xl transition-colors",
               isMoreActive ? "text-primary" : "text-muted-foreground"
             )}
           >
@@ -156,8 +156,8 @@ export default function MobileBottomNav({ module }: MobileBottomNavProps) {
 
       {/* More — bottom sheet */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="md:hidden rounded-t-2xl max-h-[75vh] overflow-y-auto">
-          <SheetHeader className="mb-5">
+        <SheetContent side="bottom" className="max-h-[82dvh] overflow-y-auto rounded-t-2xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
+          <SheetHeader className="sticky top-0 z-10 -mx-4 mb-4 border-b bg-background/95 px-4 py-4 backdrop-blur">
             <SheetTitle className="text-base font-semibold text-left">More Options</SheetTitle>
           </SheetHeader>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 pb-4">

@@ -241,13 +241,13 @@ const BillingPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
-      <div>
+    <div className="mx-auto w-full max-w-[1600px] space-y-4 px-0 pb-24 animate-fade-in sm:space-y-6 md:pb-0">
+      <div className="rounded-2xl border bg-card/80 p-4 shadow-sm sm:p-5">
         <h1 className="page-header">Billing & Payments</h1>
         <p className="page-description">Generate invoices and process payments</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Total Revenue" value={`Rs. ${totalRevenue.toFixed(2)}`} icon={<Banknote className="w-5 h-5" />} iconClassName="bg-success/10 text-success" />
         <StatCard title="Cash" value={`Rs. ${cashTotal.toFixed(2)}`} icon={<Wallet className="w-5 h-5" />} iconClassName="bg-info/10 text-info" />
         <StatCard title="Online" value={`Rs. ${onlineTotal.toFixed(2)}`} icon={<Smartphone className="w-5 h-5" />} iconClassName="bg-primary/10 text-primary" />
@@ -267,18 +267,18 @@ const BillingPage = () => {
         </CardHeader>
         <CardContent className="p-4 sm:p-5">
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="h-10 w-full justify-start rounded-lg bg-muted/70 p-1 sm:w-auto">
-              <TabsTrigger value="unpaid" className="flex-1 sm:flex-none">Unpaid ({unpaidOrders.length})</TabsTrigger>
-              <TabsTrigger value="paid" className="flex-1 sm:flex-none">Paid ({completedOrders.length})</TabsTrigger>
-              <TabsTrigger value="all" className="flex-1 sm:flex-none">All</TabsTrigger>
+            <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-muted/70 p-1 sm:inline-grid sm:w-auto">
+              <TabsTrigger value="unpaid" className="min-h-10 rounded-lg px-2 text-xs sm:text-sm">Unpaid ({unpaidOrders.length})</TabsTrigger>
+              <TabsTrigger value="paid" className="min-h-10 rounded-lg px-2 text-xs sm:text-sm">Paid ({completedOrders.length})</TabsTrigger>
+              <TabsTrigger value="all" className="min-h-10 rounded-lg px-2 text-xs sm:text-sm">All</TabsTrigger>
             </TabsList>
             <TabsContent value={tab} className="mt-4">
               <div className="space-y-3">
                 {list.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No invoices found</p>}
                 {list.map((order) => (
-                  <div key={order.id} className="rounded-xl border bg-card p-3 shadow-sm transition hover:border-primary/25 hover:shadow-md sm:p-4">
+                  <div key={order.id} className="rounded-2xl border bg-card p-3 shadow-sm transition hover:border-primary/25 hover:shadow-md sm:p-4">
                     {/* Top row — ID, badges */}
-                    <div className="grid gap-3 xl:grid-cols-[minmax(220px,1fr)_minmax(240px,360px)_auto] xl:items-center">
+                    <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_minmax(220px,360px)] xl:grid-cols-[minmax(220px,1fr)_minmax(240px,360px)_auto] xl:items-center">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="rounded-md bg-muted px-2 py-1 text-sm font-bold text-foreground">#{restaurantBillNumber(order)}</span>
@@ -304,29 +304,29 @@ const BillingPage = () => {
                           <p className="text-xs text-info mt-1">Cash Rs. {order.splitPayment.cash.toFixed(2)} • Online Rs. {order.splitPayment.online.toFixed(2)}</p>
                         )}
                       </div>
-                      <div className="min-w-0 rounded-lg bg-muted/45 px-3 py-2 text-xs text-muted-foreground xl:bg-transparent xl:px-0 xl:py-0">
+                      <div className="min-w-0 rounded-xl bg-muted/45 px-3 py-2 text-xs text-muted-foreground xl:bg-transparent xl:px-0 xl:py-0">
                         <p className="line-clamp-2 font-semibold leading-snug text-foreground">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</p>
                         <p className="mt-1">Ready for {order.status === "completed" ? "receipt" : "payment"}</p>
                       </div>
-                      <div className="flex flex-col gap-2 xl:items-end">
-                        <span className="rounded-lg bg-primary/5 px-3 py-2 text-right text-lg font-bold text-foreground xl:min-w-32">Rs. {order.total.toFixed(2)}</span>
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:flex xl:justify-end">
+                      <div className="flex flex-col gap-2 lg:col-span-2 xl:col-span-1 xl:items-end">
+                        <span className="w-full rounded-xl bg-primary/5 px-3 py-2 text-left text-lg font-bold text-foreground sm:text-right xl:min-w-32">Rs. {order.total.toFixed(2)}</span>
+                        <div className="grid w-full grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:grid-cols-4 xl:flex xl:justify-end">
                           {!order.paymentMethod && order.status !== "cancelled" && order.status !== "refunded" && (
-                            <Button className="col-span-2 h-10 rounded-lg bg-success px-4 text-sm font-semibold text-white shadow-none hover:bg-success/90 sm:col-span-1" onClick={() => openPay(order)}>
+                            <Button className="h-11 rounded-xl bg-success px-4 text-sm font-semibold text-white shadow-none hover:bg-success/90" onClick={() => openPay(order)}>
                               <Receipt className="mr-1.5 h-3.5 w-3.5 shrink-0" />Bill / Pay
                             </Button>
                           )}
                           {order.status === "completed" && (
-                            <Button variant="outline" className="h-10 rounded-lg px-3 text-destructive shadow-none hover:text-destructive" onClick={() => openRefund(order)}>
+                            <Button variant="outline" className="h-11 rounded-xl px-3 text-destructive shadow-none hover:text-destructive" onClick={() => openRefund(order)}>
                               <RefreshCcw className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                               <span>Refund</span>
                             </Button>
                           )}
-                          <Button variant="outline" className="h-10 rounded-lg px-3 shadow-none" onClick={() => handlePrint(order)}>
+                          <Button variant="outline" className="h-11 rounded-xl px-3 shadow-none" onClick={() => handlePrint(order)}>
                             <Printer className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                             <span>Print</span>
                           </Button>
-                          <Button variant="outline" className="h-10 rounded-lg px-3 shadow-none" onClick={() => handleDownload(order)}>
+                          <Button variant="outline" className="h-11 rounded-xl px-3 shadow-none" onClick={() => handleDownload(order)}>
                             <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                             <span>PDF</span>
                           </Button>
@@ -378,13 +378,13 @@ const BillingPage = () => {
                 <div className="p-4">
                   <div className="space-y-2">
                     {payOrder.items.map((item, index) => (
-                      <div key={`${item.menuItemId}-${index}`} className="grid grid-cols-[1fr_52px_92px] gap-2 rounded-md border p-3 text-sm">
+                      <div key={`${item.menuItemId}-${index}`} className="grid grid-cols-[1fr_auto] gap-2 rounded-xl border p-3 text-sm sm:grid-cols-[1fr_52px_100px] sm:items-center">
                         <div>
                           <p className="font-medium">{item.name}</p>
                           <p className="text-xs text-muted-foreground">Rate Rs. {item.price.toFixed(2)}</p>
                         </div>
-                        <p className="text-center text-muted-foreground">x {item.quantity}</p>
-                        <p className="text-right font-semibold">Rs. {(item.quantity * item.price).toFixed(2)}</p>
+                        <p className="rounded-lg bg-muted px-2 py-1 text-center text-xs text-muted-foreground sm:bg-transparent sm:p-0 sm:text-sm">x {item.quantity}</p>
+                        <p className="col-span-2 text-right font-semibold sm:col-span-1">Rs. {(item.quantity * item.price).toFixed(2)}</p>
                       </div>
                     ))}
                   </div>
@@ -455,7 +455,7 @@ const BillingPage = () => {
                           }}
                         />
                       </div>
-                      <p className="col-span-2 text-xs text-muted-foreground">Total must equal Rs. {payOrder.total.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground sm:col-span-2">Total must equal Rs. {payOrder.total.toFixed(2)}</p>
                     </div>
                   )}
                 </>
@@ -499,9 +499,9 @@ const BillingPage = () => {
                 </div>
                 <div className="mt-4 space-y-2">
                   {refundOrder.items.map((item, index) => (
-                    <div key={`${item.menuItemId}-${index}`} className="flex items-center justify-between rounded-lg bg-card px-3 py-2 text-sm">
+                    <div key={`${item.menuItemId}-${index}`} className="flex flex-col gap-1 rounded-lg bg-card px-3 py-2 text-sm min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                       <span className="font-medium">{item.quantity}x {item.name}</span>
-                      <span>Rs. {(item.quantity * item.price).toFixed(2)}</span>
+                      <span className="font-semibold">Rs. {(item.quantity * item.price).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -608,19 +608,19 @@ const BillingPage = () => {
           <DialogHeader><DialogTitle>Invoice #{detailOrder ? restaurantBillNumber(detailOrder) : ""}</DialogTitle></DialogHeader>
           {detailOrder && (
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(detailOrder.createdAt).toLocaleString()}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="capitalize">{detailOrder.type}{tableLabel(detailOrder, allTables) ? ` (${tableLabel(detailOrder, allTables)})` : ""}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge variant={detailOrder.status === "completed" ? "default" : "secondary"}>{detailOrder.status}</Badge></div>
-              {detailOrder.customerName && <div className="flex justify-between"><span className="text-muted-foreground">Customer</span><span>{detailOrder.customerName}</span></div>}
-              {detailOrder.paymentMethod && <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span className="capitalize">{detailOrder.paymentMethod}</span></div>}
-              {detailOrder.splitPayment && <div className="flex justify-between text-info"><span>Split</span><span>Cash Rs. {detailOrder.splitPayment.cash.toFixed(2)} • Online Rs. {detailOrder.splitPayment.online.toFixed(2)}</span></div>}
+              <div className="flex items-start justify-between gap-3"><span className="text-muted-foreground">Date</span><span className="text-right">{new Date(detailOrder.createdAt).toLocaleString()}</span></div>
+              <div className="flex items-start justify-between gap-3"><span className="text-muted-foreground">Type</span><span className="text-right capitalize">{detailOrder.type}{tableLabel(detailOrder, allTables) ? ` (${tableLabel(detailOrder, allTables)})` : ""}</span></div>
+              <div className="flex items-center justify-between gap-3"><span className="text-muted-foreground">Status</span><Badge variant={detailOrder.status === "completed" ? "default" : "secondary"}>{detailOrder.status}</Badge></div>
+              {detailOrder.customerName && <div className="flex items-start justify-between gap-3"><span className="text-muted-foreground">Customer</span><span className="text-right">{detailOrder.customerName}</span></div>}
+              {detailOrder.paymentMethod && <div className="flex items-start justify-between gap-3"><span className="text-muted-foreground">Payment</span><span className="text-right capitalize">{detailOrder.paymentMethod}</span></div>}
+              {detailOrder.splitPayment && <div className="flex items-start justify-between gap-3 text-info"><span>Split</span><span className="text-right">Cash Rs. {detailOrder.splitPayment.cash.toFixed(2)} / Online Rs. {detailOrder.splitPayment.online.toFixed(2)}</span></div>}
               <div className="border-t pt-3 space-y-1.5">
                 {detailOrder.items.map((i, idx) => (
-                  <div key={idx} className="flex justify-between"><span>{i.name} × {i.quantity}</span><span>Rs. {(i.price * i.quantity).toFixed(2)}</span></div>
+                  <div key={idx} className="flex items-start justify-between gap-3"><span>{i.name} x {i.quantity}</span><span className="text-right">Rs. {(i.price * i.quantity).toFixed(2)}</span></div>
                 ))}
               </div>
-              <div className="flex justify-between font-bold text-base border-t pt-2"><span>Total</span><span>Rs. {detailOrder.total.toFixed(2)}</span></div>
-              <div className="flex gap-2 pt-2">
+              <div className="flex items-start justify-between gap-3 border-t pt-2 text-base font-bold"><span>Total</span><span className="text-right">Rs. {detailOrder.total.toFixed(2)}</span></div>
+              <div className="grid grid-cols-2 gap-2 pt-2">
                 <Button variant="outline" className="h-10 flex-1 rounded-xl gap-2" onClick={() => handlePrint(detailOrder)}>
                   <Printer className="w-4 h-4 shrink-0" /><span>Print</span>
                 </Button>

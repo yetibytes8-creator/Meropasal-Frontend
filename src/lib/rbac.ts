@@ -13,6 +13,23 @@ export type PageKey =
   | "f-budget" | "f-transactions" | "f-cash-banks" | "f-tax-rates" | "f-balance-transfer"
   | "f-chart-of-accounts" | "f-reports";
 
+export interface StaffAccessConfig {
+  mode?: "role" | "custom";
+  allowedPages?: PageKey[];
+}
+
+export type PageAccessItem = {
+  key: PageKey;
+  label: string;
+  description: string;
+};
+
+export type PageAccessGroup = {
+  title: string;
+  description: string;
+  pages: PageAccessItem[];
+};
+
 // Map every route path to a page key
 export const ROUTE_PAGE: Record<string, PageKey> = {
   "/restaurant":           "r-dashboard",
@@ -121,6 +138,83 @@ const PERMISSIONS: Record<StaffRole, PageKey[] | ["*"]> = {
   ],
 };
 
+export const PAGE_ACCESS_GROUPS: PageAccessGroup[] = [
+  {
+    title: "Restaurant",
+    description: "Menu, table, kitchen, QR and billing operations.",
+    pages: [
+      { key: "r-dashboard", label: "Dashboard", description: "Restaurant overview and daily status." },
+      { key: "r-menu", label: "Menu", description: "Menu items, categories and offers." },
+      { key: "r-ingredients", label: "Ingredients / Stock", description: "Kitchen stock and ingredients." },
+      { key: "r-purchases", label: "Purchases", description: "Restaurant purchase orders and receiving." },
+      { key: "r-services", label: "Services", description: "Service catalog and charges." },
+      { key: "r-orders", label: "Orders", description: "Pending, preparing and ready orders." },
+      { key: "r-tables", label: "Tables", description: "Table status, booking and occupancy." },
+      { key: "r-kitchen", label: "Kitchen", description: "Kitchen display and preparation flow." },
+      { key: "r-qr-codes", label: "QR Codes", description: "Table QR cards and QR menu links." },
+      { key: "r-billing", label: "Billing", description: "Invoice, payment and receipt flow." },
+      { key: "r-customers", label: "Customers", description: "Restaurant customer records." },
+      { key: "r-staff", label: "Staff", description: "Restaurant staff management." },
+      { key: "r-alerts", label: "Alerts", description: "Operational alerts." },
+      { key: "r-settings", label: "Settings", description: "Restaurant business settings." },
+    ],
+  },
+  {
+    title: "Inventory",
+    description: "Products, stock, purchase, supplier and POS workflow.",
+    pages: [
+      { key: "i-dashboard", label: "Dashboard", description: "Inventory overview." },
+      { key: "i-products", label: "Products", description: "Product catalog and profile fields." },
+      { key: "i-stock-control", label: "Stock Control", description: "Stock adjustment and reorder plan." },
+      { key: "i-operations", label: "Operations Hub", description: "Returns, damage, expiry and operational tasks." },
+      { key: "i-branches", label: "Branches", description: "Branch-wise stock and settings." },
+      { key: "i-sales", label: "Sales / POS", description: "Inventory billing and sales." },
+      { key: "i-purchases", label: "Purchases", description: "Purchase orders and purchase bills." },
+      { key: "i-suppliers", label: "Suppliers", description: "Supplier records." },
+      { key: "i-expenses", label: "Expenses", description: "Inventory expenses." },
+      { key: "i-customers", label: "Customers", description: "Inventory customers and credit." },
+      { key: "i-staff", label: "Staff", description: "Inventory staff management." },
+      { key: "i-reports", label: "Reports", description: "Inventory reports." },
+      { key: "i-alerts", label: "Alerts", description: "Stock and expiry alerts." },
+      { key: "i-settings", label: "Settings", description: "Inventory business settings." },
+    ],
+  },
+  {
+    title: "Finance",
+    description: "Accounts, ledgers, cash, reports, tax and vouchers.",
+    pages: [
+      { key: "f-dashboard", label: "Dashboard", description: "Finance overview." },
+      { key: "f-day-book", label: "Day Book", description: "Daily vouchers and movement." },
+      { key: "f-income", label: "Income", description: "Income records and receipts." },
+      { key: "f-expenses", label: "Expenses", description: "Expense records and approvals." },
+      { key: "f-invoices", label: "Invoices", description: "Sales invoices and collections." },
+      { key: "f-accounts", label: "Accounts", description: "Account balances and ledger view." },
+      { key: "f-budget", label: "Budget", description: "Budget planning and branch budget." },
+      { key: "f-transactions", label: "Transactions", description: "Complete transaction ledger." },
+      { key: "f-cash-banks", label: "Cash & Banks", description: "Cash, bank and cheque position." },
+      { key: "f-tax-rates", label: "Tax / TDS", description: "VAT, TDS and tax settings." },
+      { key: "f-balance-transfer", label: "Balance Transfer", description: "Transfer between cash and bank." },
+      { key: "f-chart-of-accounts", label: "Chart of Accounts", description: "Account groups, subgroups and ledgers." },
+      { key: "f-reports", label: "Reports", description: "Trial balance, P&L and balance sheet." },
+    ],
+  },
+];
+
+const ALL_PAGES = Array.from(new Set(Object.values(ROUTE_PAGE)));
+
+export function pagesForRole(role: StaffRole): PageKey[] {
+  const allowed = PERMISSIONS[role];
+  if (allowed[0] === "*") return ALL_PAGES;
+  return [...(allowed as PageKey[])];
+}
+
+export function staffAllowedPages(role: StaffRole, permissions?: StaffAccessConfig | null): PageKey[] {
+  if (permissions?.mode === "custom" && Array.isArray(permissions.allowedPages)) {
+    return permissions.allowedPages.filter((page): page is PageKey => ALL_PAGES.includes(page as PageKey));
+  }
+  return pagesForRole(role);
+}
+
 /** Returns true if the role may access the given page key */
 export function canAccessPage(role: StaffRole, page: PageKey): boolean {
   const allowed = PERMISSIONS[role];
@@ -133,6 +227,16 @@ export function canAccessRoute(role: StaffRole, path: string): boolean {
   const page = ROUTE_PAGE[path];
   if (!page) return true; // unknown route — let pass
   return canAccessPage(role, page);
+}
+
+export function canStaffAccessPage(role: StaffRole, page: PageKey, permissions?: StaffAccessConfig | null): boolean {
+  return staffAllowedPages(role, permissions).includes(page);
+}
+
+export function canStaffAccessRoute(role: StaffRole, path: string, permissions?: StaffAccessConfig | null): boolean {
+  const page = ROUTE_PAGE[path];
+  if (!page) return true;
+  return canStaffAccessPage(role, page, permissions);
 }
 
 // Human-readable role labels and descriptions

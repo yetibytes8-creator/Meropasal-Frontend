@@ -272,8 +272,13 @@ export const generateThermalInvoiceHTML = (invoice: PrintableInvoice, settings: 
   <style>
     @page { size: 80mm auto; margin: 0; }
     * { box-sizing: border-box; }
+    html {
+      min-width: 100%;
+      background: #f3f4f6;
+    }
     body {
-      width: 80mm;
+      width: 100%;
+      min-width: 100%;
       margin: 0;
       background: #fff;
       color: #111;
@@ -281,7 +286,14 @@ export const generateThermalInvoiceHTML = (invoice: PrintableInvoice, settings: 
       font-size: 11px;
       line-height: 1.32;
     }
-    .receipt { width: 80mm; padding: 4mm 3.5mm 5mm; }
+    .receipt {
+      width: 80mm;
+      max-width: 80mm;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 4mm 3.5mm 5mm;
+      background: #fff;
+    }
     .center { text-align: center; }
     .right { text-align: right; }
     .muted { color: #444; }
@@ -314,8 +326,18 @@ export const generateThermalInvoiceHTML = (invoice: PrintableInvoice, settings: 
     .signature { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 8mm; font-size: 9px; }
     .sign-line { border-top: 1px solid #111; padding-top: 1mm; text-align: center; }
     @media print {
-      html, body { width: 80mm; background: #fff; }
-      .receipt { padding: 3mm; }
+      html, body {
+        width: 100%;
+        min-width: 100%;
+        background: #fff;
+      }
+      .receipt {
+        width: 80mm;
+        max-width: 80mm;
+        min-height: auto;
+        margin: 0 auto;
+        padding: 3mm;
+      }
     }
   </style>
 </head>

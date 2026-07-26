@@ -302,6 +302,10 @@ function waitForImages(doc: Document) {
   );
 }
 
+function isMobilePrintViewport() {
+  return window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+}
+
 function fiscalYearLabel(date = new Date()) {
   const year = date.getFullYear();
   const fiscalStartReached = date.getMonth() > 6 || (date.getMonth() === 6 && date.getDate() >= 16);
@@ -361,10 +365,23 @@ export default function FinanceStatementHeader({
   const handlePrint = useCallback(() => {
     applyClientPrintTitle();
     const source = document.querySelector(".print-root") as HTMLElement | null;
+
+    if (!source) {
+      restoreAppTitle();
+      return;
+    }
+
+    if (isMobilePrintViewport()) {
+      window.setTimeout(restoreAppTitle, 1500);
+      window.print();
+      return;
+    }
+
     const printWindow = window.open("", "_blank", "width=900,height=1200");
 
-    if (!source || !printWindow) {
-      restoreAppTitle();
+    if (!printWindow) {
+      window.setTimeout(restoreAppTitle, 1500);
+      window.print();
       return;
     }
     const reportNode = source.cloneNode(true) as HTMLElement;

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { invoices as invoicesApi, income as incomeApi, type ApiIncome, type ApiInvoice } from "@/lib/api";
 import { useList } from "@/hooks/use-data";
 import StatCard from "@/components/StatCard";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, ArrowRightLeft, CheckCircle2, CreditCard, Landmark, ReceiptText, RotateCcw, Scale, Search, WalletCards } from "lucide-react";
+import { AlertTriangle, ArrowRightLeft, BookOpenCheck, CheckCircle2, CreditCard, Landmark, ReceiptText, RotateCcw, Scale, Search, WalletCards } from "lucide-react";
 import FinanceStatementHeader from "@/components/FinanceStatementHeader";
 import { toast } from "sonner";
 
@@ -88,6 +89,7 @@ const accountingChecklist = [
 ];
 
 export default function AccountsPage() {
+  const location = useLocation();
   const [invoiceList, setInvoiceList] = useList(() => invoicesApi.list());
   const [refunds] = useList(() => incomeApi.list().then((items) => items.filter((i) => i.category === "refund")));
   const [search, setSearch] = useState("");
@@ -137,6 +139,12 @@ export default function AccountsPage() {
   const refundTotal = refunds.reduce((sum: number, item: ApiIncome) => sum + Number(item.amount), 0);
   const creditTotal = cancelledCredits.reduce((sum, inv) => sum + Number(inv.total), 0);
   const filteredDueTotal = filteredDue.reduce((sum, inv) => sum + Number(inv.total), 0);
+  const moduleBase = location.pathname.startsWith("/restaurant")
+    ? "/restaurant"
+    : location.pathname.startsWith("/inventory")
+      ? "/inventory"
+      : "/finance";
+  const chartOfAccountsPath = moduleBase === "/finance" ? "/finance/chart-of-accounts" : `${moduleBase}/chart-of-accounts`;
 
   const markPaid = async (inv: ApiInvoice) => {
     try {
@@ -149,11 +157,33 @@ export default function AccountsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <div>
         <h1 className="page-header">Accounts</h1>
         <p className="page-description">Track dues, overdue receivables, collections, refunds, and client balances</p>
       </div>
+
+      <Card className="border-green-200 bg-gradient-to-r from-green-50 via-white to-red-50 print:hidden">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-green-100 text-green-700">
+              <BookOpenCheck className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-base font-black text-green-950">Chart of Accounts setup</p>
+              <p className="text-sm text-muted-foreground">
+                Asset, liability, equity, income, expense group/sub-group र ledger यहीबाट manage गर्नुहोस्.
+              </p>
+            </div>
+          </div>
+          <Button asChild className="w-full bg-green-700 hover:bg-green-800 sm:w-auto">
+            <Link to={chartOfAccountsPath}>
+              <BookOpenCheck className="mr-2 h-4 w-4" />
+              Open Chart of Accounts
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <FinanceStatementHeader
         title="Accounts Receivable Statement"

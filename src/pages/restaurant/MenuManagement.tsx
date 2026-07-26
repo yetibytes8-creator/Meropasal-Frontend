@@ -432,38 +432,38 @@ const MenuManagement = () => {
     const discount = hasOffer ? Math.round(((Number(item.originalPrice) - item.price) / Number(item.originalPrice)) * 100) : 0;
 
     return (
-      <Card key={item.id} className={!item.available ? "opacity-60" : ""}>
-        <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-muted flex items-center justify-center">
+      <Card key={item.id} className={`overflow-hidden ${!item.available ? "opacity-60" : ""}`}>
+        <div className="aspect-[4/3] w-full overflow-hidden bg-muted flex items-center justify-center sm:aspect-video">
           {item.image ? (
             <img src={item.image} alt={item.name} className="w-full h-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, item.name, item.category)} />
           ) : (
             <img src={menuFoodImage(item.name, item.category, null)} alt={item.name} className="w-full h-full object-cover" />
           )}
         </div>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-base">{item.name}</CardTitle>
+        <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="line-clamp-2 text-sm leading-snug sm:text-base">{item.name}</CardTitle>
               <div className="mt-1 flex flex-wrap gap-1">
-                <Badge variant="outline" className="text-xs">{item.category}</Badge>
-                {item.subCategory && <Badge variant="secondary" className="text-xs">{item.subCategory}</Badge>}
-                {hasOffer && <Badge className="text-xs bg-primary/10 text-primary hover:bg-primary/10">{item.offerLabel || `${discount}% off`}</Badge>}
+                <Badge variant="outline" className="max-w-full truncate text-[10px] sm:text-xs">{item.category}</Badge>
+                {item.subCategory && <Badge variant="secondary" className="max-w-full truncate text-[10px] sm:text-xs">{item.subCategory}</Badge>}
+                {hasOffer && <Badge className="max-w-full truncate bg-primary/10 text-[10px] text-primary hover:bg-primary/10 sm:text-xs">{item.offerLabel || `${discount}% off`}</Badge>}
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-lg font-bold">Rs. {item.price.toFixed(2)}</span>
+            <div className="shrink-0 text-left sm:text-right">
+              <span className="text-base font-bold sm:text-lg">Rs. {item.price.toFixed(2)}</span>
               {hasOffer && <p className="text-xs text-muted-foreground line-through">Rs. {Number(item.originalPrice).toFixed(2)}</p>}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {item.description && <p className="text-sm text-muted-foreground mb-3">{item.description}</p>}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+        <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+          {item.description && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground sm:text-sm">{item.description}</p>}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 min-w-0">
               <Switch checked={item.available} onCheckedChange={() => toggleAvailable(item.id)} />
               <span className="text-xs text-muted-foreground">{item.available ? "Available" : "Unavailable"}</span>
             </div>
-            <div className="flex gap-1">
+            <div className="flex justify-end gap-1">
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl" onClick={() => openEdit(item)}><Pencil className="w-3.5 h-3.5" /></Button>
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
@@ -474,23 +474,23 @@ const MenuManagement = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="space-y-4 animate-fade-in pb-20 sm:space-y-6 md:pb-0">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h1 className="page-header">Menu Management</h1>
           <p className="page-description">Manage your menu items and categories</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
           <Button
             variant="outline"
-            className="h-11 rounded-xl border-2 px-4 text-sm font-semibold shadow-sm hover:border-primary/40 hover:bg-primary/5 sm:min-w-44"
+            className="h-10 rounded-xl border-2 px-3 text-xs font-semibold shadow-sm hover:border-primary/40 hover:bg-primary/5 sm:h-11 sm:min-w-44 sm:px-4 sm:text-sm"
             onClick={openAddCat}
           >
             <FolderPlus className="w-4 h-4 sm:mr-2" />
             <span>Add Category</span>
           </Button>
           <Button
-            className="h-11 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--restaurant))] px-5 text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 sm:min-w-40"
+            className="h-10 rounded-xl bg-gradient-to-r from-primary to-[hsl(var(--restaurant))] px-3 text-xs font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 sm:h-11 sm:min-w-40 sm:px-5 sm:text-sm"
             onClick={() => openAdd("normal")}
           >
             <Plus className="w-4 h-4 sm:mr-2" />
@@ -498,7 +498,7 @@ const MenuManagement = () => {
           </Button>
           <Button
             variant="outline"
-            className="h-11 rounded-xl border-primary/40 px-5 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 sm:min-w-40"
+            className="h-10 rounded-xl border-primary/40 px-3 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5 sm:h-11 sm:min-w-40 sm:px-5 sm:text-sm"
             onClick={() => openAdd("offer")}
           >
             <Tags className="w-4 h-4 sm:mr-2" />
@@ -506,7 +506,7 @@ const MenuManagement = () => {
           </Button>
           <Button
             variant="secondary"
-            className="col-span-2 h-11 rounded-xl px-5 text-sm font-semibold shadow-sm sm:col-span-1 sm:min-w-40"
+            className="h-10 rounded-xl px-3 text-xs font-semibold shadow-sm sm:h-11 sm:min-w-40 sm:px-5 sm:text-sm"
             onClick={openAddCombo}
           >
             <Tags className="w-4 h-4 sm:mr-2" />
@@ -514,7 +514,7 @@ const MenuManagement = () => {
           </Button>
           <Button
             variant="outline"
-            className="col-span-2 h-11 rounded-xl border-emerald-300 bg-emerald-50 px-5 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-100 sm:col-span-1 sm:min-w-40"
+            className="col-span-2 h-10 rounded-xl border-emerald-300 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 shadow-sm hover:bg-emerald-100 sm:col-span-1 sm:h-11 sm:min-w-40 sm:px-5 sm:text-sm"
             onClick={openAddAd}
           >
             <Megaphone className="w-4 h-4 sm:mr-2" />
@@ -527,16 +527,16 @@ const MenuManagement = () => {
       <Card>
         <CardHeader className="pb-3"><CardTitle className="text-sm">Categories</CardTitle></CardHeader>
         <CardContent>
-          <div className="flex gap-3 overflow-x-auto pb-2 pr-4">
+          <div className="-mx-2 flex snap-x gap-2 overflow-x-auto px-2 pb-2 pr-4 sm:gap-3">
             {categories.map((c) => (
-              <div key={c.name} className="group relative flex-shrink-0 w-24 sm:w-32 rounded-lg border bg-card overflow-hidden hover:border-primary/50 transition">
+              <div key={c.name} className="group relative w-20 flex-shrink-0 snap-start overflow-hidden rounded-lg border bg-card transition hover:border-primary/50 sm:w-32">
                 <div className="aspect-square bg-muted flex items-center justify-center">
                   <img src={menuFoodImage("", c.name, c.image)} alt={c.name} className="w-full h-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, "", c.name)} />
                 </div>
-                <div className="p-2 text-xs font-medium truncate">{c.name}</div>
+                <div className="truncate p-2 text-[11px] font-medium sm:text-xs">{c.name}</div>
                 <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <Button variant="secondary" size="icon" className="h-10 w-10 rounded-xl" onClick={() => openEditCat(c)}><Pencil className="w-3.5 h-3.5" /></Button>
-                  <Button variant="destructive" size="icon" className="h-10 w-10 rounded-xl" onClick={() => deleteCategory(c.name)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                  <Button variant="secondary" size="icon" className="h-8 w-8 rounded-lg sm:h-10 sm:w-10 sm:rounded-xl" onClick={() => openEditCat(c)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <Button variant="destructive" size="icon" className="h-8 w-8 rounded-lg sm:h-10 sm:w-10 sm:rounded-xl" onClick={() => deleteCategory(c.name)}><Trash2 className="w-3.5 h-3.5" /></Button>
                 </div>
               </div>
             ))}
@@ -548,21 +548,21 @@ const MenuManagement = () => {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm">Sub Menu</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex gap-2 overflow-x-auto pb-2 pr-3">
+            <div className="-mx-2 flex snap-x gap-2 overflow-x-auto px-2 pb-2 pr-3">
               <button
                 type="button"
                 onClick={() => setFilterSubCategory("all")}
-                className={`flex h-16 min-w-[132px] shrink-0 items-center gap-2 rounded-xl border px-2 text-left transition ${
+                className={`flex h-14 min-w-[116px] shrink-0 snap-start items-center gap-2 rounded-xl border px-2 text-left transition sm:h-16 sm:min-w-[132px] ${
                   filterSubCategory === "all"
                     ? "border-primary bg-primary text-primary-foreground shadow-sm"
                     : "bg-card hover:border-primary/50 hover:bg-muted/60"
                 }`}
               >
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${filterSubCategory === "all" ? "bg-white/15" : "bg-primary/10"}`}>
-                  <Tags className="h-5 w-5" />
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 ${filterSubCategory === "all" ? "bg-white/15" : "bg-primary/10"}`}>
+                  <Tags className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">All Sub Menu</p>
+                  <p className="truncate text-xs font-semibold sm:text-sm">All Sub Menu</p>
                   <p className={`text-[11px] ${filterSubCategory === "all" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{items.length} items</p>
                 </div>
               </button>
@@ -571,15 +571,15 @@ const MenuManagement = () => {
                   key={sub.name}
                   type="button"
                   onClick={() => setFilterSubCategory(sub.name)}
-                  className={`flex h-16 min-w-[132px] shrink-0 items-center gap-2 rounded-xl border p-2 text-left transition ${
+                  className={`flex h-14 min-w-[116px] shrink-0 snap-start items-center gap-2 rounded-xl border p-2 text-left transition sm:h-16 sm:min-w-[132px] ${
                     filterSubCategory === sub.name
                       ? "border-primary bg-primary/10 ring-1 ring-primary/40"
                       : "bg-card hover:border-primary/50 hover:bg-muted/60"
                   }`}
                 >
-                  <img src={sub.image} alt={sub.name} className="h-10 w-10 shrink-0 rounded-lg object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, sub.name, sub.name)} />
+                  <img src={sub.image} alt={sub.name} className="h-9 w-9 shrink-0 rounded-lg object-cover sm:h-10 sm:w-10" onError={(e) => applyMenuImageFallback(e.currentTarget, sub.name, sub.name)} />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{sub.name}</p>
+                    <p className="truncate text-xs font-semibold sm:text-sm">{sub.name}</p>
                     <p className="text-[11px] text-muted-foreground">{sub.count} items</p>
                   </div>
                 </button>
@@ -647,7 +647,7 @@ const MenuManagement = () => {
 
       {/* Item dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:w-full sm:max-w-lg sm:p-6">
           <DialogHeader><DialogTitle>{editItem ? "Edit" : "Add"} {itemMode === "offer" ? "Item Offer" : "Menu Item"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 rounded-xl border bg-muted/30 p-1">
@@ -673,12 +673,12 @@ const MenuManagement = () => {
             </div>
             <div className="space-y-2">
               <Label>Image</Label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="w-20 h-20 rounded-lg border bg-muted overflow-hidden flex items-center justify-center">
                   {form.image ? <img src={form.image} alt="" className="w-full h-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, form.name, form.category)} /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => handleImage(e, "item")} />
-                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Upload</Button>
+                <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => fileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Upload</Button>
                 {form.image && <Button type="button" variant="ghost" className="h-10 rounded-xl gap-2 px-4" onClick={() => setForm({ ...form, image: "" })}><X className="w-3.5 h-3.5" />Remove</Button>}
               </div>
             </div>
@@ -747,7 +747,7 @@ const MenuManagement = () => {
                     );
                   })}
                 </div>
-                <div className="flex gap-2 items-end">
+                <div className="grid gap-2 sm:grid-cols-[1fr_96px_44px] sm:items-end">
                   <div className="flex-1 space-y-1.5">
                     <Label className="text-xs">Ingredient</Label>
                     <Select value={recipeForm.ingredientId} onValueChange={(v) => setRecipeForm({ ...recipeForm, ingredientId: v })}>
@@ -757,22 +757,22 @@ const MenuManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="w-24 space-y-1.5">
+                  <div className="space-y-1.5">
                     <Label className="text-xs">Qty</Label>
                     <Input type="number" min="0.01" step="0.01" value={recipeForm.quantity} onChange={(e) => setRecipeForm({ ...recipeForm, quantity: e.target.value })} />
                   </div>
-                  <Button type="button" variant="outline" size="icon" className="h-11 w-11 rounded-xl" onClick={addRecipeIngredient}><Plus className="w-4 h-4" /></Button>
+                  <Button type="button" variant="outline" size="icon" className="h-11 w-full rounded-xl sm:w-11" onClick={addRecipeIngredient}><Plus className="w-4 h-4" /></Button>
                 </div>
               </div>
             )}
 
-            <Button onClick={handleSave} className="w-full gap-2"><Save className="w-4 h-4 shrink-0" />Save Item</Button>
+            <Button onClick={handleSave} className="sticky bottom-0 w-full gap-2 rounded-xl shadow-lg sm:static sm:shadow-none"><Save className="w-4 h-4 shrink-0" />Save Item</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={adDialogOpen} onOpenChange={setAdDialogOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-xl sm:w-full">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:w-full sm:max-w-xl sm:p-6">
           <DialogHeader><DialogTitle>{adForm.id ? "Edit" : "Add"} QR Menu Advertisement</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-900">
@@ -818,7 +818,7 @@ const MenuManagement = () => {
               </div>
               <Switch checked={adForm.active} onCheckedChange={(active) => setAdForm({ ...adForm, active })} />
             </div>
-            <Button onClick={saveAd} className="w-full gap-2 bg-emerald-700 hover:bg-emerald-800">
+            <Button onClick={saveAd} className="sticky bottom-0 w-full gap-2 rounded-xl bg-emerald-700 shadow-lg hover:bg-emerald-800 sm:static sm:shadow-none">
               <Save className="h-4 w-4" /> Save Advertisement
             </Button>
           </div>
@@ -827,38 +827,38 @@ const MenuManagement = () => {
 
       {/* Category dialog */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md sm:w-full">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:w-full sm:max-w-md sm:p-6">
           <DialogHeader><DialogTitle>{catForm.editing ? "Edit" : "Add"} Category</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Image</Label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="w-20 h-20 rounded-lg border bg-muted overflow-hidden flex items-center justify-center">
                   {catForm.image ? <img src={catForm.image} alt="" className="w-full h-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, "", catForm.name)} /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                 </div>
                 <input ref={catFileRef} type="file" accept="image/*" hidden onChange={(e) => handleImage(e, "cat")} />
-                <Button type="button" variant="outline" onClick={() => catFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Upload</Button>
+                <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => catFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Upload</Button>
                 {catForm.image && <Button type="button" variant="ghost" className="h-10 rounded-xl gap-2 px-4" onClick={() => setCatForm({ ...catForm, image: "" })}><X className="w-3.5 h-3.5" />Remove</Button>}
               </div>
             </div>
             <div className="space-y-2"><Label>Name</Label><Input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} placeholder="e.g. Snacks" /></div>
-            <Button onClick={saveCategory} className="w-full gap-2"><Save className="w-4 h-4 shrink-0" />Save Category</Button>
+            <Button onClick={saveCategory} className="sticky bottom-0 w-full gap-2 rounded-xl shadow-lg sm:static sm:shadow-none"><Save className="w-4 h-4 shrink-0" />Save Category</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={comboDialogOpen} onOpenChange={setComboDialogOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:w-full sm:max-w-2xl sm:p-6">
           <DialogHeader><DialogTitle>{editCombo ? "Edit" : "Add"} Combo Offer</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Image</Label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="w-20 h-20 rounded-lg border bg-muted overflow-hidden flex items-center justify-center">
                   {comboForm.image ? <img src={comboForm.image} alt="" className="w-full h-full object-cover" onError={(e) => applyMenuImageFallback(e.currentTarget, comboForm.name, comboForm.category)} /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                 </div>
                 <input ref={comboFileRef} type="file" accept="image/*" hidden onChange={(e) => handleImage(e, "combo")} />
-                <Button type="button" variant="outline" onClick={() => comboFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Upload</Button>
+                <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => comboFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Upload</Button>
                 {comboForm.image && <Button type="button" variant="ghost" className="h-10 rounded-xl gap-2 px-4" onClick={() => setComboForm({ ...comboForm, image: "" })}><X className="w-3.5 h-3.5" />Remove</Button>}
               </div>
             </div>
@@ -873,7 +873,7 @@ const MenuManagement = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Combo Items</Label>
-                <Button type="button" variant="outline" size="sm" onClick={() => setComboLines((prev) => [...prev, { menuItemId: "", menuItemName: "", quantity: "1" }])}>
+                <Button type="button" variant="outline" size="sm" className="h-9 rounded-xl" onClick={() => setComboLines((prev) => [...prev, { menuItemId: "", menuItemName: "", quantity: "1" }])}>
                   <Plus className="w-4 h-4" /> Add Line
                 </Button>
               </div>
@@ -888,7 +888,7 @@ const MenuManagement = () => {
                       </SelectContent>
                     </Select>
                     <Input type="number" min="1" value={line.quantity} onChange={(e) => updateComboLine(index, { quantity: e.target.value })} />
-                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-destructive" onClick={() => setComboLines((prev) => prev.filter((_, idx) => idx !== index))}>
+                    <Button variant="ghost" size="icon" className="h-10 w-full rounded-xl text-destructive sm:w-10" onClick={() => setComboLines((prev) => prev.filter((_, idx) => idx !== index))}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                     {!line.menuItemId && (
@@ -905,7 +905,7 @@ const MenuManagement = () => {
               </div>
               <Switch checked={comboForm.available} onCheckedChange={(checked) => setComboForm({ ...comboForm, available: checked })} />
             </div>
-            <Button onClick={saveCombo} className="w-full gap-2"><Save className="w-4 h-4 shrink-0" />Save Combo</Button>
+            <Button onClick={saveCombo} className="sticky bottom-0 w-full gap-2 rounded-xl shadow-lg sm:static sm:shadow-none"><Save className="w-4 h-4 shrink-0" />Save Combo</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -915,17 +915,17 @@ const MenuManagement = () => {
           <CardTitle className="text-base">Menu Structure</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
             {menuStructure.map((category) => (
               <div key={category.name} className="overflow-hidden rounded-xl border bg-card shadow-sm transition hover:border-primary/40 hover:shadow-md">
-                <div className="flex gap-3 p-3">
+                <div className="flex flex-col gap-3 p-3 min-[420px]:flex-row">
                   <button
                     type="button"
                     onClick={() => {
                       setFilterCategory(category.name);
                       setFilterSubCategory("all");
                     }}
-                    className="relative h-24 w-28 shrink-0 overflow-hidden rounded-lg bg-muted text-left"
+                    className="relative h-28 w-full shrink-0 overflow-hidden rounded-lg bg-muted text-left min-[420px]:h-24 min-[420px]:w-28"
                   >
                     <img src={category.previewImage} alt={category.name} className="h-full w-full object-cover transition duration-300 hover:scale-105" onError={(e) => applyMenuImageFallback(e.currentTarget, "", category.name)} />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-2">
@@ -1047,7 +1047,7 @@ const MenuManagement = () => {
             </div>
             <Badge className="bg-primary/10 text-primary hover:bg-primary/10">{offerItems.length} offers</Badge>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-4">
             {offerItems.map(renderMenuItemCard)}
           </div>
         </section>
@@ -1068,7 +1068,7 @@ const MenuManagement = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-4">
             {normalItems.map(renderMenuItemCard)}
           </div>
         )}

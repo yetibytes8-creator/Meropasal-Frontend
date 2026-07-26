@@ -133,7 +133,7 @@ export default function AppTopBar({ module, onSignOut, rightContent }: AppTopBar
   const quickSectionLinks = currentSectionLinks.slice(0, 6);
 
   return (
-    <header className="sticky top-0 z-50 h-12 shrink-0 border-b border-green-900/20 bg-gradient-to-r from-green-950 via-green-900 to-green-800 px-2 text-white shadow-sm print:hidden sm:h-10 sm:px-3">
+    <header className="sticky top-0 z-50 h-12 shrink-0 border-b border-green-900/20 bg-gradient-to-r from-green-950 via-green-900 to-green-800 px-2 text-white shadow-sm supports-[backdrop-filter]:bg-green-950/95 print:hidden sm:h-10 sm:px-3">
       <div className="flex h-full min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <SidebarTrigger className="hidden h-8 w-8 text-white hover:bg-white/10 hover:text-white md:flex" />

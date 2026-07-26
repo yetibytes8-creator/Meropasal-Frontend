@@ -1,3 +1,5 @@
+import type { StaffAccessConfig } from "@/lib/rbac";
+
 // ===== AUTH =====
 export interface User {
   id: string;
@@ -144,6 +146,7 @@ export interface Staff {
   avatar?: string;
   password?: string;
   hasLogin?: boolean;
+  permissions?: StaffAccessConfig;
 }
 
 // ===== CUSTOMERS =====

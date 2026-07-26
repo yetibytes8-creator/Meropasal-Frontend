@@ -8,7 +8,7 @@ import {
   Clock, Smartphone, Menu, X, Sparkles, TrendingUp, Activity,
   Package, Bell, Users, QrCode, Receipt, BarChart2,
   ClipboardList, ChevronRight, MapPin, Phone, Mail,
-  Facebook, Instagram, Youtube,
+  Facebook, Instagram, Youtube, ArrowUp, MessageCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import dashboardImg from "@/assets/dashboard-preview.jpg";
@@ -206,19 +206,27 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      setShowScrollTop(window.scrollY > 520);
+    };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const scrollToContact = () => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Navbar */}
-      <nav className={`sticky top-0 z-50 border-b supports-[backdrop-filter]:backdrop-blur-xl transition-all duration-300 ${scrolled ? "border-border/60 bg-background/90 shadow-sm" : "border-border/30 bg-background/80 shadow-sm"}`}>
+      <nav className={`fixed inset-x-0 top-0 z-50 border-b supports-[backdrop-filter]:backdrop-blur-xl transition-all duration-300 ${scrolled ? "border-border/60 bg-background/92 shadow-md shadow-slate-900/5" : "border-border/30 bg-background/86 shadow-sm"}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="group flex items-center gap-2">
+          <Link to="/" className="group flex items-center gap-2 transition-transform duration-300 hover:-translate-y-0.5">
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-primary/30 blur-md group-hover:bg-primary/50 transition-colors" />
               <Coffee className="relative h-7 w-7 text-primary transition-transform group-hover:rotate-12" />
@@ -235,7 +243,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden items-center gap-3 lg:flex">
             <Button variant="ghost" asChild><Link to="/login">Log in</Link></Button>
-            <Button asChild className="shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow">
+            <Button asChild className="landing-shine shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/40">
               <Link to="/signup">Start Free Trial <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
@@ -246,7 +254,7 @@ export default function LandingPage() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="border-t border-border bg-background px-4 pb-4 pt-2 lg:hidden animate-fade-in">
+          <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-border bg-background/96 px-4 pb-4 pt-2 shadow-lg backdrop-blur lg:hidden animate-fade-in">
             {navLinks.map((l) => (
               <Link key={l.to} to={l.to} className="block py-2 text-sm text-muted-foreground" onClick={() => setMobileMenuOpen(false)}>{l.label}</Link>
             ))}
@@ -257,6 +265,7 @@ export default function LandingPage() {
           </div>
         )}
       </nav>
+      <div className="h-16 shrink-0" aria-hidden="true" />
 
       {/* Hero */}
       <section id="home" className="relative scroll-mt-20 overflow-hidden bg-slate-950">
@@ -268,6 +277,9 @@ export default function LandingPage() {
         />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.9),rgba(2,6,23,0.66)_44%,hsl(var(--background))_96%)]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.78),transparent_50%,rgba(2,6,23,0.42))]" />
+        <div className="pointer-events-none absolute left-0 top-24 h-px w-full bg-gradient-to-r from-transparent via-primary/60 to-transparent landing-flow-line" />
+        <div className="pointer-events-none absolute left-0 top-52 h-px w-full bg-gradient-to-r from-transparent via-white/30 to-transparent landing-flow-line" style={{ animationDelay: "2.2s" }} />
+        <div className="pointer-events-none absolute left-0 bottom-36 h-px w-full bg-gradient-to-r from-transparent via-primary/45 to-transparent landing-flow-line" style={{ animationDelay: "4.1s" }} />
 
         <div className="relative mx-auto max-w-7xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8 lg:pt-14">
           <div className="relative mx-auto max-w-3xl text-center">
@@ -292,10 +304,10 @@ export default function LandingPage() {
             </Reveal>
             <Reveal delay={240}>
               <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Button size="lg" className="group w-full px-8 text-base shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5 sm:w-auto" asChild>
+                <Button size="lg" className="landing-shine landing-pulse-ring group w-full px-8 text-base shadow-xl shadow-primary/25 transition-all hover:-translate-y-1 hover:shadow-primary/40 sm:w-auto" asChild>
                   <Link to="/signup">Start 14-Day Free Trial <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
                 </Button>
-                <Button size="lg" variant="outline" className="w-full px-8 text-base backdrop-blur sm:w-auto" asChild>
+                <Button size="lg" variant="outline" className="w-full px-8 text-base backdrop-blur transition-all hover:-translate-y-1 hover:bg-white/95 sm:w-auto" asChild>
                   <Link to="/pricing">View Pricing</Link>
                 </Button>
               </div>
@@ -330,8 +342,8 @@ export default function LandingPage() {
           <Reveal delay={380} className="mt-12 sm:mt-14">
             <div className="relative mx-auto w-full max-w-4xl px-2 sm:px-6 lg:px-0">
               <div className="pointer-events-none absolute -inset-x-4 -inset-y-4 rounded-[2rem] bg-gradient-to-r from-primary/20 via-[hsl(var(--restaurant)/0.25)] to-[hsl(var(--inventory)/0.2)] blur-3xl opacity-60 sm:-inset-x-10 sm:-inset-y-6" />
-              <div className="relative">
-                <div className="absolute left-2 top-4 z-20 flex items-center gap-2 rounded-xl border border-border/60 bg-card/90 p-2 shadow-xl backdrop-blur-md animate-float sm:left-3 sm:top-8 sm:gap-3 sm:p-3 lg:-left-8">
+              <div className="relative landing-soft-breathe">
+                <div className="absolute left-2 top-4 z-20 flex items-center gap-2 rounded-xl border border-border/60 bg-card/90 p-2 shadow-xl backdrop-blur-md animate-float transition-transform hover:scale-105 sm:left-3 sm:top-8 sm:gap-3 sm:p-3 lg:-left-8">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/15 text-success sm:h-9 sm:w-9">
                     <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
@@ -340,7 +352,7 @@ export default function LandingPage() {
                     <div className="text-xs font-bold sm:text-sm">Rs. 24,580</div>
                   </div>
                 </div>
-                <div className="absolute right-2 top-1/3 z-20 flex items-center gap-2 rounded-xl border border-border/60 bg-card/90 p-2 shadow-xl backdrop-blur-md animate-float sm:right-3 sm:gap-3 sm:p-3 lg:-right-8" style={{ animationDelay: "1.5s" }}>
+                <div className="absolute right-2 top-1/3 z-20 flex items-center gap-2 rounded-xl border border-border/60 bg-card/90 p-2 shadow-xl backdrop-blur-md animate-float transition-transform hover:scale-105 sm:right-3 sm:gap-3 sm:p-3 lg:-right-8" style={{ animationDelay: "1.5s" }}>
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary sm:h-9 sm:w-9">
                     <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
@@ -349,7 +361,7 @@ export default function LandingPage() {
                     <div className="text-xs font-bold sm:text-sm">38 Live</div>
                   </div>
                 </div>
-                <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-border/60 bg-card/90 p-2 shadow-xl backdrop-blur-md animate-float sm:bottom-4 sm:left-1/4 sm:translate-x-0 sm:gap-3 sm:p-3" style={{ animationDelay: "3s" }}>
+                <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-border/60 bg-card/90 p-2 shadow-xl backdrop-blur-md animate-float transition-transform hover:scale-105 sm:bottom-4 sm:left-1/4 sm:translate-x-0 sm:gap-3 sm:p-3" style={{ animationDelay: "3s" }}>
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[hsl(var(--restaurant)/0.15)] text-[hsl(var(--restaurant))] sm:h-9 sm:w-9">
                     <ChefHat className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
@@ -358,14 +370,14 @@ export default function LandingPage() {
                     <div className="text-xs font-bold sm:text-sm">7 items</div>
                   </div>
                 </div>
-                <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-2xl ring-1 ring-primary/10 sm:rounded-2xl">
+                <div className="landing-shine relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-2xl ring-1 ring-primary/10 transition-transform duration-500 hover:-translate-y-1 sm:rounded-2xl">
                   <div className="absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
                   <img
                     src={dashboardImg}
                     alt="Mero Pasal dashboard preview"
                     width={1920}
                     height={1080}
-                    className="block h-auto w-full"
+                    className="block h-auto w-full transition-transform duration-700 hover:scale-[1.015]"
                   />
                 </div>
               </div>
@@ -380,7 +392,7 @@ export default function LandingPage() {
                 { value: "2M+", label: "Orders Processed" },
                 { value: "99.9%", label: "Uptime" },
               ].map((s) => (
-                <div key={s.label} className="text-center">
+                <div key={s.label} className="rounded-xl p-2 text-center transition-all duration-300 hover:-translate-y-1 hover:bg-background/70">
                   <div className="font-display text-3xl font-bold text-primary sm:text-4xl">{s.value}</div>
                   <div className="mt-1 text-xs text-muted-foreground sm:text-sm">{s.label}</div>
                 </div>
@@ -494,7 +506,7 @@ export default function LandingPage() {
                     { icon: CreditCard, label: "Dues & refunds", value: "Rs. 18,400", color: "text-[hsl(var(--finance))]", bg: "bg-[hsl(var(--finance)/0.12)]" },
                     { icon: BarChart2, label: "Daily profit", value: "+18.6%", color: "text-primary", bg: "bg-primary/10" },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-background/70 p-3">
+                    <div key={item.label} className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-background/70 p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
                       <div className="flex items-center gap-3">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${item.bg}`}>
                           <item.icon className={`h-5 w-5 ${item.color}`} />
@@ -748,7 +760,7 @@ export default function LandingPage() {
                     { day: "Thu", h: 80 }, { day: "Fri", h: 95 }, { day: "Sat", h: 100 }, { day: "Sun", h: 72 },
                   ].map((d) => (
                     <div key={d.day} className="flex flex-1 flex-col items-center gap-1">
-                      <div className="w-full rounded-t-md bg-primary/80 transition-all motion-safe:animate-bar-rise" style={{ height: `${d.h}%` }} />
+                      <div className="w-full rounded-t-md bg-primary/80 transition-all motion-safe:animate-bar-rise hover:bg-primary" style={{ height: `${d.h}%`, animationDelay: `${d.h * 4}ms` }} />
                       <span className="text-[9px] text-muted-foreground">{d.day}</span>
                     </div>
                   ))}
@@ -863,7 +875,7 @@ export default function LandingPage() {
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan, i) => (
               <Reveal key={plan.name} delay={i * 80}>
-                <Card className={`relative flex h-full flex-col border-border/50 transition-all duration-300 hover:-translate-y-1 ${plan.popular ? "ring-2 ring-primary shadow-xl shadow-primary/20 scale-[1.02]" : "hover:shadow-lg"}`}>
+                <Card className={`relative flex h-full flex-col overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 ${plan.popular ? "landing-shine ring-2 ring-primary shadow-xl shadow-primary/20 scale-[1.02]" : "hover:shadow-lg"}`}>
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <Badge className="bg-primary text-primary-foreground px-3 shadow-lg shadow-primary/30">★ Most Popular</Badge>
@@ -884,7 +896,7 @@ export default function LandingPage() {
                         </li>
                       ))}
                     </ul>
-                    <Button className="mt-6 w-full" variant={plan.popular ? "default" : "outline"} asChild>
+                  <Button className={`mt-6 w-full transition-all hover:-translate-y-0.5 ${plan.popular ? "landing-shine" : ""}`} variant={plan.popular ? "default" : "outline"} asChild>
                       <Link to="/signup">{plan.cta}</Link>
                     </Button>
                   </CardContent>
@@ -1105,6 +1117,26 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <div className="fixed bottom-5 right-4 z-50 flex flex-col gap-2 print:hidden sm:bottom-6 sm:right-6">
+        <button
+          type="button"
+          onClick={scrollToContact}
+          className="landing-pulse-ring group flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/25 transition hover:-translate-y-1 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:w-auto sm:px-4"
+          aria-label="Message YetiBytes"
+        >
+          <MessageCircle className="h-5 w-5 sm:mr-2" />
+          <span className="hidden text-sm font-semibold sm:inline">Message</span>
+        </button>
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className={`flex h-11 w-11 items-center justify-center rounded-full border border-green-100 bg-white text-primary shadow-lg transition duration-200 hover:-translate-y-0.5 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${showScrollTop ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      </div>
     </div>
   );
 }

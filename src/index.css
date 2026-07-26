@@ -200,6 +200,80 @@
 }
 
 @layer utilities {
+  @keyframes landing-flow {
+    0% {
+      transform: translateX(-18%);
+      opacity: 0;
+    }
+    15%,
+    72% {
+      opacity: 0.75;
+    }
+    100% {
+      transform: translateX(118%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes landing-shine {
+    0% {
+      transform: translateX(-120%) skewX(-18deg);
+    }
+    42%,
+    100% {
+      transform: translateX(180%) skewX(-18deg);
+    }
+  }
+
+  @keyframes landing-pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.34);
+    }
+    70% {
+      box-shadow: 0 0 0 14px hsl(var(--primary) / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    }
+  }
+
+  @keyframes landing-soft-breathe {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-6px) scale(1.01);
+    }
+  }
+
+  .landing-flow-line {
+    animation: landing-flow 8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  .landing-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .landing-shine::after {
+    content: "";
+    position: absolute;
+    inset: -20% auto -20% 0;
+    width: 36%;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary-foreground) / 0.32), transparent);
+    animation: landing-shine 4.8s ease-in-out infinite;
+  }
+
+  .landing-pulse-ring {
+    animation: landing-pulse-ring 2.8s ease-out infinite;
+  }
+
+  .landing-soft-breathe {
+    animation: landing-soft-breathe 7s ease-in-out infinite;
+  }
+
   @keyframes qr-menu-enter {
     from {
       opacity: 0;
@@ -242,6 +316,13 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .landing-flow-line,
+    .landing-shine::after,
+    .landing-pulse-ring,
+    .landing-soft-breathe {
+      animation: none !important;
+    }
+
     .qr-menu-enter,
     .qr-item-card,
     .qr-menu-sweep {
@@ -322,6 +403,81 @@
   }
   .finance-accountant-workspace-copy p:not(.finance-clean-copy) {
     display: none;
+  }
+  .finance-workspace,
+  .finance-page {
+    @apply max-w-full;
+  }
+  .finance-workspace > *,
+  .finance-page {
+    @apply min-w-0;
+  }
+  .finance-workspace .page-header,
+  .finance-page .page-header {
+    @apply text-2xl font-black tracking-tight text-green-950 sm:text-3xl;
+  }
+  .finance-workspace .page-description,
+  .finance-page .page-description {
+    @apply max-w-3xl text-sm leading-6 text-muted-foreground;
+  }
+  .finance-workspace .card,
+  .finance-page .card {
+    @apply max-w-full rounded-2xl border-border/70 shadow-sm;
+  }
+  .finance-workspace table,
+  .finance-page table {
+    @apply min-w-[680px];
+  }
+  .finance-workspace th,
+  .finance-workspace td,
+  .finance-page th,
+  .finance-page td {
+    @apply whitespace-normal align-top;
+  }
+  .finance-workspace td,
+  .finance-page td {
+    overflow-wrap: anywhere;
+  }
+  .finance-workspace [data-radix-dialog-content],
+  .finance-page [data-radix-dialog-content] {
+    @apply max-w-[calc(100vw-1.5rem)];
+  }
+  @media (max-width: 640px) {
+    .finance-workspace,
+    .finance-page {
+      @apply text-[14px];
+    }
+    .finance-workspace .page-header,
+    .finance-page .page-header {
+      @apply text-[1.45rem] leading-tight;
+    }
+    .finance-workspace .page-description,
+    .finance-page .page-description {
+      @apply text-[13px] leading-5;
+    }
+    .finance-workspace .card > div,
+    .finance-page .card > div {
+      @apply p-3;
+    }
+    .finance-workspace input,
+    .finance-workspace textarea,
+    .finance-workspace [role="combobox"],
+    .finance-page input,
+    .finance-page textarea,
+    .finance-page [role="combobox"] {
+      @apply min-h-11 text-sm;
+    }
+  }
+  @media (max-width: 480px) {
+    .finance-workspace .grid.grid-cols-2,
+    .finance-page .grid.grid-cols-2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .finance-workspace .flex.items-center.justify-between,
+    .finance-page .flex.items-center.justify-between {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
   }
   .mobile-card-grid {
     @apply grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;

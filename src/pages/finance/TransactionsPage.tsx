@@ -177,7 +177,7 @@ const TransactionsPage = () => {
   };
 
   return (
-    <div className="print-root space-y-6 animate-fade-in pb-20 md:pb-0 print:space-y-2 print:pb-0">
+    <div className="finance-page print-root space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0 print:space-y-2 print:pb-0">
       <div>
         <h1 className="page-header">Transactions</h1>
         <p className="page-description">Complete ledger of all income and expenses</p>

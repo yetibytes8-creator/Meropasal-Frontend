@@ -93,7 +93,7 @@ const IncomePage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="page-header">Income</h1>

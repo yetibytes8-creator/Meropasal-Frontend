@@ -283,15 +283,15 @@ export default function ChartOfAccountsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <section className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm print:hidden">
         <div className="h-1 bg-gradient-to-r from-green-600 via-green-500 to-red-500" />
-        <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[1.2fr_0.8fr] lg:p-6">
+        <div className="grid gap-4 p-3 sm:gap-5 sm:p-5 lg:grid-cols-[1.2fr_0.8fr] lg:p-6">
           <div>
             <Badge className="mb-3 border-green-200 bg-green-50 text-green-700 hover:bg-green-50">
               Accounting setup
             </Badge>
-            <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Chart of Accounts</h1>
+            <h1 className="text-xl font-black tracking-tight text-slate-950 sm:text-3xl">Chart of Accounts</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
               Ledger banाउँदा pahila account type choose garnus, tespachi group, sub-group ani ledger name rakhnus. Sales, purchase, payment, refund sabai report yahi structure bata milcha.
             </p>
@@ -305,14 +305,14 @@ export default function ChartOfAccountsPage() {
                 <div key={step} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-600 text-xs font-black text-white">{step}</span>
-                    <p className="font-bold text-slate-950">{title}</p>
+                    <p className="text-sm font-bold text-slate-950 sm:text-base">{title}</p>
                   </div>
                   <p className="mt-1 text-xs leading-5 text-slate-600">{text}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-green-100 bg-green-50/60 p-4">
+          <div className="rounded-2xl border border-green-100 bg-green-50/60 p-3 sm:p-4">
             <p className="text-sm font-black text-green-900">Quick Actions</p>
             <div className="mt-3 grid gap-2">
               <Button onClick={openAdd} className="h-11 justify-between rounded-xl bg-green-600 text-white hover:bg-green-700">
@@ -582,7 +582,33 @@ export default function ChartOfAccountsPage() {
                           <p className="text-sm font-semibold text-muted-foreground">{subGroup.subGroupName}</p>
                           <Badge variant="outline">{subGroup.rows.length}</Badge>
                         </div>
-                        <div className="overflow-x-auto rounded-lg border">
+                        <div className="space-y-2 sm:hidden">
+                          {subGroup.rows.map((account) => (
+                            <div key={account.id} className="rounded-xl border bg-white p-3 shadow-sm">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-black text-slate-950">{account.name}</p>
+                                  <p className="mt-0.5 font-mono text-xs text-muted-foreground">{account.code}</p>
+                                </div>
+                                <Button variant="outline" size="sm" className="h-8 shrink-0 rounded-xl px-2" onClick={() => openEdit(account)}>
+                                  <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
+                                </Button>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                <div className="rounded-lg bg-slate-50 p-2">
+                                  <p className="text-muted-foreground">Opening Dr</p>
+                                  <p className="font-bold">Rs. {Number(account.opening_debit || 0).toLocaleString()}</p>
+                                </div>
+                                <div className="rounded-lg bg-slate-50 p-2">
+                                  <p className="text-muted-foreground">Opening Cr</p>
+                                  <p className="font-bold">Rs. {Number(account.opening_credit || 0).toLocaleString()}</p>
+                                </div>
+                              </div>
+                              <Badge className="mt-3" variant={account.is_active ? "default" : "secondary"}>{account.is_active ? "Active" : "Inactive"}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="hidden overflow-x-auto rounded-lg border sm:block">
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -624,8 +650,34 @@ export default function ChartOfAccountsPage() {
 
       <Card className="print:hidden">
         <CardHeader><CardTitle className="text-base">Flat Ledger List</CardTitle></CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <Table>
+        <CardContent className="p-3 sm:p-0 sm:overflow-x-auto">
+          <div className="space-y-2 sm:hidden">
+            {filteredAccounts.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                onClick={() => openEdit(account)}
+                className="w-full rounded-xl border bg-white p-3 text-left shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black">{account.name}</p>
+                    <p className="mt-1 font-mono text-xs text-muted-foreground">{account.code}</p>
+                  </div>
+                  <Badge variant="outline" className={`${colorByType[account.account_type]} shrink-0`}>{typeLabel(account.account_type)}</Badge>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1">
+                  <Badge variant="secondary" className="max-w-full truncate">{account.group || "Ungrouped"}</Badge>
+                  <Badge variant="secondary" className="max-w-full truncate">{account.sub_group || "General Ledger"}</Badge>
+                  <Badge variant="outline">{normalBalance(account.account_type)}</Badge>
+                </div>
+              </button>
+            ))}
+            {filteredAccounts.length === 0 && (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No ledgers found</div>
+            )}
+          </div>
+          <Table className="hidden sm:table">
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
@@ -659,8 +711,8 @@ export default function ChartOfAccountsPage() {
       </Card>
 
       <Dialog open={categoryOpen} onOpenChange={setCategoryOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full">
-          <DialogHeader><DialogTitle>Create Group / Sub Group</DialogTitle></DialogHeader>
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-lg rounded-2xl p-3 sm:w-full sm:p-6">
+          <DialogHeader className="pr-8 text-left"><DialogTitle className="text-base sm:text-lg">Create Group / Sub Group</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="rounded-xl border bg-muted/40 p-3 text-sm text-muted-foreground">
               Group only save garda main category create huncha. Sub Group pani rakhe tyo group vitra ledger category ready huncha.
@@ -696,7 +748,7 @@ export default function ChartOfAccountsPage() {
                 placeholder="e.g. Bank Account, Supplier Ledger, VAT Payable"
               />
             </div>
-            <Button onClick={saveCategory} className="w-full gap-2">
+            <Button onClick={saveCategory} className="sticky bottom-0 w-full gap-2 rounded-xl">
               <Save className="h-4 w-4" /> Save Category
             </Button>
           </div>
@@ -704,8 +756,8 @@ export default function ChartOfAccountsPage() {
       </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl sm:w-full">
-          <DialogHeader><DialogTitle>{editing ? "Edit Ledger" : "Add Ledger"}</DialogTitle></DialogHeader>
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl rounded-2xl p-3 sm:w-full sm:p-6">
+          <DialogHeader className="pr-8 text-left"><DialogTitle className="text-base sm:text-lg">{editing ? "Edit Ledger" : "Add Ledger"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
@@ -742,14 +794,14 @@ export default function ChartOfAccountsPage() {
                 <Input type="number" min="0" value={form.opening_credit} onChange={(e) => setForm({ ...form, opening_credit: e.target.value })} />
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-xl border p-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
               <div>
                 <p className="text-sm font-medium">Active Ledger</p>
                 <p className="text-xs text-muted-foreground">Inactive ledger report ma rahanchha, tara new posting ma hide garna milcha.</p>
               </div>
               <Switch checked={form.is_active} onCheckedChange={(is_active) => setForm({ ...form, is_active })} />
             </div>
-            <Button onClick={saveAccount} className="w-full gap-2">
+            <Button onClick={saveAccount} className="sticky bottom-0 w-full gap-2 rounded-xl">
               <Save className="h-4 w-4" /> Save Ledger
             </Button>
           </div>

@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useStaffAuth } from "@/contexts/StaffAuthContext";
-import { canAccessRoute, type StaffRole } from "@/lib/rbac";
+import { canStaffAccessRoute, type StaffRole } from "@/lib/rbac";
 
 interface Props { children: React.ReactNode }
 
@@ -16,7 +16,7 @@ export default function RoleGuard({ children }: Props) {
 
   if (!staffUser) return <>{children}</>;
 
-  if (!canAccessRoute(staffUser.role as StaffRole, pathname)) {
+  if (!canStaffAccessRoute(staffUser.role as StaffRole, pathname, staffUser.permissions)) {
     return <Navigate to="/access-denied" replace />;
   }
 

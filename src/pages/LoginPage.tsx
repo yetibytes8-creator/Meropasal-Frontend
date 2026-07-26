@@ -50,7 +50,7 @@ function PasswordInput({
         type={show ? "text" : "password"}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-12 pl-10 pr-10"
+        className="h-11 pl-10 pr-10 text-sm sm:h-12"
         maxLength={128}
         autoComplete="current-password"
         required
@@ -133,9 +133,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background cafe-pattern p-4 lg:p-6">
-      <div className="mx-auto grid min-h-[calc(100vh-2rem)] w-full max-w-6xl overflow-hidden rounded-[28px] border bg-card shadow-2xl lg:min-h-[calc(100vh-3rem)] lg:grid-cols-[0.95fr_1.05fr]">
-        <aside className="relative flex min-h-[260px] flex-col justify-between overflow-hidden bg-gradient-to-br from-[#fff5ef] via-white to-[#eefbf3] p-6 sm:p-8 lg:min-h-full lg:p-10">
+    <div className="min-h-screen bg-background cafe-pattern p-3 sm:p-4 lg:p-6">
+      <div className="mx-auto grid min-h-[calc(100vh-1.5rem)] w-full max-w-6xl overflow-hidden rounded-2xl border bg-card shadow-2xl sm:rounded-[28px] lg:min-h-[calc(100vh-3rem)] lg:grid-cols-[0.95fr_1.05fr]">
+        <aside className="relative order-2 flex min-h-[240px] flex-col justify-between overflow-hidden bg-gradient-to-br from-[#fff5ef] via-white to-[#eefbf3] p-5 sm:p-8 lg:order-1 lg:min-h-full lg:p-10">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-[#128c3a] to-[#111827]" />
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(220,38,38,0.08)_0%,rgba(255,255,255,0)_42%,rgba(18,140,58,0.10)_100%)]" />
 
@@ -149,43 +149,43 @@ export default function LoginPage() {
               Back to home
             </button>
 
-            <div className="mt-10 flex items-center gap-4">
-              <img src={cafeLogo} alt="Mero Pasal" className="h-16 w-16 rounded-2xl object-contain shadow-sm" />
+            <div className="mt-7 flex items-center gap-3 sm:mt-10 sm:gap-4">
+              <img src={cafeLogo} alt="Mero Pasal" className="h-12 w-12 rounded-xl object-contain shadow-sm sm:h-16 sm:w-16 sm:rounded-2xl" />
               <div>
-                <p className="text-sm font-semibold text-primary">Mero Pasal</p>
-                <h2 className="font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+                <p className="text-xs font-semibold text-primary sm:text-sm">Mero Pasal</p>
+                <h2 className="font-display text-2xl font-bold leading-tight text-foreground sm:text-4xl">
                   One login opens the right workspace.
                 </h2>
               </div>
             </div>
 
-            <div className="mt-8 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm">
-                <UtensilsCrossed className="mb-3 h-5 w-5 text-primary" />
-                <p className="font-semibold text-foreground">Restaurant access</p>
+            <div className="mt-6 grid gap-3 text-sm text-muted-foreground sm:mt-8 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-2xl border border-white/70 bg-white/70 p-3 shadow-sm sm:p-4">
+                <UtensilsCrossed className="mb-2 h-4 w-4 text-primary sm:mb-3 sm:h-5 sm:w-5" />
+                <p className="text-sm font-semibold text-foreground sm:text-base">Restaurant access</p>
                 <p className="mt-1 text-xs leading-relaxed">Orders, tables, QR menu, kitchen and billing.</p>
               </div>
-              <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm">
-                <Package className="mb-3 h-5 w-5 text-[#128c3a]" />
-                <p className="font-semibold text-foreground">Inventory access</p>
+              <div className="rounded-2xl border border-white/70 bg-white/70 p-3 shadow-sm sm:p-4">
+                <Package className="mb-2 h-4 w-4 text-[#128c3a] sm:mb-3 sm:h-5 sm:w-5" />
+                <p className="text-sm font-semibold text-foreground sm:text-base">Inventory access</p>
                 <p className="mt-1 text-xs leading-relaxed">POS, purchases, stock, suppliers and reports.</p>
               </div>
-              <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm">
-                <Users className="mb-3 h-5 w-5 text-[#1f4b7a]" />
-                <p className="font-semibold text-foreground">Role based staff</p>
+              <div className="rounded-2xl border border-white/70 bg-white/70 p-3 shadow-sm sm:p-4">
+                <Users className="mb-2 h-4 w-4 text-[#1f4b7a] sm:mb-3 sm:h-5 sm:w-5" />
+                <p className="text-sm font-semibold text-foreground sm:text-base">Role based staff</p>
                 <p className="mt-1 text-xs leading-relaxed">Staff opens only the pages assigned by admin.</p>
               </div>
             </div>
           </div>
 
-          <div className="relative mt-8 rounded-3xl border border-white/80 bg-white/80 p-4 shadow-sm">
+          <div className="relative mt-6 rounded-2xl border border-white/80 bg-white/80 p-3 shadow-sm sm:mt-8 sm:rounded-3xl sm:p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Powered by</p>
             <div className="mt-3 flex items-center gap-4">
-              <div className="flex h-16 w-24 items-center justify-center rounded-2xl bg-[#0b0b0b] px-2 shadow-inner">
+              <div className="flex h-12 w-20 items-center justify-center rounded-xl bg-[#0b0b0b] px-2 shadow-inner sm:h-16 sm:w-24 sm:rounded-2xl">
                 <img src={yetibytesLogo} alt="YetiBytes Tech Private Limited" className="max-h-12 w-auto object-contain" />
               </div>
               <div>
-                <p className="text-base font-bold text-foreground">YetiBytes Tech Private Limited</p>
+                <p className="text-sm font-bold text-foreground sm:text-base">YetiBytes Tech Private Limited</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   Designed and developed for modern Nepali businesses.
                 </p>
@@ -194,22 +194,22 @@ export default function LoginPage() {
           </div>
         </aside>
 
-        <main className="flex items-center justify-center bg-gradient-to-b from-white to-muted/30 p-5 sm:p-8">
+        <main className="order-1 flex items-center justify-center bg-gradient-to-b from-white to-muted/30 p-4 sm:p-8 lg:order-2">
           <div className="w-full max-w-md animate-fade-in">
-            <div className="mb-6 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                <ShieldCheck className="h-7 w-7 text-primary" />
+            <div className="mb-5 text-center sm:mb-6">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 sm:mb-4 sm:h-14 sm:w-14">
+                <ShieldCheck className="h-6 w-6 text-primary sm:h-7 sm:w-7" />
               </div>
-              <p className="text-sm font-semibold text-primary">Client Login</p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">Sign in to your business</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="text-xs font-semibold text-primary sm:text-sm">Client Login</p>
+              <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl">Sign in to your business</h1>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
                 Enter the ID and password provided during setup. We will open the modules allowed for this account.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="rounded-2xl border bg-card p-6 shadow-lg">
+            <form onSubmit={handleSubmit} className="rounded-2xl border bg-card p-4 shadow-lg sm:p-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email / Login ID</Label>
+                <Label htmlFor="email" className="text-sm">Email / Login ID</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -218,7 +218,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="admin@company.com"
-                    className="h-12 pl-10"
+                    className="h-11 pl-10 text-sm sm:h-12"
                     maxLength={254}
                     autoComplete="email"
                     required
@@ -228,11 +228,11 @@ export default function LoginPage() {
 
               <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm">Password</Label>
                   <button
                     type="button"
                     onClick={() => navigate("/forgot-password")}
-                    className="text-xs font-medium text-primary hover:underline"
+                    className="text-[11px] font-medium text-primary hover:underline sm:text-xs"
                   >
                     Forgot password?
                   </button>
@@ -242,7 +242,7 @@ export default function LoginPage() {
 
               {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
 
-              <Button type="submit" size="lg" className="mt-5 w-full gap-2" disabled={loading || locked}>
+              <Button type="submit" size="lg" className="mt-5 h-11 w-full gap-2 text-sm sm:h-12 sm:text-base" disabled={loading || locked}>
                 <ShieldCheck className="h-4 w-4" />
                 {loading ? "Signing in..." : locked ? "Locked - try later" : "Sign In"}
               </Button>

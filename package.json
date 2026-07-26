@@ -3,8 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
+    "scripts": {
     "dev": "vite",
+    "dev:mobile": "vite --host 0.0.0.0 --port 5176 --strictPort",
+    "dev:mobile:fixed": "vite --host 192.168.18.8 --port 5176 --strictPort",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

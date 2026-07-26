@@ -46,7 +46,7 @@ const FinanceDashboard = () => {
 
   if (!data) {
     return (
-      <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+      <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         <div>
           <h1 className="page-header">Finance</h1>
           <p className="page-description">Loading finance summary...</p>
@@ -146,7 +146,7 @@ const FinanceDashboard = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <section className="overflow-hidden rounded-2xl border border-green-100 bg-white shadow-sm print:hidden">
         <div className="h-1 bg-gradient-to-r from-green-600 via-green-500 to-red-500" />
         <div className="p-4 sm:p-5 lg:p-6">
@@ -295,7 +295,7 @@ const FinanceDashboard = () => {
 
       <Card className="print:hidden">
         <CardHeader>
-          <CardTitle className="text-base">Monthly Summary</CardTitle>
+          <CardTitle className="text-base">Overview Details - Monthly Summary</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <Table>

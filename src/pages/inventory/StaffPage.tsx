@@ -11,16 +11,18 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import StatCard from "@/components/StatCard";
-import { Plus, Search, Users, UserCheck, UserX, Banknote, Pencil, Trash2, Save, X, Eye, EyeOff, KeyRound, ShieldCheck, Lock } from "lucide-react";
+import { Check, Plus, Search, Users, UserCheck, UserX, Banknote, Pencil, Trash2, Save, X, Eye, EyeOff, KeyRound, ShieldCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useStaffAuth } from "@/contexts/StaffAuthContext";
-import { ROLE_META, type StaffRole } from "@/lib/rbac";
+import { PAGE_ACCESS_GROUPS, ROLE_META, pagesForRole, staffAllowedPages, type PageKey, type StaffRole } from "@/lib/rbac";
 
 type FormState = {
   name: string; email: string; phone: string;
   role: Staff["role"]; department: Staff["department"];
   salary: string; status: Staff["status"];
   password: string; confirmPassword: string;
+  accessMode: "role" | "custom";
+  allowedPages: PageKey[];
 };
 
 const emptyForm: FormState = {
@@ -28,6 +30,7 @@ const emptyForm: FormState = {
   role: "staff", department: "both",
   salary: "", status: "active",
   password: "", confirmPassword: "",
+  accessMode: "role", allowedPages: [],
 };
 
 const passwordStrength = (pw: string): { label: string; color: string; width: string } => {
@@ -66,10 +69,37 @@ const StaffPage = () => {
   const activeCount = staff.filter((s) => s.status === "active").length;
   const onLeaveCount = staff.filter((s) => s.status === "on-leave").length;
   const totalSalary = staff.filter((s) => s.status === "active").reduce((s, m) => s + m.salary, 0);
+  const effectivePages = form.accessMode === "custom" ? form.allowedPages : pagesForRole(form.role as StaffRole);
+
+  const changeRole = (role: Staff["role"]) => {
+    setForm((prev) => ({
+      ...prev,
+      role,
+      allowedPages: prev.accessMode === "custom" ? prev.allowedPages : pagesForRole(role as StaffRole),
+    }));
+  };
+
+  const togglePage = (page: PageKey) => {
+    setForm((prev) => {
+      const exists = prev.allowedPages.includes(page);
+      return {
+        ...prev,
+        allowedPages: exists ? prev.allowedPages.filter((key) => key !== page) : [...prev.allowedPages, page],
+      };
+    });
+  };
+
+  const setGroupAccess = (pages: PageKey[], enabled: boolean) => {
+    setForm((prev) => {
+      const next = new Set(prev.allowedPages);
+      pages.forEach((page) => enabled ? next.add(page) : next.delete(page));
+      return { ...prev, allowedPages: Array.from(next) };
+    });
+  };
 
   const openAdd = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, allowedPages: pagesForRole(emptyForm.role as StaffRole) });
     setShowPassword(false);
     setShowConfirm(false);
     setDialogOpen(true);
@@ -77,7 +107,19 @@ const StaffPage = () => {
 
   const openEdit = (m: Staff) => {
     setEditingId(m.id);
-    setForm({ name: m.name, email: m.email, phone: m.phone, role: m.role, department: m.department, salary: String(m.salary), status: m.status, password: "", confirmPassword: "" });
+    setForm({
+      name: m.name,
+      email: m.email,
+      phone: m.phone,
+      role: m.role,
+      department: m.department,
+      salary: String(m.salary),
+      status: m.status,
+      password: "",
+      confirmPassword: "",
+      accessMode: m.permissions?.mode ?? "role",
+      allowedPages: m.permissions?.mode === "custom" ? (m.permissions.allowedPages ?? []) : pagesForRole(m.role as StaffRole),
+    });
     setSelectedStaff(null);
     setShowPassword(false);
     setShowConfirm(false);
@@ -91,6 +133,10 @@ const StaffPage = () => {
     }
     if (parseFloat(form.salary) <= 0) {
       toast.error("Salary must be greater than 0");
+      return;
+    }
+    if (form.accessMode === "custom" && form.allowedPages.length === 0) {
+      toast.error("Select at least one page for custom access");
       return;
     }
     // Password is required for new staff; optional on edit (blank = keep existing)
@@ -110,7 +156,20 @@ const StaffPage = () => {
     }
     if (editingId) {
       const existing = staff.find((s) => s.id === editingId)!;
-      const updated: Staff = { ...existing, name: form.name, email: form.email, phone: form.phone, role: form.role, department: form.department, salary: parseFloat(form.salary), status: form.status };
+      const updated: Staff = {
+        ...existing,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        role: form.role,
+        department: form.department,
+        salary: parseFloat(form.salary),
+        status: form.status,
+        permissions: {
+          mode: form.accessMode,
+          allowedPages: form.accessMode === "custom" ? form.allowedPages : [],
+        },
+      };
       if (form.password) updated.password = form.password;
       updateStaff(updated);
       toast.success("Staff member updated");
@@ -126,6 +185,10 @@ const StaffPage = () => {
         salary: parseFloat(form.salary),
         status: form.status,
         password: form.password,
+        permissions: {
+          mode: form.accessMode,
+          allowedPages: form.accessMode === "custom" ? form.allowedPages : [],
+        },
       };
       addStaff(member);
       toast.success("Staff member added");
@@ -172,7 +235,7 @@ const StaffPage = () => {
               <span>Add Staff</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:w-full">
+          <DialogContent className="max-h-[92dvh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto sm:w-full">
             <DialogHeader><DialogTitle>{editingId ? "Edit Staff Member" : "Add New Staff Member"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Full Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" /></div>
@@ -183,7 +246,7 @@ const StaffPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Role</Label>
-                  <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as Staff["role"] })}>
+                  <Select value={form.role} onValueChange={(v) => changeRole(v as Staff["role"])}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="admin">Admin</SelectItem>
@@ -222,6 +285,89 @@ const StaffPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <Separator />
+
+              <div className="rounded-2xl border bg-muted/20 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold">
+                      <Lock className="h-4 w-4 text-primary" />
+                      User Access
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Select exactly which pages this user can open after login.
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="w-fit bg-primary/10 text-primary border-primary/20">
+                    {effectivePages.length} pages enabled
+                  </Badge>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, accessMode: "role", allowedPages: pagesForRole(prev.role as StaffRole) }))}
+                    className={`rounded-xl border p-3 text-left transition-all ${form.accessMode === "role" ? "border-primary bg-primary/10 text-primary" : "bg-background hover:bg-muted/50"}`}
+                  >
+                    <span className="text-sm font-semibold">Use role default</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{ROLE_META[form.role as StaffRole]?.pages}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, accessMode: "custom", allowedPages: prev.allowedPages.length ? prev.allowedPages : pagesForRole(prev.role as StaffRole) }))}
+                    className={`rounded-xl border p-3 text-left transition-all ${form.accessMode === "custom" ? "border-primary bg-primary/10 text-primary" : "bg-background hover:bg-muted/50"}`}
+                  >
+                    <span className="text-sm font-semibold">Custom access</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">Tick only the pages this staff member needs.</span>
+                  </button>
+                </div>
+
+                {form.accessMode === "custom" && (
+                  <div className="mt-4 space-y-3">
+                    {PAGE_ACCESS_GROUPS.map((group) => {
+                      const groupPages = group.pages.map((page) => page.key);
+                      const selectedCount = groupPages.filter((page) => form.allowedPages.includes(page)).length;
+                      return (
+                        <div key={group.title} className="rounded-xl border bg-background p-3">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-sm font-semibold">{group.title}</p>
+                              <p className="text-xs text-muted-foreground">{group.description}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">{selectedCount}/{group.pages.length}</Badge>
+                              <Button type="button" variant="outline" size="sm" className="h-8 rounded-lg" onClick={() => setGroupAccess(groupPages, true)}>All</Button>
+                              <Button type="button" variant="outline" size="sm" className="h-8 rounded-lg text-destructive hover:text-destructive" onClick={() => setGroupAccess(groupPages, false)}>None</Button>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {group.pages.map((page) => {
+                              const selected = form.allowedPages.includes(page.key);
+                              return (
+                                <button
+                                  type="button"
+                                  key={page.key}
+                                  onClick={() => togglePage(page.key)}
+                                  className={`flex min-h-16 items-start gap-3 rounded-xl border p-3 text-left transition-all ${selected ? "border-primary bg-primary/10" : "bg-muted/20 hover:bg-muted/50"}`}
+                                >
+                                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${selected ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}>
+                                    {selected && <Check className="h-3.5 w-3.5" />}
+                                  </span>
+                                  <span className="min-w-0">
+                                    <span className="block text-sm font-semibold">{page.label}</span>
+                                    <span className="mt-0.5 block text-xs text-muted-foreground">{page.description}</span>
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -360,6 +506,13 @@ const StaffPage = () => {
                       <ShieldCheck className="w-3.5 h-3.5" />Login enabled
                     </div>
                   )}
+                  {member.permissions?.mode === "custom" && (
+                    <div className="mt-2">
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                        Custom access: {staffAllowedPages(member.role as StaffRole, member.permissions).length} pages
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2 mt-3 pt-3 border-t">
@@ -402,7 +555,11 @@ const StaffPage = () => {
                   <p className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
                     <Lock className="w-3.5 h-3.5" />Access Permissions
                   </p>
-                  <p className="text-xs text-muted-foreground">{ROLE_META[selectedStaff.role as StaffRole]?.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedStaff.permissions?.mode === "custom"
+                      ? `Custom access enabled with ${staffAllowedPages(selectedStaff.role as StaffRole, selectedStaff.permissions).length} allowed pages.`
+                      : ROLE_META[selectedStaff.role as StaffRole]?.description}
+                  </p>
                 </div>
 
                 <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${selectedStaff.hasLogin ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>

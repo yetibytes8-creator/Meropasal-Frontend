@@ -51,7 +51,7 @@ export default function BalanceTransferPage() {
   const transferTotal = transfers.reduce((sum, transfer) => sum + transfer.amount, 0);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <div>
         <h1 className="page-header">Balance Transfer</h1>
         <p className="page-description">Move balances between counter, bank, and owner accounts</p>

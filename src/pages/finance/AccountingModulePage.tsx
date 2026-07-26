@@ -665,7 +665,7 @@ export default function AccountingModulePage() {
 
   return (
     <>
-    <div className="space-y-6 animate-fade-in pb-20 md:pb-0">
+    <div className="finance-page space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
       <FinanceStatementHeader
         title={config.title}
         subtitle={config.subtitle}

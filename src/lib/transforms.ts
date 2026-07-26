@@ -206,5 +206,6 @@ export function fromApiStaff(s: ApiStaff): Staff {
     status: s.status,
     avatar: s.avatar ?? undefined,
     hasLogin: Boolean(s.has_login),
+    permissions: (s.permissions ?? undefined) as Staff["permissions"],
   };
 }

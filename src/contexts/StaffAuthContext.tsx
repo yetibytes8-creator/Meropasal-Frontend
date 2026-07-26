@@ -43,6 +43,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
       salary: member.salary,
       status: member.status,
       avatar: member.avatar ?? null,
+      permissions: member.permissions ?? { mode: "role", allowedPages: [] },
       password: member.password,
     });
     setAllStaff((prev) => [...prev, fromApiStaff(created)]);
@@ -59,6 +60,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
       salary: member.salary,
       status: member.status,
       avatar: member.avatar ?? null,
+      permissions: member.permissions ?? { mode: "role", allowedPages: [] },
       password: member.password || undefined,
     });
     const mapped = fromApiStaff(updated);

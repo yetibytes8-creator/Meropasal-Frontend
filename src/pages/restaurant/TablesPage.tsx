@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { menuItems as menuItemsApi } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,7 @@ const statusColorMap: Record<string, string> = {
 const TablesPage = () => {
   const { allTables, setTables, allOrders, setAllOrders, closeTable } = useOrders();
   const { settings } = useSettings();
+  const navigate = useNavigate();
   const [liveMenuItems, setLiveMenuItems] = useState<LiveMenuItem[]>([]);
 
   useEffect(() => {
@@ -175,13 +177,17 @@ const TablesPage = () => {
       }
       splitPayment = { cash, online };
     }
-    const paidOrder: Order = { ...selectedOrder, status: "completed", paymentMethod, splitPayment };
-    await closeTable(selectedTableId, paymentMethod, splitPayment);
+    const paidOrder = await closeTable(selectedTableId, paymentMethod, splitPayment);
+    if (!paidOrder) {
+      toast.error("Order not found for this table");
+      return;
+    }
     await printSelectedBill(paidOrder);
     postRestaurantBillToAccounts(paidOrder).catch(() => toast.warning("Payment saved, finance auto-entry pending"));
     setPaymentDialog(false);
     setSelectedOrder(null);
     toast.success("Payment recorded, bill printed, and table closed");
+    navigate(`/restaurant/billing?invoice=${paidOrder.id}`);
   };
 
   const addToCart = (menuItemId: string) => setCart(prev => ({ ...prev, [menuItemId]: (prev[menuItemId] || 0) + 1 }));

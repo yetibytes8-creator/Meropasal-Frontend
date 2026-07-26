@@ -866,6 +866,7 @@ export interface ApiStaff {
   salary: number;
   status: "active" | "on-leave" | "inactive";
   avatar: string | null;
+  permissions?: Record<string, unknown> | null;
   has_login: boolean;
   created_at: string;
 }

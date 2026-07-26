@@ -9,7 +9,7 @@ interface OrdersContextType {
   setAllOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   allTables: Table[];
   setTables: React.Dispatch<React.SetStateAction<Table[]>>;
-  closeTable: (tableId: string, paymentMethod: NonNullable<Order["paymentMethod"]>, splitPayment?: Order["splitPayment"]) => void;
+  closeTable: (tableId: string, paymentMethod: NonNullable<Order["paymentMethod"]>, splitPayment?: Order["splitPayment"]) => Promise<Order | null>;
   loading: boolean;
   reload: () => void;
 }
@@ -36,28 +36,35 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const closeTable = async (tableId: string, paymentMethod: NonNullable<Order["paymentMethod"]>, splitPayment?: Order["splitPayment"]) => {
+  const closeTable = async (tableId: string, paymentMethod: NonNullable<Order["paymentMethod"]>, splitPayment?: Order["splitPayment"]): Promise<Order | null> => {
     const table = allTables.find((t) => t.id === tableId);
-    if (!table?.orderId) return;
+    if (!table?.orderId) return null;
+    const order = allOrders.find((item) => item.id === table.orderId);
+    if (!order) return null;
+    let paidOrder: Order = { ...order, status: "completed", paymentMethod, splitPayment };
 
     setAllOrders((prev) =>
-      prev.map((o) => o.id === table.orderId ? { ...o, status: "completed" as const, paymentMethod, splitPayment } : o)
+      prev.map((o) => o.id === table.orderId ? paidOrder : o)
     );
     setTables((prev) =>
       prev.map((t) => t.id === tableId ? { ...t, status: "available" as const, orderId: undefined } : t)
     );
 
     const numericOrderId = Number(table.orderId);
-    if (!Number.isFinite(numericOrderId)) return;
+    if (!Number.isFinite(numericOrderId)) return paidOrder;
 
     try {
-      await ordersApi.update(numericOrderId, {
+      const updated = await ordersApi.update(numericOrderId, {
         status: "completed",
         payment_method: paymentMethod,
         split_cash: splitPayment?.cash ?? null,
         split_online: splitPayment?.online ?? null,
       });
+      paidOrder = fromApiOrder(updated);
+      setAllOrders((prev) => prev.map((o) => o.id === table.orderId ? paidOrder : o));
     } catch { /* keep UI unchanged on failure */ }
+
+    return paidOrder;
   };
 
   return (
